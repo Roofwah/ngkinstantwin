@@ -3,6 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { submitClaim, sendOtp, verifyOtp } from '../api';
 import BarcodeScanner from '../components/BarcodeScanner';
 import { BrowserMultiFormatReader } from '@zxing/browser';
+import * as pdfjsLib from 'pdfjs-dist';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 const BRANDS = ['NGK', 'NTK', 'KYB'];
 
@@ -79,8 +85,43 @@ export default function Claim() {
     return null;
   }
 
+  async function detectBarcodeFromPdf(file) {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      // Scan first 2 pages
+      for (let p = 1; p <= Math.min(2, pdf.numPages); p++) {
+        const page = await pdf.getPage(p);
+        const viewport = page.getViewport({ scale: 2 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        // Try BarcodeDetector
+        if (window.BarcodeDetector) {
+          try {
+            const supported = await window.BarcodeDetector.getSupportedFormats();
+            const formats = ['code_128', 'code_39', 'ean_13', 'ean_8', 'itf', 'upc_a', 'upc_e'].filter(f => supported.includes(f));
+            if (formats.length > 0) {
+              const detector = new window.BarcodeDetector({ formats });
+              const results = await detector.detect(canvas);
+              if (results.length > 0) return results[0].rawValue;
+            }
+          } catch { /* fall through */ }
+        }
+        // Try zxing
+        try {
+          const reader = new BrowserMultiFormatReader();
+          const result = await reader.decodeFromCanvas(canvas);
+          if (result) return result.getText();
+        } catch { /* try next page */ }
+      }
+    } catch { /* pdf parse failed */ }
+    return null;
+  }
+
   function extractNumberFromFilename(filename) {
-    // Strip extension, keep only digits — if result is 6+ digits it's likely an invoice number
     const base = filename.replace(/\.[^.]+$/, '');
     const digits = base.replace(/\D/g, '');
     return digits.length >= 6 ? digits : null;
@@ -100,15 +141,25 @@ export default function Claim() {
         if (barcode) {
           setForm(f => ({ ...f, receiptNumber: f.receiptNumber || barcode }));
         } else {
-          // Fallback: try filename
           const fromName = extractNumberFromFilename(file.name);
           if (fromName) setForm(f => ({ ...f, receiptNumber: f.receiptNumber || fromName }));
         }
       };
       fileReader.readAsDataURL(file);
+    } else if (file.type === 'application/pdf') {
+      setFilePreview(null);
+      setBarcodeScanning(true);
+      detectBarcodeFromPdf(file).then(barcode => {
+        setBarcodeScanning(false);
+        if (barcode) {
+          setForm(f => ({ ...f, receiptNumber: f.receiptNumber || barcode }));
+        } else {
+          const fromName = extractNumberFromFilename(file.name);
+          if (fromName) setForm(f => ({ ...f, receiptNumber: f.receiptNumber || fromName }));
+        }
+      });
     } else {
       setFilePreview(null);
-      // PDF / non-image: extract invoice number from filename
       const fromName = extractNumberFromFilename(file.name);
       if (fromName) setForm(f => ({ ...f, receiptNumber: f.receiptNumber || fromName }));
     }
