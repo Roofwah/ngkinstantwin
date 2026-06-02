@@ -2,7 +2,6 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { submitClaim, sendOtp, verifyOtp } from '../api';
 import BarcodeScanner from '../components/BarcodeScanner';
-import { Html5Qrcode } from 'html5-qrcode';
 
 const BRANDS = ['NGK', 'NTK', 'KYB'];
 
@@ -42,29 +41,12 @@ export default function Claim() {
   }
 
   async function scanFileForBarcode(file) {
-    // html5-qrcode needs a real DOM element
-    const divId = '__h5qr__';
-    let div = document.getElementById(divId);
-    if (!div) {
-      div = document.createElement('div');
-      div.id = divId;
-      div.style.display = 'none';
-      document.body.appendChild(div);
-    }
     try {
-      const scanner = new Html5Qrcode(divId, { verbose: false });
-      const result = await scanner.scanFile(file, false);
-      return result || null;
-    } catch { return null; }
-  }
-
-  async function detectBarcodeFromImage(dataURL) {
-    // Convert dataURL back to File for html5-qrcode
-    try {
-      const res = await fetch(dataURL);
-      const blob = await res.blob();
-      const file = new File([blob], 'invoice.jpg', { type: blob.type });
-      return await scanFileForBarcode(file);
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await fetch('/api/scan', { method: 'POST', body: fd });
+      const data = await res.json();
+      return data.code || null;
     } catch { return null; }
   }
 
