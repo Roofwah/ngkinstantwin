@@ -1,0 +1,27 @@
+{
+  "name": "pure-random-instant-win-mockup",
+  "version": "1.0.0",
+  "description": "Repco Rewards x NGK/NTK/KYB — Secure digital Scratch & Win powered by PureRandom Instant Win Engine",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "concurrently \"nodemon server/index.js\" \"cd client && npm run dev\"",
+    "build": "cd client && npm ci && npm run build",
+    "setup": "npm install && cd client && npm install"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3",
+    "multer": "^1.4.5-lts.1",
+    "twilio": "^6.0.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

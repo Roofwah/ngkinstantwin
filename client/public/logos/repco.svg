@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 52" role="img" aria-label="Repco">
+  <!-- Repco red background block -->
+  <rect width="160" height="52" fill="#E2001A" rx="3"/>
+  <!-- White wordmark — bold italic geometric REPCO -->
+  <text
+    x="12"
+    y="38"
+    font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+    font-size="30"
+    font-weight="900"
+    font-style="italic"
+    fill="#FFFFFF"
+    letter-spacing="1"
+  >REPCO</text>
+</svg>

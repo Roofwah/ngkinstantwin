@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: pure-random-instant-win
+    env: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DEMO_MODE
+        value: "true"
+      - key: MOCK_SEED
+        value: "00000000000000000001f4a9c8b7e6d9mockseed"
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: DATABASE_PATH
+        value: /opt/render/project/data/instant-win.db

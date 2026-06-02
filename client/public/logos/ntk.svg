@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 52" role="img" aria-label="NTK">
+  <!-- NTK — NGK group sub-brand, dark red -->
+  <rect width="120" height="52" fill="#B30000" rx="3"/>
+  <rect y="0" width="120" height="5" fill="#E00000" rx="2"/>
+  <!-- White NTK wordmark -->
+  <text
+    x="12"
+    y="38"
+    font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+    font-size="28"
+    font-weight="900"
+    fill="#FFFFFF"
+    letter-spacing="2"
+  >NTK</text>
+</svg>

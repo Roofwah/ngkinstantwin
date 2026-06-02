@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 52" role="img" aria-label="KYB">
+  <!-- KYB — dark navy/charcoal with red accent (KYB corporate colours) -->
+  <rect width="120" height="52" fill="#1A1A2E" rx="3"/>
+  <!-- Red left accent bar -->
+  <rect x="0" y="0" width="6" height="52" fill="#E2001A" rx="2"/>
+  <!-- White KYB wordmark -->
+  <text
+    x="18"
+    y="38"
+    font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+    font-size="28"
+    font-weight="900"
+    fill="#FFFFFF"
+    letter-spacing="2"
+  >KYB</text>
+</svg>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 52" role="img" aria-label="NGK">
+  <!-- NGK orange-red brand colour -->
+  <rect width="120" height="52" fill="#E05A00" rx="3"/>
+  <!-- Thin white top stripe accent -->
+  <rect y="0" width="120" height="5" fill="#FF7A20" rx="2"/>
+  <!-- White NGK wordmark -->
+  <text
+    x="12"
+    y="38"
+    font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+    font-size="28"
+    font-weight="900"
+    fill="#FFFFFF"
+    letter-spacing="2"
+  >NGK</text>
+</svg>
