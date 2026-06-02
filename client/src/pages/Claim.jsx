@@ -3,12 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { submitClaim, sendOtp, verifyOtp } from '../api';
 import BarcodeScanner from '../components/BarcodeScanner';
 import { BrowserMultiFormatReader } from '@zxing/browser';
-import * as pdfjsLib from 'pdfjs-dist';
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
-).toString();
 
 const BRANDS = ['NGK', 'NTK', 'KYB'];
 
@@ -48,74 +42,53 @@ export default function Claim() {
   }
 
   async function detectBarcodeFromImage(dataURL) {
-    const img = new Image();
-    img.src = dataURL;
-    await img.decode();
+    try {
+      const img = new Image();
+      img.src = dataURL;
+      await img.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      return await detectBarcodeFromCanvas(canvas);
+    } catch { return null; }
+  }
 
-    // Try native BarcodeDetector first (Chrome/Android)
+  async function detectBarcodeFromCanvas(canvas) {
     if (window.BarcodeDetector) {
       try {
         const supported = await window.BarcodeDetector.getSupportedFormats();
-        const want = ['code_128', 'code_39', 'ean_13', 'ean_8', 'itf', 'upc_a', 'upc_e'];
-        const formats = want.filter(f => supported.includes(f));
+        const formats = ['code_128', 'code_39', 'ean_13', 'ean_8', 'itf', 'upc_a', 'upc_e'].filter(f => supported.includes(f));
         if (formats.length > 0) {
-          const detector = new window.BarcodeDetector({ formats });
-          const results = await detector.detect(img);
+          const results = await new window.BarcodeDetector({ formats }).detect(canvas);
           if (results.length > 0) return results[0].rawValue;
         }
-      } catch { /* fall through to zxing */ }
+      } catch { /* fall through */ }
     }
-
-    // Fallback: zxing (works on iOS Safari + all browsers)
     try {
-      const el = document.createElement('img');
-      el.src = dataURL;
-      el.style.cssText = 'position:fixed;opacity:0;pointer-events:none;top:0;left:0';
-      document.body.appendChild(el);
-      await new Promise(r => { el.onload = r; el.onerror = r; });
-      try {
-        const reader = new BrowserMultiFormatReader();
-        const result = await reader.decodeFromImageElement(el);
-        return result.getText();
-      } finally {
-        document.body.removeChild(el);
-      }
-    } catch { /* no barcode found */ }
-
+      const result = await new BrowserMultiFormatReader().decodeFromCanvas(canvas);
+      if (result) return result.getText();
+    } catch { /* nothing */ }
     return null;
   }
 
   async function detectBarcodeFromPdf(file) {
     try {
+      // Dynamically import pdfjs to avoid breaking the page if it fails
+      const pdfjsLib = await import('pdfjs-dist');
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      // Scan first 2 pages
       for (let p = 1; p <= Math.min(2, pdf.numPages); p++) {
         const page = await pdf.getPage(p);
         const viewport = page.getViewport({ scale: 2 });
         const canvas = document.createElement('canvas');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
-        const ctx = canvas.getContext('2d');
-        await page.render({ canvasContext: ctx, viewport }).promise;
-        // Try BarcodeDetector
-        if (window.BarcodeDetector) {
-          try {
-            const supported = await window.BarcodeDetector.getSupportedFormats();
-            const formats = ['code_128', 'code_39', 'ean_13', 'ean_8', 'itf', 'upc_a', 'upc_e'].filter(f => supported.includes(f));
-            if (formats.length > 0) {
-              const detector = new window.BarcodeDetector({ formats });
-              const results = await detector.detect(canvas);
-              if (results.length > 0) return results[0].rawValue;
-            }
-          } catch { /* fall through */ }
-        }
-        // Try zxing
-        try {
-          const reader = new BrowserMultiFormatReader();
-          const result = await reader.decodeFromCanvas(canvas);
-          if (result) return result.getText();
-        } catch { /* try next page */ }
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        const barcode = await detectBarcodeFromCanvas(canvas);
+        if (barcode) return barcode;
       }
     } catch { /* pdf parse failed */ }
     return null;
