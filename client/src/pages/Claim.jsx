@@ -42,34 +42,25 @@ export default function Claim() {
   }
 
   async function detectBarcodeFromImage(dataURL) {
-    try {
-      const img = new Image();
-      img.src = dataURL;
-      await img.decode();
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      canvas.getContext('2d').drawImage(img, 0, 0);
-      return await detectBarcodeFromCanvas(canvas);
-    } catch { return null; }
-  }
-
-  async function detectBarcodeFromCanvas(canvas) {
+    // Try native BarcodeDetector (Chrome desktop / Android only)
     if (window.BarcodeDetector) {
       try {
         const supported = await window.BarcodeDetector.getSupportedFormats();
         const formats = ['code_128', 'code_39', 'ean_13', 'ean_8', 'itf', 'upc_a', 'upc_e'].filter(f => supported.includes(f));
         if (formats.length > 0) {
-          const results = await new window.BarcodeDetector({ formats }).detect(canvas);
+          const img = new Image();
+          img.src = dataURL;
+          await img.decode();
+          const results = await new window.BarcodeDetector({ formats }).detect(img);
           if (results.length > 0) return results[0].rawValue;
         }
       } catch { /* fall through */ }
     }
+    // zxing via decodeFromImageUrl — works on iPhone Chrome, iOS Safari, everywhere
     try {
-      const result = await new BrowserMultiFormatReader().decodeFromCanvas(canvas);
-      if (result) return result.getText();
-    } catch { /* nothing */ }
-    return null;
+      const result = await new BrowserMultiFormatReader().decodeFromImageUrl(dataURL);
+      return result?.getText() ?? null;
+    } catch { return null; }
   }
 
   async function detectBarcodeFromPdf(file) {
@@ -87,8 +78,11 @@ export default function Claim() {
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-        const barcode = await detectBarcodeFromCanvas(canvas);
-        if (barcode) return barcode;
+        const blobUrl = URL.createObjectURL(await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.95)));
+        try {
+          const result = await new BrowserMultiFormatReader().decodeFromImageUrl(blobUrl);
+          if (result) return result.getText();
+        } catch { /* try next page */ } finally { URL.revokeObjectURL(blobUrl); }
       }
     } catch { /* pdf parse failed */ }
     return null;
