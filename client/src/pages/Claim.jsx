@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { submitClaim, sendOtp, verifyOtp } from '../api';
 import BarcodeScanner from '../components/BarcodeScanner';
-import { BrowserMultiFormatReader } from '@zxing/browser';
+import { Html5Qrcode } from 'html5-qrcode';
 
 const BRANDS = ['NGK', 'NTK', 'KYB'];
 
@@ -41,25 +41,30 @@ export default function Claim() {
     setError('');
   }
 
-  async function detectBarcodeFromImage(dataURL) {
-    // Try native BarcodeDetector (Chrome desktop / Android only)
-    if (window.BarcodeDetector) {
-      try {
-        const supported = await window.BarcodeDetector.getSupportedFormats();
-        const formats = ['code_128', 'code_39', 'ean_13', 'ean_8', 'itf', 'upc_a', 'upc_e'].filter(f => supported.includes(f));
-        if (formats.length > 0) {
-          const img = new Image();
-          img.src = dataURL;
-          await img.decode();
-          const results = await new window.BarcodeDetector({ formats }).detect(img);
-          if (results.length > 0) return results[0].rawValue;
-        }
-      } catch { /* fall through */ }
+  async function scanFileForBarcode(file) {
+    // html5-qrcode needs a real DOM element
+    const divId = '__h5qr__';
+    let div = document.getElementById(divId);
+    if (!div) {
+      div = document.createElement('div');
+      div.id = divId;
+      div.style.display = 'none';
+      document.body.appendChild(div);
     }
-    // zxing via decodeFromImageUrl — works on iPhone Chrome, iOS Safari, everywhere
     try {
-      const result = await new BrowserMultiFormatReader().decodeFromImageUrl(dataURL);
-      return result?.getText() ?? null;
+      const scanner = new Html5Qrcode(divId, { verbose: false });
+      const result = await scanner.scanFile(file, false);
+      return result || null;
+    } catch { return null; }
+  }
+
+  async function detectBarcodeFromImage(dataURL) {
+    // Convert dataURL back to File for html5-qrcode
+    try {
+      const res = await fetch(dataURL);
+      const blob = await res.blob();
+      const file = new File([blob], 'invoice.jpg', { type: blob.type });
+      return await scanFileForBarcode(file);
     } catch { return null; }
   }
 
@@ -103,7 +108,8 @@ export default function Claim() {
       fileReader.onload = async e => {
         setFilePreview(e.target.result);
         setBarcodeScanning(true);
-        const barcode = await detectBarcodeFromImage(e.target.result);
+        // Pass original File directly to html5-qrcode — most reliable path
+        const barcode = await scanFileForBarcode(file);
         setBarcodeScanning(false);
         if (barcode) {
           setForm(f => ({ ...f, receiptNumber: f.receiptNumber || barcode }));
