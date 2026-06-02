@@ -25,6 +25,7 @@ export default function Claim() {
   const [otpDemo, setOtpDemo] = useState(false);
   const [filePreview, setFilePreview] = useState(null);
   const [fileName, setFileName] = useState('');
+  const [barcodeScanning, setBarcodeScanning] = useState(false);
 
   const [form, setForm] = useState({
     mobile: '',
@@ -48,10 +49,15 @@ export default function Claim() {
     // Try native BarcodeDetector first (Chrome/Android)
     if (window.BarcodeDetector) {
       try {
-        const detector = new window.BarcodeDetector({ formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'itf', 'upc_a', 'upc_e'] });
-        const results = await detector.detect(img);
-        if (results.length > 0) return results[0].rawValue;
-      } catch { /* fall through */ }
+        const supported = await window.BarcodeDetector.getSupportedFormats();
+        const want = ['code_128', 'code_39', 'ean_13', 'ean_8', 'itf', 'upc_a', 'upc_e'];
+        const formats = want.filter(f => supported.includes(f));
+        if (formats.length > 0) {
+          const detector = new window.BarcodeDetector({ formats });
+          const results = await detector.detect(img);
+          if (results.length > 0) return results[0].rawValue;
+        }
+      } catch { /* fall through to zxing */ }
     }
 
     // Fallback: zxing (works on iOS Safari + all browsers)
@@ -76,7 +82,9 @@ export default function Claim() {
       const fileReader = new FileReader();
       fileReader.onload = async e => {
         setFilePreview(e.target.result);
+        setBarcodeScanning(true);
         const barcode = await detectBarcodeFromImage(e.target.result);
+        setBarcodeScanning(false);
         if (barcode) {
           setForm(f => ({ ...f, receiptNumber: f.receiptNumber || barcode }));
         }
@@ -306,7 +314,10 @@ export default function Claim() {
                     onChange={e => set('receiptNumber', e.target.value)}
                     placeholder="e.g. 3420958459"
                   />
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>Auto-filled when you scan your invoice below</span>
+                  {barcodeScanning
+                    ? <span style={{ fontSize: '0.75rem', color: 'var(--amber)' }}>⏳ Reading barcode…</span>
+                    : <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>Auto-filled when you scan your invoice below</span>
+                  }
                 </div>
 
                 <div className="field">
