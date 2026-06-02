@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { submitClaim, sendOtp, verifyOtp } from '../api';
 import BarcodeScanner from '../components/BarcodeScanner';
+import { BrowserMultiFormatReader } from '@zxing/browser';
 
 const BRANDS = ['NGK', 'NTK', 'KYB'];
 
@@ -39,31 +40,48 @@ export default function Claim() {
     setError('');
   }
 
+  async function detectBarcodeFromImage(dataURL) {
+    const img = new Image();
+    img.src = dataURL;
+    await img.decode();
+
+    // Try native BarcodeDetector first (Chrome/Android)
+    if (window.BarcodeDetector) {
+      try {
+        const detector = new window.BarcodeDetector({ formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'itf', 'upc_a', 'upc_e'] });
+        const results = await detector.detect(img);
+        if (results.length > 0) return results[0].rawValue;
+      } catch { /* fall through */ }
+    }
+
+    // Fallback: zxing (works on iOS Safari + all browsers)
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      const reader = new BrowserMultiFormatReader();
+      const result = await reader.decodeFromCanvas(canvas);
+      return result.getText();
+    } catch { /* no barcode found */ }
+
+    return null;
+  }
+
   function handleFile(file) {
     if (!file) return;
     set('receipt', file);
     setFileName(file.name);
     if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = async e => {
+      const fileReader = new FileReader();
+      fileReader.onload = async e => {
         setFilePreview(e.target.result);
-        // Auto-read barcode from the photo to fill invoice number
-        if (window.BarcodeDetector) {
-          try {
-            const img = new Image();
-            img.src = e.target.result;
-            await img.decode();
-            const detector = new window.BarcodeDetector({
-              formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'itf'],
-            });
-            const results = await detector.detect(img);
-            if (results.length > 0) {
-              setForm(f => ({ ...f, receiptNumber: f.receiptNumber || results[0].rawValue }));
-            }
-          } catch { /* no barcode found — user types manually */ }
+        const barcode = await detectBarcodeFromImage(e.target.result);
+        if (barcode) {
+          setForm(f => ({ ...f, receiptNumber: f.receiptNumber || barcode }));
         }
       };
-      reader.readAsDataURL(file);
+      fileReader.readAsDataURL(file);
     } else {
       setFilePreview(null);
     }
