@@ -79,6 +79,13 @@ export default function Claim() {
     return null;
   }
 
+  function extractNumberFromFilename(filename) {
+    // Strip extension, keep only digits — if result is 6+ digits it's likely an invoice number
+    const base = filename.replace(/\.[^.]+$/, '');
+    const digits = base.replace(/\D/g, '');
+    return digits.length >= 6 ? digits : null;
+  }
+
   function handleFile(file) {
     if (!file) return;
     set('receipt', file);
@@ -92,11 +99,18 @@ export default function Claim() {
         setBarcodeScanning(false);
         if (barcode) {
           setForm(f => ({ ...f, receiptNumber: f.receiptNumber || barcode }));
+        } else {
+          // Fallback: try filename
+          const fromName = extractNumberFromFilename(file.name);
+          if (fromName) setForm(f => ({ ...f, receiptNumber: f.receiptNumber || fromName }));
         }
       };
       fileReader.readAsDataURL(file);
     } else {
       setFilePreview(null);
+      // PDF / non-image: extract invoice number from filename
+      const fromName = extractNumberFromFilename(file.name);
+      if (fromName) setForm(f => ({ ...f, receiptNumber: f.receiptNumber || fromName }));
     }
   }
 
