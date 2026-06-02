@@ -62,13 +62,18 @@ export default function Claim() {
 
     // Fallback: zxing (works on iOS Safari + all browsers)
     try {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      canvas.getContext('2d').drawImage(img, 0, 0);
-      const reader = new BrowserMultiFormatReader();
-      const result = await reader.decodeFromCanvas(canvas);
-      return result.getText();
+      const el = document.createElement('img');
+      el.src = dataURL;
+      el.style.cssText = 'position:fixed;opacity:0;pointer-events:none;top:0;left:0';
+      document.body.appendChild(el);
+      await new Promise(r => { el.onload = r; el.onerror = r; });
+      try {
+        const reader = new BrowserMultiFormatReader();
+        const result = await reader.decodeFromImageElement(el);
+        return result.getText();
+      } finally {
+        document.body.removeChild(el);
+      }
     } catch { /* no barcode found */ }
 
     return null;
