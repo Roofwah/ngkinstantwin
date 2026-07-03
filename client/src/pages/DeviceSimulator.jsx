@@ -122,16 +122,6 @@ const SCREEN = {
 
 const BTN_PWR = { top: SCREEN.top + 56, right: 0, w: 24, h: 52 };
 
-const STATE_DESCRIPTIONS = {
-  IDLE:       'Double-tap the screen to issue a token. Swipe up for menu.',
-  GENERATING: 'Generating a cryptographic single-use token...',
-  READY:      'Token issued. Show QR code to customer.',
-  SCANNED:    'Customer scanned — entering mobile number and OTP.',
-  REDEEMED:   'Token redeemed. Press G to issue a new one.',
-  EXPIRED:    'Token expired. Press G to issue a new one.',
-  ERROR:      'Server error. Check connection and press G to retry.',
-};
-
 export default function DeviceSimulator() {
   const [campaign, setCampaign]       = useState(CAMPAIGNS.niterra);
   const [deviceState, setDeviceState] = useState(STATE.IDLE);
@@ -142,6 +132,8 @@ export default function DeviceSimulator() {
   const [menuOpen, setMenuOpen]       = useState(false);
   const [activePanel, setActivePanel] = useState(null);
   const [tapPending, setTapPending]     = useState(false);
+  const [campaignModalOpen, setCampaignModalOpen] = useState(false);
+  const [deviceScale, setDeviceScale] = useState(1);
 
   const pollRef      = useRef(null);
   const timerRef     = useRef(null);
@@ -160,11 +152,59 @@ export default function DeviceSimulator() {
   useEffect(() => () => stopAll(), [stopAll]);
 
   useEffect(() => {
+    const prevTitle = document.title;
+    const prevOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.title = 'PureRandom PUK Simulator';
+
+    let appTitleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    const createdMeta = !appTitleMeta;
+    const prevAppTitle = appTitleMeta?.getAttribute('content') ?? '';
+    if (!appTitleMeta) {
+      appTitleMeta = document.createElement('meta');
+      appTitleMeta.setAttribute('name', 'apple-mobile-web-app-title');
+      document.head.appendChild(appTitleMeta);
+    }
+    appTitleMeta.setAttribute('content', 'PUK Simulator');
+
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.title = prevTitle;
+      document.body.style.overflow = prevOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      if (createdMeta && appTitleMeta?.parentNode) {
+        appTitleMeta.parentNode.removeChild(appTitleMeta);
+      } else if (appTitleMeta) {
+        appTitleMeta.setAttribute('content', prevAppTitle);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    function updateScale() {
+      const headerH = 52;
+      const footerH = tokenData && deviceState !== STATE.IDLE ? 36 : 0;
+      const pad = 16;
+      const availW = window.innerWidth - pad * 2;
+      const availH = window.innerHeight - headerH - footerH - pad;
+      setDeviceScale(Math.min(1, availW / BODY_W, availH / BODY_H));
+    }
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+  }, [tokenData, deviceState]);
+
+  useEffect(() => {
     function onKey(e) {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (e.key === 'g' || e.key === 'G') handleGenerate();
       if (e.key === 'm' || e.key === 'M') handleReset();
-      if (e.key === 'Escape') { setMenuOpen(false); setActivePanel(null); }
+      if (e.key === 'Escape') {
+        setCampaignModalOpen(false);
+        setMenuOpen(false);
+        setActivePanel(null);
+      }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -320,36 +360,90 @@ export default function DeviceSimulator() {
     : '';
   const isExpiring = timeLeft !== null && timeLeft < 90000;
 
+  function selectCampaign(c) {
+    setCampaign(c);
+    setCampaignModalOpen(false);
+    handleReset();
+  }
+
   return (
     <div style={{
-      minHeight: '100dvh',
+      position: 'fixed',
+      inset: 0,
+      height: '100dvh',
+      maxHeight: '100dvh',
+      overflow: 'hidden',
+      touchAction: 'none',
       background: 'radial-gradient(ellipse 120% 80% at 50% 40%, #2e2e48 0%, #1a1a2e 50%, #0d0d18 100%)',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px 24px',
       fontFamily: 'var(--font-body)',
     }}>
 
-      {/* Page label */}
-      <div style={{ textAlign: 'center', marginBottom: 32 }}>
-        <p style={{ fontSize: '0.6rem', letterSpacing: '0.24em', textTransform: 'uppercase', color: '#333', marginBottom: 4 }}>
-          PureRandom Device Simulator
-        </p>
-        <p style={{ fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 700, color: '#555', marginBottom: 2 }}>
-          ESP32-S3 Touch AMOLED 2.06"
-        </p>
-        <p style={{ fontSize: '0.68rem', color: '#2a2a2a', letterSpacing: '0.06em' }}>
-          {DEVICE_CODE} &middot; {campaign.name}
-        </p>
-      </div>
+      {/* Header */}
+      <header style={{
+        flexShrink: 0,
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px 16px',
+        boxSizing: 'border-box',
+      }}>
+        <div>
+          <p style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '0.95rem',
+            fontWeight: 700,
+            color: '#888',
+            margin: 0,
+            letterSpacing: '0.04em',
+          }}>
+            PureRandom PUK Simulator
+          </p>
+          <p style={{ fontSize: '0.62rem', color: '#3a3a3a', letterSpacing: '0.08em', margin: '2px 0 0' }}>
+            {DEVICE_CODE} &middot; {campaign.name}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setCampaignModalOpen(true)}
+          style={{
+            padding: '8px 12px',
+            background: '#111',
+            border: `1px solid ${campaign.color}44`,
+            borderRadius: 8,
+            color: campaign.color,
+            fontFamily: 'monospace',
+            fontSize: '0.62rem',
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          Campaign
+        </button>
+      </header>
 
-      {/* Device shell */}
+      {/* Device — scaled to fit viewport */}
+      <div style={{
+        flex: 1,
+        minHeight: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        overflow: 'hidden',
+      }}>
       <div style={{
         position: 'relative',
         width: BODY_W,
         height: BODY_H,
+        transform: `scale(${deviceScale})`,
+        transformOrigin: 'center center',
         filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.35))',
       }}>
 
@@ -467,75 +561,157 @@ export default function DeviceSimulator() {
           }}
         />
       </div>
-
-      {/* Keyboard hints */}
-      <div style={{ marginTop: 36, display: 'flex', gap: 24, fontSize: '0.74rem', color: '#333' }}>
-        <span><KbdKey>G</KbdKey> Generate</span>
-        <span><KbdKey>M</KbdKey> Reset</span>
       </div>
 
-      {/* State description */}
-      <p style={{
-        marginTop: 10,
-        fontSize: '0.78rem',
-        color: '#2e2e2e',
-        maxWidth: 340,
-        textAlign: 'center',
-        lineHeight: 1.5,
-        minHeight: '2.8em',
-      }}>
-        {STATE_DESCRIPTIONS[deviceState]}
-      </p>
-
-      {/* Campaign switcher */}
-      <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-        <p style={{ fontSize: '0.6rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: '#222' }}>
-          Switch Campaign
-        </p>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {Object.values(CAMPAIGNS).map(c => {
-            const active = campaign.id === c.id;
-            return (
-              <button
-                key={c.id}
-                onClick={() => { setCampaign(c); handleReset(); }}
-                style={{
-                  padding: '7px 16px',
-                  background: active ? c.color : '#0a0a0a',
-                  color: active ? '#000' : '#383838',
-                  border: `1px solid ${active ? c.color : '#1c1c1c'}`,
-                  borderRadius: 6,
-                  fontFamily: 'monospace',
-                  fontSize: '0.7rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.1em',
-                  cursor: 'pointer',
-                  textTransform: 'uppercase',
-                  transition: 'all 0.18s ease',
-                }}
-              >
-                {c.name}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Customer link */}
+      {/* Customer link — fixed footer when token active */}
       {tokenData && deviceState !== STATE.IDLE && (
-        <div style={{ marginTop: 16, textAlign: 'center' }}>
-          <p style={{ fontSize: '0.66rem', color: '#252525', marginBottom: 4 }}>Customer scan link:</p>
+        <div style={{
+          flexShrink: 0,
+          width: '100%',
+          padding: '8px 16px 12px',
+          boxSizing: 'border-box',
+          textAlign: 'center',
+        }}>
           <a
             href={tokenUrl}
             target="_blank"
             rel="noopener noreferrer"
-            style={{ fontSize: '0.8rem', color: 'var(--green)', fontFamily: 'monospace' }}
+            style={{
+              fontSize: '0.68rem',
+              color: 'var(--green)',
+              fontFamily: 'monospace',
+              textDecoration: 'none',
+              display: 'block',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
           >
             {tokenUrl.replace(/^https?:\/\//, '')}
           </a>
         </div>
       )}
 
+      {campaignModalOpen && (
+        <CampaignModal
+          campaign={campaign}
+          onSelect={selectCampaign}
+          onClose={() => setCampaignModalOpen(false)}
+        />
+      )}
+
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Campaign picker modal
+// ─────────────────────────────────────────────────────────────────
+function CampaignModal({ campaign, onSelect, onClose }) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Switch campaign"
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 100,
+        background: 'rgba(0,0,0,0.72)',
+        backdropFilter: 'blur(6px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+        boxSizing: 'border-box',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          width: '100%',
+          maxWidth: 340,
+          background: '#0a0a0a',
+          border: '1px solid #1c1c1c',
+          borderRadius: 14,
+          padding: '20px 18px 18px',
+          boxShadow: '0 24px 48px rgba(0,0,0,0.5)',
+        }}
+      >
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 16,
+        }}>
+          <span style={{
+            fontFamily: 'monospace',
+            fontSize: '0.65rem',
+            letterSpacing: '0.2em',
+            textTransform: 'uppercase',
+            color: '#666',
+          }}>
+            Switch Campaign
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              background: '#1a1a1a',
+              border: 'none',
+              borderRadius: 8,
+              color: '#888',
+              fontSize: 20,
+              lineHeight: 1,
+              width: 36,
+              height: 36,
+              cursor: 'pointer',
+            }}
+          >
+            ×
+          </button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {Object.values(CAMPAIGNS).map(c => {
+            const active = campaign.id === c.id;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => onSelect(c)}
+                style={{
+                  padding: '12px 14px',
+                  background: active ? c.color : '#111',
+                  color: active ? '#000' : '#aaa',
+                  border: `1px solid ${active ? c.color : '#222'}`,
+                  borderRadius: 8,
+                  fontFamily: 'monospace',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  cursor: 'pointer',
+                  textTransform: 'uppercase',
+                  textAlign: 'left',
+                }}
+              >
+                {c.name}
+                <span style={{
+                  display: 'block',
+                  fontSize: '0.6rem',
+                  fontWeight: 400,
+                  opacity: 0.75,
+                  marginTop: 2,
+                  letterSpacing: '0.06em',
+                }}>
+                  {c.sub}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1044,27 +1220,5 @@ function PanelHeader({ label, color, onBack }) {
         ‹
       </button>
     </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Keyboard key hint
-// ─────────────────────────────────────────────────────────────────
-function KbdKey({ children }) {
-  return (
-    <kbd style={{
-      display: 'inline-block',
-      padding: '2px 8px',
-      background: '#111',
-      border: '1px solid #2a2a2a',
-      borderBottom: '2px solid #1a1a1a',
-      borderRadius: 4,
-      fontFamily: 'monospace',
-      fontSize: '0.73rem',
-      color: '#555',
-      marginRight: 5,
-    }}>
-      {children}
-    </kbd>
   );
 }
