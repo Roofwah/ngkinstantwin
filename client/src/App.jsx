@@ -3,6 +3,8 @@ import Landing from './pages/Landing';
 import Claim from './pages/Claim';
 import Scratch from './pages/Scratch';
 import Result from './pages/Result';
+import TokenLanding from './pages/TokenLanding';
+import DeviceSimulator from './pages/DeviceSimulator';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminManifest from './pages/AdminManifest';
@@ -25,6 +27,10 @@ export default function App() {
         <Route path="/claim"               element={<Claim />} />
         <Route path="/scratch/:claimId"    element={<Scratch />} />
         <Route path="/result/:claimId"     element={<Result />} />
+
+        {/* Pure Random device flow */}
+        <Route path="/t/:token"            element={<TokenLanding />} />
+        <Route path="/demo/device"         element={<DeviceSimulator />} />
 
         {/* Admin */}
         <Route path="/admin"               element={<AdminLogin />} />

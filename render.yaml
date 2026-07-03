@@ -18,3 +18,7 @@ services:
         generateValue: true
       - key: DATABASE_PATH
         value: /opt/render/project/data/instant-win.db
+      # Set after first deploy to https://<your-service>.onrender.com
+      # (Render also provides RENDER_EXTERNAL_URL automatically)
+      - key: BASE_URL
+        sync: false

@@ -1,0 +1,3 @@
+# node:sqlite requires Node 22.5+
+[variables]
+NIXPACKS_NODE_VERSION = "22"

@@ -91,6 +91,35 @@ npm run dev
 2. In Render, click **New → Blueprint** and connect your repo
 3. Render will read `render.yaml` and configure everything automatically
 4. After deploy, note the generated `ADMIN_PASSWORD` in the Render environment panel
+5. Set **`BASE_URL`** to your public HTTPS URL, e.g. `https://pure-random-instant-win.onrender.com`  
+   (Render also sets `RENDER_EXTERNAL_URL` automatically if `BASE_URL` is omitted, but explicit is recommended.)
+
+### Phase 1 — PUK public deployment checklist
+
+This app is the **PureRandom backend + game UI** (monolith). No repo split required.
+
+1. **Deploy** via Render (above) or run locally with `npm run build && npm start`.
+2. **Set env vars** on Render:
+   - `BASE_URL=https://<your-service>.onrender.com` — used in QR links from `POST /api/device/issue-token`
+   - `DEMO_MODE=true`
+   - `ADMIN_PASSWORD` (from Render or your own)
+3. **Generate manifest**: open `https://<host>/admin`, log in, click **Generate Manifest**.
+4. **Web PUK test**: open `https://<host>/demo/device` → double-tap (or press `G`) → issue token.
+5. **Phone test**: scan the QR or open the `url` from the issue-token response → `/t/{token}` → OTP `123456` → scratch → result.
+6. **Physical PUK**: flash firmware with `PUK_SERVER_URL=https://<host>` and `PUK_DEVICE_CODE=PR-UNIT-001` (see `puk-firmware/README.md`).
+
+**Device API** (used by firmware and `/demo/device`):
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/api/health` | Connectivity check |
+| `POST` | `/api/device/issue-token` | Issue token `{ deviceCode }` |
+| `GET` | `/api/device/token-status/:token` | Poll scanned/redeemed |
+| `GET` | `/api/device/stats` | Token counts |
+
+QR codes and customer links use `{BASE_URL}/t/{token}` — must be a **public HTTPS** URL, not `localhost`.
+
+---
 
 ### Option B — manual
 
@@ -157,10 +186,15 @@ The following changes are required before a real campaign launch:
 
 | Method | Path                          | Description                  |
 |--------|-------------------------------|------------------------------|
-| GET    | /api/health                   | Health check                 |
+| GET    | /api/health                   | Health check (+ DB status)   |
 | POST   | /api/claims                   | Submit a claim (multipart)   |
 | GET    | /api/claims/:claimId          | Get claim result             |
 | POST   | /api/claims/:claimId/reveal   | Mark scratch as revealed     |
+| POST   | /api/device/issue-token       | Issue PUK token (JSON)       |
+| GET    | /api/device/token/:token      | Validate token / mark scanned |
+| GET    | /api/device/token-status/:token | Poll token status (PUK)  |
+| POST   | /api/device/claim             | Redeem token after OTP       |
+| GET    | /api/device/stats             | Token counts                 |
 
 ### Admin (x-admin-token header required)
 
@@ -180,6 +214,7 @@ The following changes are required before a real campaign launch:
 | Variable       | Default                                    | Description                         |
 |----------------|--------------------------------------------|-------------------------------------|
 | PORT           | 3000                                       | Express server port                 |
+| BASE_URL         | (auto)                                     | Public HTTPS URL for QR `/t/{token}` links. Falls back to `RAILWAY_STATIC_URL`, `RAILWAY_PUBLIC_DOMAIN`, `RENDER_EXTERNAL_URL`, then `http://localhost:{PORT}` |
 | NODE_ENV       | development                                | Set to `production` for Render      |
 | DEMO_MODE      | true                                       | Counter-based prize assignment      |
 | DATABASE_PATH  | ./data/instant-win.db                      | SQLite file path                    |

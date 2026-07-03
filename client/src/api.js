@@ -48,6 +48,36 @@ export async function verifyOtp(mobile, code) {
   return handleResponse(res);
 }
 
+// ─── Device / Token API ───────────────────────────────────────
+
+export async function issueToken(deviceCode) {
+  const res = await fetch(`${BASE}/device/issue-token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ deviceCode }),
+  });
+  return handleResponse(res);
+}
+
+export async function validateToken(token) {
+  const res = await fetch(`${BASE}/device/token/${token}`);
+  return handleResponse(res);
+}
+
+export async function pollTokenStatus(token) {
+  const res = await fetch(`${BASE}/device/token-status/${token}`);
+  return handleResponse(res);
+}
+
+export async function submitTokenClaim(tokenId, mobile, customerName, spendAmount, selectedBrand) {
+  const res = await fetch(`${BASE}/device/claim`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tokenId, mobile, customerName, spendAmount, selectedBrand }),
+  });
+  return handleResponse(res);
+}
+
 // ─── Admin API ────────────────────────────────────────────────────
 
 export async function adminLogin(password) {

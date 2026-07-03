@@ -136,8 +136,8 @@ export default function Result() {
           </div>
 
           <div style={{ textAlign: 'center', marginTop: 24 }}>
-            <button className="btn btn--ghost" onClick={() => navigate('/')}>
-              ← Back to Home
+            <button className="btn btn--primary" onClick={() => navigate('/')}>
+              Complete
             </button>
           </div>
 
