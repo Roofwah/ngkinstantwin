@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
+import { deriveStoreCodeFromInvoice, parseReceiptFile } from '../lib/receiptParse';
 
 function deriveStoreCode(invoiceNumber) {
-  const digits = String(invoiceNumber || '').replace(/\D/g, '');
-  return digits.length >= 3 ? digits.slice(0, 3) : '';
+  return deriveStoreCodeFromInvoice(invoiceNumber);
 }
 
 const EMPTY = {
@@ -29,6 +29,25 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
   const [fileName, setFileName] = useState('');
   const [form, setForm] = useState(EMPTY);
   const [error, setError] = useState('');
+  const [scanning, setScanning] = useState(false);
+  const [scanHint, setScanHint] = useState('');
+
+  function applyParsedFields(parsed) {
+    if (!parsed.invoiceNumber && !parsed.purchaseDate && !parsed.spendAmount) {
+      setScanHint('Could not read the receipt automatically — please check the fields below.');
+      return;
+    }
+    setScanHint(parsed.invoiceNumber
+      ? 'Details read from receipt — please confirm before continuing.'
+      : 'Partially read — please fill any missing fields.');
+    setForm(f => ({
+      ...f,
+      invoiceNumber: parsed.invoiceNumber || f.invoiceNumber,
+      purchaseDate: parsed.purchaseDate || f.purchaseDate,
+      spendAmount: parsed.spendAmount || f.spendAmount,
+      storeCode: parsed.storeCode || deriveStoreCode(parsed.invoiceNumber || f.invoiceNumber),
+    }));
+  }
 
   function setField(field, value) {
     setForm(f => {
@@ -41,18 +60,41 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
     setError('');
   }
 
-  function handleFile(file, source) {
+  async function handleFile(file, source) {
     if (!file) return;
     setReceiptFile(file);
     setReceiptSource(source);
     setFileName(file.name);
     setMode('upload');
     setError('');
+    setScanHint('');
 
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
-      reader.onload = e => setFilePreview(e.target.result);
+      reader.onload = async e => {
+        setFilePreview(e.target.result);
+        setScanning(true);
+        try {
+          const parsed = await parseReceiptFile(file);
+          applyParsedFields(parsed);
+        } catch {
+          setScanHint('Could not read the receipt — enter details manually below.');
+        } finally {
+          setScanning(false);
+        }
+      };
       reader.readAsDataURL(file);
+    } else if (file.type === 'application/pdf') {
+      setFilePreview(null);
+      setScanning(true);
+      try {
+        const parsed = await parseReceiptFile(file);
+        applyParsedFields(parsed);
+      } catch {
+        setScanHint('Could not read the PDF — enter details manually below.');
+      } finally {
+        setScanning(false);
+      }
     } else {
       setFilePreview(null);
     }
@@ -63,6 +105,7 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
     setReceiptSource(null);
     setFilePreview(null);
     setFileName('');
+    setScanHint('');
   }
 
   function switchToManual() {
@@ -216,7 +259,13 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
           value={form.invoiceNumber}
           onChange={e => setField('invoiceNumber', e.target.value.replace(/\D/g, '').slice(0, 10))}
         />
-        <span className="field-hint">10 digits — store code is the first 3 digits</span>
+        {scanning
+          ? <span className="field-hint" style={{ color: 'var(--amber)' }}>Reading receipt…</span>
+          : <span className="field-hint">10 digits — store code is the first 3 digits</span>
+        }
+        {scanHint && !scanning && (
+          <span className="field-hint" style={{ color: 'var(--amber)', display: 'block', marginTop: 4 }}>{scanHint}</span>
+        )}
       </div>
 
       <div className="field">
