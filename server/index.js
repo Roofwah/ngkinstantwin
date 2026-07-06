@@ -5,6 +5,16 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./db');
 const { getBaseUrl, getPublicBaseUrlWarning } = require('./lib/baseUrl');
+const { getOtpMode, hasBirdConfig, birdEnvStatus } = require('./lib/otpMode');
+const { generateManifest } = require('./services/manifestGenerator');
+
+// Ensure demo/local runs always have prizes to assign
+const manifestCount = db.prepare('SELECT COUNT(*) as c FROM manifest').get().c;
+if (manifestCount === 0) {
+  const seed = process.env.MOCK_SEED || '00000000000000000001f4a9c8b7e6d9mockseed';
+  const prizes = generateManifest(seed, 168);
+  console.log(`[startup] Auto-generated prize manifest (${prizes.length} prizes)`);
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -46,6 +56,9 @@ app.get('/api/health', (req, res) => {
     status: database === 'ok' ? 'ok' : 'degraded',
     timestamp: new Date().toISOString(),
     demoMode: process.env.DEMO_MODE === 'true',
+    otpMode: getOtpMode(),
+    birdConfigured: hasBirdConfig(),
+    birdEnv: birdEnvStatus(),
     database,
     baseUrl: getBaseUrl(),
   };
@@ -71,7 +84,8 @@ app.listen(PORT, () => {
 
   console.log(`\n🎰 PureRandom Instant Win — Server running on port ${PORT}`);
   console.log(`   Public URL: ${baseUrl}`);
-  console.log(`   Demo mode : ${process.env.DEMO_MODE === 'true' ? 'ON  ⚡ (every 5th/12th/30th claim wins)' : 'OFF (timestamp windows)'}`);
+  console.log(`   Demo mode : ${process.env.DEMO_MODE === 'true' ? 'ON  ⚡ (every 2nd/5th/12th/30th claim wins)' : 'OFF (timestamp windows)'}`);
+  console.log(`   OTP mode  : ${getOtpMode() === 'bird' ? 'Bird SMS' : 'DEMO (123456) — set BIRD_* env vars for real SMS'}`);
   console.log(`   Seed      : ${process.env.MOCK_SEED || '(default)'}`);
   console.log(`   Admin     : ${baseUrl}/admin`);
   console.log(`   PUK demo  : ${baseUrl}/demo/device`);

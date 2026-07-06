@@ -29,15 +29,15 @@ function assignPrize(claimId, claimTime) {
   return { result: tierToResult(prize.tier), prize };
 }
 
-// Demo mode: every 5th = Tier 1, every 12th = Tier 2, every 30th = Tier 3
+// Demo mode: every 2nd or 5th = Tier 1 (~60% win), every 12th = Tier 2, every 30th = Tier 3
 // Counter is based on total claims submitted (including this one, hence +1)
 function assignDemoMode(claimId) {
   const count = getTotalClaimCount(); // claim already inserted, so this is the true 1-based position
 
   let targetTier = null;
-  if (count % 30 === 0) targetTier = 3;
+  if (count % 10 === 0) targetTier = 3;
   else if (count % 12 === 0) targetTier = 2;
-  else if (count % 5 === 0) targetTier = 1;
+  else if (count % 2 === 0 || count % 5 === 0) targetTier = 1;
 
   if (targetTier === null) return { result: 'NOT_WINNER', prize: null };
 

@@ -39,7 +39,7 @@ export default function AdminLogin() {
             Admin Dashboard
           </h1>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-3)', marginTop: 6 }}>
-            Repco Rewards × NGK / NTK / KYB
+            PureRandom Instant Win
           </p>
         </div>
 

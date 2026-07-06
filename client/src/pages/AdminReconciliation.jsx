@@ -42,11 +42,11 @@ export default function AdminReconciliation() {
       <button className="btn btn--ghost btn--sm" onClick={load}>↻ Refresh</button>
     }>
       <div className="card mb-16" style={{ fontSize: '0.85rem', color: 'var(--text-2)' }}>
-        <strong style={{ color: 'var(--text)' }}>Repco Rewards Validation (Mock)</strong><br />
-        This screen simulates the weekly Repco Rewards reconciliation process.
+        <strong style={{ color: 'var(--text)' }}>Retailer Validation (Mock)</strong><br />
+        This screen simulates the weekly retailer reconciliation process.
         Tier 2 and Tier 3 provisional wins must be validated against the original receipt
-        and Repco Rewards member data before prizes are dispatched.
-        {/* PRODUCTION NOTE: This would integrate with the real Repco Rewards API
+        and loyalty member data before prizes are dispatched.
+        {/* PRODUCTION NOTE: This would integrate with the retailer's validation API
             to cross-reference member ID, purchase history, and receipt validation */}
       </div>
 

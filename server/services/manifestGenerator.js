@@ -5,15 +5,15 @@ const PRIZE_TIERS = {
   tier1: [
     { prizeName: 'NGK Racing Cap', value: 15 },
     { prizeName: 'NGK Stubby Cooler', value: 20 },
-    { prizeName: 'Repco Voucher $25', value: 25 },
+    { prizeName: 'Gift Voucher $25', value: 25 },
     { prizeName: 'Workshop Gloves', value: 30 },
     { prizeName: 'NGK Keyring Set', value: 10 },
     { prizeName: 'NGK Water Bottle', value: 18 },
-    { prizeName: 'Repco Voucher $25', value: 25 },
+    { prizeName: 'Gift Voucher $25', value: 25 },
     { prizeName: 'KYB Workshop Cap', value: 15 },
   ],
   tier2: [
-    { prizeName: '$250 Repco Voucher', value: 250 },
+    { prizeName: '$250 Gift Voucher', value: 250 },
     { prizeName: 'NGK Professional Tool Kit', value: 350 },
     { prizeName: 'KYB Suspension Pack', value: 500 },
     { prizeName: '$500 Workshop Pack', value: 500 },
@@ -21,7 +21,7 @@ const PRIZE_TIERS = {
   tier3: [
     { prizeName: 'Bathurst Experience Package', value: 2500 },
     { prizeName: 'Major Workshop Upgrade Pack', value: 3000 },
-    { prizeName: '$5,000 Repco Rewards Prize', value: 5000 },
+    { prizeName: '$5,000 Major Prize', value: 5000 },
   ],
 };
 

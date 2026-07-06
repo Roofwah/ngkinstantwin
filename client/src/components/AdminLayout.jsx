@@ -20,7 +20,7 @@ export default function AdminLayout({ children, title, actions }) {
     <div className="admin-shell">
       <nav className="admin-sidebar">
         <div className="admin-sidebar__logo">
-          <img src="/logos/rrlogo.png" alt="Repco" style={{ height: 26, marginBottom: 4 }} />
+          <img src="/logos/purerandom.svg" alt="PureRandom" style={{ height: 26, marginBottom: 4 }} />
           <span style={{ display: 'block', fontSize: '0.65rem', letterSpacing: '0.12em', color: 'var(--text-3)' }}>ADMIN</span>
         </div>
 

@@ -1,4 +1,4 @@
-# Repco Rewards × NGK / NTK / KYB — Scratch & Win
+# NGK / NTK / KYB — Scratch & Win
 
 > Powered by **PureRandom Instant Win Engine**
 
@@ -162,10 +162,10 @@ The following changes are required before a real campaign launch:
 - Require OTP verification before the claim is processed
   `// PRODUCTION TODO: Twilio OTP call would go here`
 
-### Repco Rewards API
-- Replace the mock reconciliation screen with real API calls to Repco Rewards:
+### Partner reconciliation API
+- Replace the mock reconciliation screen with real API calls to the retail partner:
   - Verify member ID, purchase history, eligible products
-  `// PRODUCTION TODO: Repco Rewards API integration`
+  `// PRODUCTION TODO: Partner reconciliation API integration`
 
 ### Seed / manifest
 - Use a real Bitcoin block hash (published before campaign start) as the seed
@@ -224,5 +224,5 @@ The following changes are required before a real campaign launch:
 
 ---
 
-*Repco Rewards × NGK / NTK / KYB Scratch & Win — Prototype Demo*  
+*NGK / NTK / KYB Scratch & Win — Prototype Demo*  
 *Powered by PureRandom Instant Win Engine*

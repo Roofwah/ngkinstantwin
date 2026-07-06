@@ -59,6 +59,20 @@ export async function issueToken(deviceCode) {
   return handleResponse(res);
 }
 
+export async function getDeviceConfig(deviceCode) {
+  const res = await fetch(`${BASE}/device/config?deviceCode=${encodeURIComponent(deviceCode)}`);
+  return handleResponse(res);
+}
+
+export async function setDemoCampaign(campaignId) {
+  const res = await fetch(`${BASE}/device/demo-campaign`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ campaignId }),
+  });
+  return handleResponse(res);
+}
+
 export async function validateToken(token) {
   const res = await fetch(`${BASE}/device/token/${token}`);
   return handleResponse(res);
@@ -69,12 +83,65 @@ export async function pollTokenStatus(token) {
   return handleResponse(res);
 }
 
-export async function submitTokenClaim(tokenId, mobile, customerName, spendAmount, selectedBrand) {
-  const res = await fetch(`${BASE}/device/claim`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ tokenId, mobile, customerName, spendAmount, selectedBrand }),
-  });
+export async function submitDirectClaim({
+  deviceCode,
+  mobile,
+  invoiceNumber,
+  purchaseDate,
+  storeCode,
+  productDescription,
+  selectedBrand,
+  spendAmount,
+  receiptSource,
+  verificationMethod,
+  receiptFile,
+  campaignId,
+}) {
+  const fd = new FormData();
+  fd.append('deviceCode', deviceCode);
+  fd.append('mobile', mobile);
+  fd.append('invoiceNumber', invoiceNumber);
+  fd.append('purchaseDate', purchaseDate);
+  if (storeCode) fd.append('storeCode', storeCode);
+  if (productDescription) fd.append('productDescription', productDescription);
+  fd.append('selectedBrand', selectedBrand);
+  fd.append('spendAmount', String(spendAmount));
+  fd.append('receiptSource', receiptSource);
+  fd.append('verificationMethod', verificationMethod);
+  if (campaignId) fd.append('campaignId', campaignId);
+  if (receiptFile) fd.append('receipt', receiptFile);
+
+  const res = await fetch(`${BASE}/device/direct-claim`, { method: 'POST', body: fd });
+  return handleResponse(res);
+}
+
+export async function submitTokenClaim({
+  tokenId,
+  mobile,
+  invoiceNumber,
+  purchaseDate,
+  storeCode,
+  productDescription,
+  selectedBrand,
+  spendAmount,
+  receiptSource,
+  verificationMethod,
+  receiptFile,
+}) {
+  const fd = new FormData();
+  fd.append('tokenId', tokenId);
+  fd.append('mobile', mobile);
+  fd.append('invoiceNumber', invoiceNumber);
+  fd.append('purchaseDate', purchaseDate);
+  if (storeCode) fd.append('storeCode', storeCode);
+  if (productDescription) fd.append('productDescription', productDescription);
+  fd.append('selectedBrand', selectedBrand);
+  fd.append('spendAmount', String(spendAmount));
+  fd.append('receiptSource', receiptSource);
+  fd.append('verificationMethod', verificationMethod);
+  if (receiptFile) fd.append('receipt', receiptFile);
+
+  const res = await fetch(`${BASE}/device/claim`, { method: 'POST', body: fd });
   return handleResponse(res);
 }
 

@@ -157,8 +157,8 @@ export default function Scratch() {
     <div className="scratch-page">
       <div className="scratch-container">
         {/* Eyebrow */}
-        <p style={{ fontSize: '0.72rem', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 8 }}>
-          Repco Rewards × NGK / NTK / KYB
+        <p className="field-hint" style={{ letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: 8 }}>
+          Instant Win Promotion
         </p>
 
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', fontWeight: 700, marginBottom: 4 }}>
@@ -180,7 +180,7 @@ export default function Scratch() {
                 {claim.prizeName}
               </div>
             )}
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-3)', marginTop: 4 }}>
+            <div className="field-hint" style={{ marginTop: 4 }}>
               Claim #{claimId?.slice(0, 8)}
             </div>
           </div>

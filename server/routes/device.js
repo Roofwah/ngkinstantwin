@@ -4,8 +4,16 @@ const crypto = require('crypto');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../db');
 const { log } = require('../services/auditLogger');
-const { assignPrize } = require('../services/prizeEngine');
 const { getBaseUrl } = require('../lib/baseUrl');
+const {
+  resolveCampaignId,
+  loadCampaign,
+  setActiveDemoCampaignId,
+  listDemoCampaigns,
+  isDemoDevice,
+} = require('../services/demoCampaign');
+const { receiptUpload } = require('../lib/receiptUpload');
+const { createClaimWithReceipt } = require('../services/deviceClaim');
 
 const TOKEN_TTL_MS = 10 * 60 * 1000; // 10 minutes — token stays claimable after device returns home
 
@@ -14,16 +22,73 @@ function generateToken() {
   return 'PR-' + bytes.toString('hex').toUpperCase().slice(0, 8);
 }
 
+function getDevice(deviceCode) {
+  return db.prepare('SELECT * FROM devices WHERE deviceCode = ? AND status = ?').get(deviceCode, 'active');
+}
+
+function buildConfigResponse(deviceCode) {
+  const device = getDevice(deviceCode);
+  if (!device) return null;
+
+  const campaignId = resolveCampaignId(db, device);
+  const campaign = loadCampaign(db, campaignId);
+  if (!campaign) return null;
+
+  return {
+    deviceCode: device.deviceCode,
+    device: {
+      deviceCode: device.deviceCode,
+      name: device.name,
+      storeName: device.storeName,
+      retailer: device.retailer,
+      storeCode: device.storeCode,
+    },
+    campaign,
+    canIssueToken: true,
+    demoMode: process.env.DEMO_MODE === 'true',
+    availableCampaigns: listDemoCampaigns(db),
+  };
+}
+
+// GET /api/device/config?deviceCode=PR-DEMO-001
+router.get('/config', (req, res) => {
+  const deviceCode = req.query.deviceCode;
+  if (!deviceCode) return res.status(400).json({ error: 'deviceCode required' });
+
+  const payload = buildConfigResponse(deviceCode);
+  if (!payload) return res.status(404).json({ error: 'Device not found or no active campaign' });
+
+  res.json(payload);
+});
+
+// PUT /api/device/demo-campaign — set active demo campaign (shared by simulator + physical PUK)
+router.put('/demo-campaign', (req, res) => {
+  const { campaignId } = req.body;
+  if (!campaignId) return res.status(400).json({ error: 'campaignId required' });
+
+  try {
+    setActiveDemoCampaignId(db, campaignId);
+    log('demo_campaign_switched', { details: { campaignId } });
+    const payload = buildConfigResponse('PR-DEMO-001');
+    res.json({ ok: true, campaignId, config: payload });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 // POST /api/device/issue-token
 router.post('/issue-token', (req, res) => {
   const { deviceCode } = req.body;
   if (!deviceCode) return res.status(400).json({ error: 'deviceCode required' });
 
-  const device = db.prepare('SELECT * FROM devices WHERE deviceCode = ? AND status = ?').get(deviceCode, 'active');
+  const device = getDevice(deviceCode);
   if (!device) return res.status(404).json({ error: 'Device not found or inactive' });
 
-  const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ? AND status = ?').get(device.campaignId, 'active');
-  if (!campaign) return res.status(404).json({ error: 'No active campaign for this device' });
+  const campaignId = resolveCampaignId(db, device);
+  const campaign = loadCampaign(db, campaignId);
+  if (!campaign || campaign.status !== 'active') {
+    return res.status(404).json({ error: 'No active campaign for this device' });
+  }
 
   const token = generateToken();
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
@@ -37,7 +102,7 @@ router.post('/issue-token', (req, res) => {
   `).run(id, token, tokenHash, campaign.id, device.id, device.storeCode, issuedAt, expiresAt);
 
   log('device_token_issued', {
-    details: { token, deviceCode, campaignId: campaign.id, storeCode: device.storeCode },
+    details: { token, deviceCode, campaignId: campaign.id, storeCode: device.storeCode, demo: isDemoDevice(deviceCode) },
   });
 
   const baseUrl = getBaseUrl();
@@ -46,7 +111,7 @@ router.post('/issue-token', (req, res) => {
     token,
     url: `${baseUrl}/t/${token}`,
     expiresAt: new Date(expiresAt).toISOString(),
-    campaign: { id: campaign.id, name: campaign.name, brand: campaign.brand, tagline: campaign.tagline, mechanic: campaign.mechanic },
+    campaign,
     device: { deviceCode: device.deviceCode, name: device.name, storeName: device.storeName, retailer: device.retailer },
   });
 });
@@ -70,7 +135,7 @@ router.get('/token/:token', (req, res) => {
     log('device_token_scanned', { details: { token, deviceId: record.deviceId } });
   }
 
-  const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(record.campaignId);
+  const campaign = loadCampaign(db, record.campaignId);
   const device = db.prepare('SELECT * FROM devices WHERE id = ?').get(record.deviceId);
 
   res.json({
@@ -94,63 +159,91 @@ router.get('/token-status/:token', (req, res) => {
   res.json({ status: record.status, scannedAt: record.scannedAt, redeemedAt: record.redeemedAt });
 });
 
-// POST /api/device/claim — create a claim from a validated token (after OTP verified)
-router.post('/claim', (req, res) => {
+// POST /api/device/direct-claim — instant win without a PUK token (multipart + receipt)
+router.post('/direct-claim', receiptUpload.single('receipt'), (req, res) => {
   try {
-    const { tokenId, mobile, customerName, spendAmount, selectedBrand } = req.body;
+    const deviceCode = req.body.deviceCode || 'PR-DEMO-001';
+    const { mobile, campaignId: bodyCampaignId } = req.body;
+
+    if (!mobile) return res.status(400).json({ error: 'mobile required' });
+
+    const device = getDevice(deviceCode);
+    if (!device) return res.status(404).json({ error: 'Device not found or inactive' });
+
+    const resolvedCampaignId = bodyCampaignId || resolveCampaignId(db, device);
+    const campaign = loadCampaign(db, resolvedCampaignId);
+    if (!campaign || campaign.status !== 'active') {
+      return res.status(404).json({ error: 'No active campaign' });
+    }
+
+    const outcome = createClaimWithReceipt({
+      mobile,
+      body: req.body,
+      file: req.file,
+      ipAddress: req.ip,
+      campaign,
+      deviceCode,
+      campaignId: resolvedCampaignId,
+    });
+
+    if (outcome.error) {
+      return res.status(outcome.status || 400).json({
+        error: outcome.error,
+        errors: outcome.errors,
+      });
+    }
+
+    res.json({ claimId: outcome.claimId, success: true });
+  } catch (err) {
+    console.error('Direct claim error:', err);
+    if (err.message?.includes('UNIQUE')) {
+      return res.status(409).json({ error: 'This invoice number has already been used.' });
+    }
+    res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+});
+
+// POST /api/device/claim — create a claim from a validated token (multipart + receipt)
+router.post('/claim', receiptUpload.single('receipt'), (req, res) => {
+  try {
+    const { tokenId, mobile } = req.body;
     if (!tokenId || !mobile) return res.status(400).json({ error: 'tokenId and mobile required' });
-
-    const normMobile = (() => {
-      const s = (mobile || '').replace(/[\s\-()]/g, '');
-      if (/^\+614/.test(s)) return '0' + s.slice(3);
-      return s;
-    })();
-    if (!/^04\d{8}$/.test(normMobile)) return res.status(400).json({ error: 'Invalid mobile number' });
-
-    const spend = parseFloat(spendAmount) || 0;
-    if (!['NGK', 'NTK', 'KYB'].includes(selectedBrand))
-      return res.status(400).json({ error: 'Invalid brand' });
 
     const record = db.prepare('SELECT * FROM issued_tokens WHERE id = ?').get(tokenId);
     if (!record) return res.status(404).json({ error: 'Token not found' });
     if (record.status === 'redeemed') return res.status(410).json({ error: 'Token already redeemed' });
     if (record.status === 'void') return res.status(410).json({ error: 'Token has been voided' });
-    if (record.status === 'expired' || Date.now() > record.expiresAt)
+    if (record.status === 'expired' || Date.now() > record.expiresAt) {
       return res.status(410).json({ error: 'Token has expired' });
+    }
 
-    const claimId = uuidv4();
-    const now = Date.now();
+    const campaign = loadCampaign(db, record.campaignId);
+    const device = db.prepare('SELECT * FROM devices WHERE id = ?').get(record.deviceId);
 
-    db.prepare(`
-      INSERT INTO claims
-        (claimId, mobile, receiptNumber, receiptFilename, spendAmount, selectedBrand,
-         termsAccepted, result, claimStatus, createdAt, ipAddress, customerName)
-      VALUES (?, ?, ?, NULL, ?, ?, 1, 'NOT_WINNER', 'ELIGIBLE', ?, ?, ?)
-    `).run(claimId, normMobile, record.token, spend, selectedBrand, now, req.ip || '', customerName || null);
-
-    const { result, prize } = assignPrize(claimId, now);
-
-    let claimStatus = 'ELIGIBLE';
-    if (result === 'TIER_1_INSTANT_WIN') claimStatus = 'VALIDATED';
-    else if (result === 'TIER_2_PROVISIONAL_WIN' || result === 'TIER_3_PROVISIONAL_WIN')
-      claimStatus = 'VALIDATION_PENDING';
-
-    db.prepare('UPDATE claims SET result = ?, claimStatus = ?, prizeId = ?, prizeName = ? WHERE claimId = ?')
-      .run(result, claimStatus, prize?.prizeId || null, prize?.prizeName || null, claimId);
-
-    db.prepare('UPDATE issued_tokens SET status = ?, redeemedAt = ?, claimId = ? WHERE id = ?')
-      .run('redeemed', now, claimId, tokenId);
-
-    log('device_token_redeemed', {
-      claimId,
-      details: { tokenId, token: record.token, mobile: normMobile.slice(0, 4) + '****', result, selectedBrand, spendAmount: spend },
+    const outcome = createClaimWithReceipt({
+      mobile,
+      body: req.body,
+      file: req.file,
+      ipAddress: req.ip,
+      campaign,
+      deviceCode: device?.deviceCode,
+      campaignId: record.campaignId,
+      tokenId,
+      tokenRecord: record,
     });
 
-    res.json({ claimId, success: true });
+    if (outcome.error) {
+      return res.status(outcome.status || 400).json({
+        error: outcome.error,
+        errors: outcome.errors,
+      });
+    }
+
+    res.json({ claimId: outcome.claimId, success: true });
   } catch (err) {
     console.error('Token claim error:', err);
     if (err.message?.includes('UNIQUE')) {
-      return res.status(409).json({ error: 'This token has already been used.' });
+      return res.status(409).json({ error: 'This invoice number has already been used.' });
     }
     res.status(500).json({ error: err.message || 'Internal server error' });
   }

@@ -4,6 +4,7 @@ import Claim from './pages/Claim';
 import Scratch from './pages/Scratch';
 import Result from './pages/Result';
 import TokenLanding from './pages/TokenLanding';
+import InstantWinDirect from './pages/InstantWinDirect';
 import DeviceSimulator from './pages/DeviceSimulator';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -30,6 +31,7 @@ export default function App() {
 
         {/* Pure Random device flow */}
         <Route path="/t/:token"            element={<TokenLanding />} />
+        <Route path="/enter"               element={<InstantWinDirect />} />
         <Route path="/demo/device"         element={<DeviceSimulator />} />
 
         {/* Admin */}

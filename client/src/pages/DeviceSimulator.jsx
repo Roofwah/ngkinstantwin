@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { issueToken, pollTokenStatus } from '../api';
+import { issueToken, pollTokenStatus, getDeviceConfig, setDemoCampaign } from '../api';
 
 // ─── Device states ────────────────────────────────────────────────
 const STATE = {
@@ -13,11 +13,9 @@ const STATE = {
   ERROR:      'ERROR',
 };
 
-// ─── Campaign definitions ─────────────────────────────────────────
-const CAMPAIGNS = {
-  niterra: {
-    id: 'niterra',
-    name: 'Niterra',
+// Slideshow / FAQ presentation keyed by backend campaign id
+const CAMPAIGN_UI = {
+  'niterra-ngk-2026': {
     sub: 'NGK / NTK / KYB',
     color: '#e86600',
     slides: [
@@ -27,18 +25,14 @@ const CAMPAIGNS = {
       { headline: 'EVERY PURCHASE', sub: 'Earns a scan',     src: '/campaigns/niterra/slide4.jpg' },
     ],
     faq: [
-      { q: 'Campaign', a: 'Niterra Instant Win — NGK, NTK & KYB products at participating Repco and NAPA stores.' },
+      { q: 'Campaign', a: 'Niterra Instant Win — NGK, NTK & KYB products at participating stores.' },
       { q: 'Start date', a: '1 July 2026' },
       { q: 'End date', a: '31 August 2026' },
       { q: 'How to enter', a: 'Purchase any eligible NGK, NTK or KYB product from a participating store. Ask staff to issue a QR code on this device, then scan with your phone.' },
-      { q: 'Prizes', a: 'Tier 1: $50 Repco gift card (1 in 5 chance). Tier 2: $200 Repco gift card (1 in 12). Tier 3: $500 tool kit (1 in 30). All other valid entries receive a weekly draw entry.' },
-      { q: 'Validation', a: 'Your mobile number and purchase amount are captured at entry. Tier 2 and Tier 3 prizes require receipt validation before fulfilment.' },
-      { q: 'Prize delivery', a: 'Tier 1 gift cards are emailed within 2 business days. Tier 2 and Tier 3 prizes dispatched within 10 business days of validation.' },
+      { q: 'Prizes', a: 'Tier 1: $50 gift card (1 in 5 chance). Tier 2: $200 gift card (1 in 12). Tier 3: $500 tool kit (1 in 30). All other valid entries receive a weekly draw entry.' },
     ],
   },
-  cocacola: {
-    id: 'cocacola',
-    name: 'Coca-Cola',
+  'cocacola-2026': {
     sub: 'Refresh & Win',
     color: '#E8112D',
     slides: [
@@ -49,17 +43,10 @@ const CAMPAIGNS = {
     ],
     faq: [
       { q: 'Campaign', a: 'Coca-Cola Refresh & Win — participating convenience and grocery stores.' },
-      { q: 'Start date', a: '1 August 2026' },
-      { q: 'End date', a: '30 September 2026' },
-      { q: 'How to enter', a: 'Purchase any participating Coca-Cola product and ask staff to scan your receipt for an instant win QR code.' },
-      { q: 'Prizes', a: 'Tier 1: $25 gift card. Tier 2: Coca-Cola merchandise pack valued at $150. Tier 3: Premium experience package valued at $1,000.' },
-      { q: 'Validation', a: 'Receipt must show purchase of eligible Coca-Cola product. Staff verify at point of sale.' },
-      { q: 'Prize delivery', a: 'Digital prizes delivered within 24 hours. Physical prizes within 10 business days.' },
+      { q: 'How to enter', a: 'Purchase any participating Coca-Cola product and ask staff for an instant win QR code.' },
     ],
   },
-  castrol: {
-    id: 'castrol',
-    name: 'Castrol',
+  'castrol-2026': {
     sub: 'Power Up & Win',
     color: '#00a84a',
     slides: [
@@ -70,17 +57,10 @@ const CAMPAIGNS = {
     ],
     faq: [
       { q: 'Campaign', a: 'Castrol Power Up & Win — participating auto parts and service stores.' },
-      { q: 'Start date', a: '15 July 2026' },
-      { q: 'End date', a: '15 October 2026' },
-      { q: 'How to enter', a: 'Buy any participating Castrol product from a partner store and ask for your instant win scan.' },
-      { q: 'Prizes', a: 'Tier 1: $30 fuel voucher. Tier 2: Castrol premium service pack valued at $200. Tier 3: Full car service package valued at $800.' },
-      { q: 'Validation', a: 'Purchase of eligible Castrol product required. Minimum spend of $25 applies.' },
-      { q: 'Prize delivery', a: 'Vouchers emailed within 48 hours. Service packs arranged via local partner stores.' },
+      { q: 'How to enter', a: 'Buy any participating Castrol product and ask for your instant win scan.' },
     ],
   },
-  vb: {
-    id: 'vb',
-    name: 'VB',
+  'vb-2026': {
     sub: 'Hard Earned Wins',
     color: '#C9A84C',
     slides: [
@@ -91,15 +71,44 @@ const CAMPAIGNS = {
     ],
     faq: [
       { q: 'Campaign', a: 'VB Hard Earned Wins — participating bottle shops and venues nationally.' },
-      { q: 'Start date', a: '1 September 2026' },
-      { q: 'End date', a: '30 November 2026' },
-      { q: 'How to enter', a: 'Purchase participating VB products and receive your instant win scan at the counter. Must be 18+ to participate.' },
-      { q: 'Prizes', a: 'Tier 1: $50 bar tab voucher. Tier 2: VB merchandise and experience pack valued at $300. Tier 3: Ultimate footy experience valued at $2,000.' },
-      { q: 'Validation', a: 'Must be 18+ to enter. Valid purchase of VB products required. ID may be requested.' },
-      { q: 'Prize delivery', a: 'Bar tab vouchers issued same day. Experience prizes coordinated within 5 business days.' },
+      { q: 'How to enter', a: 'Purchase participating VB products and receive your instant win scan at the counter. Must be 18+.' },
+    ],
+  },
+  'redbull-2026': {
+    sub: 'Gives You Wings',
+    color: '#003087',
+    slides: [
+      { headline: 'WINGS', sub: 'Red Bull Instant Win' },
+      { headline: 'SCAN TO PLAY', sub: 'Instant prizes await' },
+      { headline: 'FUEL UP', sub: 'Every can counts' },
+      { headline: 'WIN NOW', sub: 'Your moment starts here' },
+    ],
+    faq: [
+      { q: 'Campaign', a: 'Red Bull Instant Win — participating convenience and grocery stores.' },
+      { q: 'How to enter', a: 'Purchase participating Red Bull products and ask staff for your QR code.' },
     ],
   },
 };
+
+function mergeCampaign(apiCampaign) {
+  const ui = CAMPAIGN_UI[apiCampaign.id] || {};
+  return {
+    id: apiCampaign.id,
+    name: apiCampaign.name,
+    sub: apiCampaign.brand || ui.sub || '',
+    color: apiCampaign.config?.themeColor || ui.color || '#888',
+    slides: ui.slides || [{ headline: apiCampaign.name, sub: apiCampaign.tagline || '' }],
+    faq: ui.faq || [{ q: 'Campaign', a: apiCampaign.mechanic || apiCampaign.tagline || '' }],
+  };
+}
+
+const DEFAULT_CAMPAIGN = mergeCampaign({
+  id: 'niterra-ngk-2026',
+  name: 'Niterra',
+  brand: 'NGK / NTK / KYB',
+  tagline: '',
+  config: { themeColor: '#e86600' },
+});
 
 const DEVICE_CODE = 'PR-DEMO-001';
 
@@ -123,7 +132,8 @@ const SCREEN = {
 const BTN_PWR = { top: SCREEN.top + 56, right: 0, w: 24, h: 52 };
 
 export default function DeviceSimulator() {
-  const [campaign, setCampaign]       = useState(CAMPAIGNS.niterra);
+  const [campaign, setCampaign]       = useState(DEFAULT_CAMPAIGN);
+  const [campaignOptions, setCampaignOptions] = useState([]);
   const [deviceState, setDeviceState] = useState(STATE.IDLE);
   const [tokenData, setTokenData]     = useState(null);
   const [errorMsg, setErrorMsg]       = useState('');
@@ -150,6 +160,18 @@ export default function DeviceSimulator() {
   }, []);
 
   useEffect(() => () => stopAll(), [stopAll]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getDeviceConfig(DEVICE_CODE)
+      .then((data) => {
+        if (cancelled) return;
+        setCampaign(mergeCampaign(data.campaign));
+        setCampaignOptions((data.availableCampaigns || []).map((c) => mergeCampaign(c)));
+      })
+      .catch((err) => console.warn('Device config load failed:', err.message));
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     const prevTitle = document.title;
@@ -360,10 +382,17 @@ export default function DeviceSimulator() {
     : '';
   const isExpiring = timeLeft !== null && timeLeft < 90000;
 
-  function selectCampaign(c) {
-    setCampaign(c);
-    setCampaignModalOpen(false);
-    handleReset();
+  async function selectCampaign(c) {
+    try {
+      const data = await setDemoCampaign(c.id);
+      const next = data.config?.campaign ? mergeCampaign(data.config.campaign) : c;
+      setCampaign(next);
+      setCampaignModalOpen(false);
+      handleReset();
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to switch campaign');
+      setDeviceState(STATE.ERROR);
+    }
   }
 
   return (
@@ -595,6 +624,7 @@ export default function DeviceSimulator() {
       {campaignModalOpen && (
         <CampaignModal
           campaign={campaign}
+          options={campaignOptions.length ? campaignOptions : [campaign]}
           onSelect={selectCampaign}
           onClose={() => setCampaignModalOpen(false)}
         />
@@ -607,7 +637,7 @@ export default function DeviceSimulator() {
 // ─────────────────────────────────────────────────────────────────
 // Campaign picker modal
 // ─────────────────────────────────────────────────────────────────
-function CampaignModal({ campaign, onSelect, onClose }) {
+function CampaignModal({ campaign, options, onSelect, onClose }) {
   return (
     <div
       role="dialog"
@@ -674,7 +704,7 @@ function CampaignModal({ campaign, onSelect, onClose }) {
           </button>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {Object.values(CAMPAIGNS).map(c => {
+          {options.map(c => {
             const active = campaign.id === c.id;
             return (
               <button

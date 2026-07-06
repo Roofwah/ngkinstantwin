@@ -299,7 +299,7 @@ export default function Claim() {
                   {otpSent && !otpVerified && (
                     <div style={{ marginTop: 10 }}>
                       {otpDemo && (
-                        <div style={{ fontSize: '0.72rem', color: 'var(--amber)', marginBottom: 6, padding: '6px 10px', background: 'rgba(255,171,0,0.08)', borderRadius: 4 }}>
+                        <div className="notice-banner" style={{ marginBottom: 6 }}>
                           Demo mode — enter <strong>123456</strong> to verify
                         </div>
                       )}
@@ -324,7 +324,7 @@ export default function Claim() {
                           {otpVerifying ? <span className="spinner" style={{ width: 14, height: 14 }} /> : 'Verify'}
                         </button>
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-3)', marginTop: 4 }}>
+                      <div className="field-hint" style={{ marginTop: 4 }}>
                         Code sent to {form.mobile} · expires in 10 min
                       </div>
                     </div>

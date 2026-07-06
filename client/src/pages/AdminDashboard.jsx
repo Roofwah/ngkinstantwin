@@ -58,7 +58,7 @@ export default function AdminDashboard() {
     >
       {stats?.demoMode && (
         <div className="demo-banner mb-16">
-          DEMO MODE ACTIVE — Every 5th claim wins Tier 1 · Every 12th wins Tier 2 · Every 30th wins Tier 3
+          DEMO MODE ACTIVE — Every 2nd or 5th claim wins Tier 1 · Every 12th wins Tier 2 · Every 30th wins Tier 3
         </div>
       )}
 

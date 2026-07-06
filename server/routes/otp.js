@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { isOtpDemoMode, getOtpMode, birdEnvStatus } = require('../lib/otpMode');
 
 // In-memory OTP store: mobile -> { code, expiresAt, attempts }
 const otpStore = new Map();
@@ -7,12 +8,6 @@ const otpStore = new Map();
 const DEMO_CODE = '123456';
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const MAX_ATTEMPTS = 5;
-
-function isDemoMode() {
-  return !process.env.BIRD_ACCESS_KEY ||
-    !process.env.BIRD_WORKSPACE_ID ||
-    !process.env.BIRD_CHANNEL_ID;
-}
 
 function generateCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -23,6 +18,19 @@ function toE164(mobile) {
   return '+61' + mobile.slice(1);
 }
 
+const { getBirdEnv } = require('../lib/otpMode');
+
+// GET /api/otp/status — safe diagnostic (no secret values)
+router.get('/status', (req, res) => {
+  const bird = birdEnvStatus();
+  res.json({
+    mode: getOtpMode(),
+    demo: isOtpDemoMode(),
+    bird,
+    ready: bird.accessKey && bird.workspaceId && bird.channelId,
+  });
+});
+
 // POST /api/otp/send
 router.post('/send', async (req, res) => {
   const { mobile } = req.body;
@@ -30,25 +38,26 @@ router.post('/send', async (req, res) => {
     return res.status(400).json({ error: 'Valid Australian mobile required' });
   }
 
-  const code = isDemoMode() ? DEMO_CODE : generateCode();
+  const code = isOtpDemoMode() ? DEMO_CODE : generateCode();
   otpStore.set(mobile, { code, expiresAt: Date.now() + OTP_TTL_MS, attempts: 0 });
 
-  if (isDemoMode()) {
+  if (isOtpDemoMode()) {
     console.log(`[DEMO] OTP for ${mobile}: ${code}`);
     return res.json({ sent: true, demo: true });
   }
 
   try {
-    const url = `https://api.bird.com/workspaces/${process.env.BIRD_WORKSPACE_ID}/channels/${process.env.BIRD_CHANNEL_ID}/messages`;
+    const bird = getBirdEnv();
+    const url = `https://api.bird.com/workspaces/${bird.workspaceId}/channels/${bird.channelId}/messages`;
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `AccessKey ${process.env.BIRD_ACCESS_KEY}`,
+        'Authorization': `AccessKey ${bird.accessKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         receiver: { contacts: [{ identifierValue: toE164(mobile) }] },
-        body: { type: 'text', text: { text: `Your Repco Rewards code is: ${code}. Valid for 10 minutes.` } },
+        body: { type: 'text', text: { text: `Your FLOW Mktg code is: ${code}. Valid for 10 minutes.` } },
       }),
     });
     const data = await response.json();
