@@ -783,6 +783,75 @@ tbody tr:hover td { background: var(--bg-3); }
   font-size: 1rem;
 }
 
+.receipt-readout {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.receipt-readout__title {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin: 0 0 10px;
+}
+
+.receipt-readout__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.92rem;
+}
+
+.receipt-readout__row:last-child {
+  border-bottom: none;
+}
+
+.receipt-readout__label {
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+
+.receipt-readout__value {
+  color: var(--text);
+  font-weight: 600;
+  text-align: right;
+}
+
+.receipt-readout__scanning {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--amber);
+  font-size: 0.9rem;
+  margin-bottom: 14px;
+}
+
+.receipt-readout__issue {
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 193, 7, 0.08);
+  border-left: 3px solid var(--amber);
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: var(--text-2);
+  line-height: 1.45;
+}
+
+.receipt-readout__issue strong {
+  display: block;
+  color: var(--amber);
+  margin-bottom: 4px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 /* ─── Scratch card ───────────────────────────────────────────────── */
 .scratch-page {
   min-height: 100dvh;

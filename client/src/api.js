@@ -88,7 +88,9 @@ export async function submitDirectClaim({
   mobile,
   invoiceNumber,
   purchaseDate,
+  purchaseTime,
   storeCode,
+  storeName,
   productDescription,
   selectedBrand,
   spendAmount,
@@ -103,6 +105,8 @@ export async function submitDirectClaim({
   fd.append('invoiceNumber', invoiceNumber);
   fd.append('purchaseDate', purchaseDate);
   if (storeCode) fd.append('storeCode', storeCode);
+  if (purchaseTime) fd.append('purchaseTime', purchaseTime);
+  if (storeName) fd.append('storeName', storeName);
   if (productDescription) fd.append('productDescription', productDescription);
   fd.append('selectedBrand', selectedBrand);
   fd.append('spendAmount', String(spendAmount));
@@ -120,7 +124,9 @@ export async function submitTokenClaim({
   mobile,
   invoiceNumber,
   purchaseDate,
+  purchaseTime,
   storeCode,
+  storeName,
   productDescription,
   selectedBrand,
   spendAmount,
@@ -134,6 +140,8 @@ export async function submitTokenClaim({
   fd.append('invoiceNumber', invoiceNumber);
   fd.append('purchaseDate', purchaseDate);
   if (storeCode) fd.append('storeCode', storeCode);
+  if (purchaseTime) fd.append('purchaseTime', purchaseTime);
+  if (storeName) fd.append('storeName', storeName);
   if (productDescription) fd.append('productDescription', productDescription);
   fd.append('selectedBrand', selectedBrand);
   fd.append('spendAmount', String(spendAmount));

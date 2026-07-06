@@ -61,7 +61,9 @@ function validateReceiptPayload(body, file) {
     errors,
     invoiceNumber,
     purchaseDate: String(body.purchaseDate).trim(),
+    purchaseTime: body.purchaseTime ? String(body.purchaseTime).trim() : null,
     storeCode,
+    storeName: (body.storeName || '').trim() || null,
     productDescription: (body.productDescription || '').trim() || null,
     selectedBrand: body.selectedBrand,
     spendAmount: spend,
@@ -121,10 +123,10 @@ function createClaimWithReceipt({
     INSERT INTO claims
       (claimId, mobile, receiptNumber, receiptFilename, spendAmount, selectedBrand,
        termsAccepted, result, claimStatus, createdAt, ipAddress,
-       purchaseDate, storeCode, productSku, productDescription,
+       purchaseDate, purchaseTime, storeCode, storeName, productSku, productDescription,
        receiptSource, verificationMethod, receiptValidationStatus)
     VALUES (?, ?, ?, ?, ?, ?, 1, 'NOT_WINNER', 'ELIGIBLE', ?, ?,
-            ?, ?, ?, ?, ?, ?, ?)
+            ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     claimId,
     normMobile,
@@ -135,7 +137,9 @@ function createClaimWithReceipt({
     now,
     ipAddress || '',
     validated.purchaseDate,
+    validated.purchaseTime,
     validated.storeCode,
+    validated.storeName,
     null,
     validated.productDescription,
     validated.receiptSource,

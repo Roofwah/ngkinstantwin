@@ -115,6 +115,8 @@ try { db.exec('ALTER TABLE claims ADD COLUMN productDescription TEXT'); } catch 
 try { db.exec('ALTER TABLE claims ADD COLUMN receiptSource TEXT'); } catch {}
 try { db.exec('ALTER TABLE claims ADD COLUMN verificationMethod TEXT'); } catch {}
 try { db.exec('ALTER TABLE claims ADD COLUMN receiptValidationStatus TEXT'); } catch {}
+try { db.exec('ALTER TABLE claims ADD COLUMN storeName TEXT'); } catch {}
+try { db.exec('ALTER TABLE claims ADD COLUMN purchaseTime TEXT'); } catch {}
 try { db.exec('CREATE UNIQUE INDEX idx_claims_receipt ON claims(receiptNumber)'); } catch {}
 try { db.exec('CREATE INDEX idx_claims_mobile ON claims(mobile)'); } catch {}
 try { db.exec('CREATE INDEX idx_claims_status ON claims(claimStatus)'); } catch {}
