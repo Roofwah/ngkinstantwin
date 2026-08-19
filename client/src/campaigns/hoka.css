@@ -52,7 +52,7 @@
 }
 
 .hoka-page--enter.hoka-page--verify .hoka-body {
-  padding: 14svh 16px 28px;
+  padding: calc(24svh + 48px) 16px 28px;
 }
 
 .hoka-form-panel {

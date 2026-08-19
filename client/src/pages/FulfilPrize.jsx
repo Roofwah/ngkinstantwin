@@ -41,7 +41,7 @@ export default function FulfilPrize() {
 
   return (
     <HokaCampaignShell
-      artSrc="/campaigns/hoka/iwbg.jpg"
+      artSrc="/campaigns/hoka/redem.jpg"
       heroClassName="hoka-hero--enter"
     >
       <div className="hoka-form-panel">
