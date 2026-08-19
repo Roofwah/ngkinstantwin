@@ -4,6 +4,9 @@ import { QRCodeSVG } from 'qrcode.react';
 import { issueToken, pollTokenStatus, getDeviceConfig, setDemoCampaign } from '../api';
 import { getPukHardware, listPukHardware, pukHardwarePath } from '../config/pukHardware';
 
+const PUK2_ENTER_QR_URL =
+  'https://pure-random-instant-win-production.up.railway.app/enter?device=PR-PUK2-001';
+
 // ─── Device states ────────────────────────────────────────────────
 const STATE = {
   IDLE:       'IDLE',
@@ -255,7 +258,10 @@ export default function DeviceSimulator() {
     setErrorMsg('');
 
     try {
-      const data = await issueToken(DEVICE_CODE);
+      const staticPuk2Qr = hw.id === 'puk2';
+      const data = staticPuk2Qr
+        ? { token: DEVICE_CODE, url: PUK2_ENTER_QR_URL }
+        : await issueToken(DEVICE_CODE);
       setTokenData(data);
       setDeviceState(STATE.READY);
       blinkLed('#00e676');
@@ -279,6 +285,8 @@ export default function DeviceSimulator() {
           }
         }
       }, 1000);
+
+      if (staticPuk2Qr) return;
 
       pollRef.current = setInterval(async () => {
         const s = stateRef.current;

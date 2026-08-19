@@ -81,59 +81,98 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;');
 }
 
+/** Railway/dotenv often store `"value"` with quotes — Resend rejects that From. */
+function envVal(name, fallback = '') {
+  const raw = process.env[name];
+  const s = (raw == null || raw === '' ? fallback : String(raw)).trim();
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    return s.slice(1, -1).trim();
+  }
+  return s;
+}
+
+function resendConfigured() {
+  return Boolean(envVal('RESEND_API_KEY'));
+}
+
 async function sendWinnerEmail(claim) {
-  const apiKey = (process.env.RESEND_API_KEY || '').trim();
-  const to = (process.env.WINNER_NOTIFY_EMAIL || 'chris@flowmarketing.com.au').trim();
-  const from = (process.env.RESEND_FROM || 'Cotswold Instant Win <onboarding@resend.dev>').trim();
+  const apiKey = envVal('RESEND_API_KEY');
+  const to = envVal('WINNER_NOTIFY_EMAIL', 'chris@flowmarketing.com.au');
+  const from = envVal('RESEND_FROM', 'Cotswold Instant Win <onboarding@resend.dev>');
 
   if (!apiKey) {
     console.warn(`[resend] RESEND_API_KEY not set — would email ${to} for ${claim.claimId}`);
     return { ok: false, skipped: true, error: 'Resend not configured' };
   }
 
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      subject: 'Cotswold Birmingham — Instant Winner',
-      html: winnerEmailHtml(claim),
-    }),
-  });
+  console.log(`[resend] sending winner email for ${claim.claimId} from ${from} to ${to}`);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  let response;
+  try {
+    response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject: 'Cotswold Birmingham — Instant Winner',
+        html: winnerEmailHtml(claim),
+      }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timer);
+    const error = err.name === 'AbortError' ? 'Resend timed out' : err.message;
+    console.error(`[resend] ${error} for ${claim.claimId}`);
+    return { ok: false, skipped: false, error };
+  }
+  clearTimeout(timer);
+
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     const error = data.message || data.error || `Resend HTTP ${response.status}`;
+    console.error(`[resend] failed for ${claim.claimId}: ${error}`, data);
     return { ok: false, skipped: false, error };
   }
+  console.log(`[resend] sent ${data.id || 'ok'} for ${claim.claimId}`);
   return { ok: true, skipped: false };
 }
 
 async function notifyHokaWinner(claimId) {
   const claim = db.prepare('SELECT * FROM claims WHERE claimId = ?').get(claimId);
-  if (!claim || !claim.redemptionCode) return;
+  if (!claim || !claim.redemptionCode) {
+    console.warn(`[hoka] skip winner notify — missing claim or redemption code (${claimId})`);
+    return;
+  }
 
   let smsStatus = 'failed';
   let emailStatus = 'failed';
   const errors = [];
 
-  try {
-    const sms = await sendBirdSms(claim.mobile, winnerSmsBody(claim), { required: true });
+  const [smsResult, emailResult] = await Promise.allSettled([
+    sendBirdSms(claim.mobile, winnerSmsBody(claim), { required: true }),
+    sendWinnerEmail(claim),
+  ]);
+
+  if (smsResult.status === 'fulfilled') {
+    const sms = smsResult.value;
     smsStatus = sms.ok ? (sms.demo || sms.skipped ? 'skipped' : 'sent') : (sms.skipped ? 'skipped' : 'failed');
     if (!sms.ok) errors.push(`sms: ${sms.error}`);
-  } catch (err) {
-    errors.push(`sms: ${err.message}`);
+  } else {
+    errors.push(`sms: ${smsResult.reason?.message || smsResult.reason}`);
   }
 
-  try {
-    const email = await sendWinnerEmail(claim);
+  if (emailResult.status === 'fulfilled') {
+    const email = emailResult.value;
     emailStatus = email.ok ? 'sent' : (email.skipped ? 'skipped' : 'failed');
     if (!email.ok) errors.push(`email: ${email.error}`);
-  } catch (err) {
-    errors.push(`email: ${err.message}`);
+  } else {
+    errors.push(`email: ${emailResult.reason?.message || emailResult.reason}`);
   }
 
   db.prepare(`
@@ -167,4 +206,4 @@ function notifyHokaWinnerSafe(claimId) {
   });
 }
 
-module.exports = { notifyHokaWinner, notifyHokaWinnerSafe, winnerSmsBody };
+module.exports = { notifyHokaWinner, notifyHokaWinnerSafe, winnerSmsBody, resendConfigured };

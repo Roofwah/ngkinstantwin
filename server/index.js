@@ -6,6 +6,7 @@ const cors = require('cors');
 const db = require('./db');
 const { getBaseUrl, getPublicBaseUrlWarning } = require('./lib/baseUrl');
 const { getOtpMode, hasBirdConfig, birdEnvStatus } = require('./lib/otpMode');
+const { resendConfigured } = require('./services/winnerNotify');
 const { generateManifest } = require('./services/manifestGenerator');
 const { getActiveDemoCampaignId, DEMO_CAMPAIGN_IDS } = require('./services/demoCampaign');
 const { usesNthWinDemo, getDemoControl, loadNominatedIntoPool } = require('./services/demoControl');
@@ -71,6 +72,7 @@ app.get('/api/health', (req, res) => {
     otpMode: getOtpMode(),
     birdConfigured: hasBirdConfig(),
     birdEnv: birdEnvStatus(),
+    resendConfigured: resendConfigured(),
     database,
     baseUrl: getBaseUrl(),
   };
