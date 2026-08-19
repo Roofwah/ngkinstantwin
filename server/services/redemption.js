@@ -34,6 +34,29 @@ function attachRedemption(claimId) {
   throw new Error('Could not allocate a unique redemption code');
 }
 
+/** Ensure a winner claim has both redemption code and fulfilment token before notify. */
+function ensureWinnerRedemption(claimId) {
+  let claim = db.prepare('SELECT * FROM claims WHERE claimId = ?').get(claimId);
+  if (!claim) return null;
+
+  if (claim.redemptionCode && claim.fulfilmentToken) {
+    return claim;
+  }
+
+  if (claim.redemptionCode && !claim.fulfilmentToken) {
+    const fulfilmentToken = generateFulfilmentToken();
+    db.prepare(`
+      UPDATE claims
+      SET fulfilmentToken = ?, redemptionStatus = 'AWAITING_FULFILMENT'
+      WHERE claimId = ?
+    `).run(fulfilmentToken, claimId);
+    return db.prepare('SELECT * FROM claims WHERE claimId = ?').get(claimId);
+  }
+
+  attachRedemption(claimId);
+  return db.prepare('SELECT * FROM claims WHERE claimId = ?').get(claimId);
+}
+
 function getClaimByFulfilmentToken(token) {
   if (!token) return null;
   return db.prepare('SELECT * FROM claims WHERE fulfilmentToken = ?').get(token);
@@ -65,6 +88,7 @@ module.exports = {
   generateRedemptionCode,
   generateFulfilmentToken,
   attachRedemption,
+  ensureWinnerRedemption,
   getClaimByFulfilmentToken,
   markFulfilled,
 };

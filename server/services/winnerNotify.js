@@ -3,6 +3,7 @@ const { log } = require('./auditLogger');
 const { sendBirdSms } = require('../lib/birdSms');
 const { getBaseUrl, getLanIpv4 } = require('../lib/baseUrl');
 const { HOKA_STORE_NAME, maskMobile } = require('../lib/hokaCampaign');
+const { ensureWinnerRedemption } = require('./redemption');
 
 function firstName(fullName) {
   return String(fullName || 'there').trim().split(/\s+/)[0] || 'there';
@@ -35,7 +36,55 @@ function appBaseUrl() {
 }
 
 function fulfilUrl(claim) {
+  if (!claim?.fulfilmentToken) return null;
   return `${appBaseUrl()}/fulfil/${claim.fulfilmentToken}`;
+}
+
+function fulfilButtonBlock(url) {
+  const safeUrl = escapeHtml(url);
+  return `
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:28px auto 12px;">
+      <tr>
+        <td align="center" bgcolor="#dfff00" style="border-radius:8px;">
+          <a href="${safeUrl}" target="_blank" rel="noopener noreferrer"
+             style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:0.08em;color:#0a1628;text-decoration:none;background:#dfff00;border-radius:8px;">
+            FULFIL PRIZE
+          </a>
+        </td>
+      </tr>
+    </table>
+    <p style="font-size:12px;color:#9aa6b8;text-align:center;margin:0 0 8px;">
+      Tap the button to open the staff fulfilment page, or use this link:
+    </p>
+    <p style="font-size:12px;text-align:center;margin:0 0 8px;word-break:break-all;">
+      <a href="${safeUrl}" style="color:#dfff00;text-decoration:underline;">${safeUrl}</a>
+    </p>
+    <p style="font-size:12px;color:#9aa6b8;text-align:center;margin:0;">
+      The button opens the fulfilment page. It does not mark the prize fulfilled.
+    </p>`;
+}
+
+function winnerEmailText(claim) {
+  const url = fulfilUrl(claim);
+  const value = Number(claim.spendAmount || 0).toFixed(2);
+  const lines = [
+    'COTSWOLD OUTDOOR × HOKA — Instant Winner',
+    '',
+    `Store: ${claim.storeName || HOKA_STORE_NAME}`,
+    `Winner: ${claim.customerName || '—'}`,
+    `Mobile: ${maskMobile(claim.mobile)}`,
+    `Purchase: ${claim.selectedBrand || '—'}`,
+    `Purchase Value: $${value}`,
+    `Prize: ${claim.prizeName || '—'}`,
+    `Redemption Code: ${claim.redemptionCode || '—'}`,
+    'Status: AWAITING FULFILMENT',
+    '',
+  ];
+  if (url) {
+    lines.push('FULFIL PRIZE:', url, '');
+    lines.push('Open the link above to confirm fulfilment on the staff page.');
+  }
+  return lines.join('\n');
 }
 
 function winnerEmailHtml(claim) {
@@ -57,10 +106,7 @@ function winnerEmailHtml(claim) {
       ${row('Redemption Code', claim.redemptionCode || '—')}
       ${row('Status', 'AWAITING FULFILMENT')}
     </table>
-    <p style="text-align:center;margin:28px 0 8px;">
-      <a href="${url}" style="display:inline-block;background:#dfff00;color:#0a1628;text-decoration:none;font-weight:700;letter-spacing:0.08em;padding:14px 28px;border-radius:8px;">FULFIL PRIZE</a>
-    </p>
-    <p style="font-size:12px;color:#9aa6b8;text-align:center;">This button opens the fulfilment page. It does not mark the prize fulfilled.</p>
+    ${url ? fulfilButtonBlock(url) : '<p style="color:#ff8a80;text-align:center;">Fulfilment link unavailable — contact support.</p>'}
   </div>
 </body>
 </html>`;
@@ -122,6 +168,7 @@ async function sendWinnerEmail(claim) {
         to: [to],
         subject: 'Cotswold Birmingham — Instant Winner',
         html: winnerEmailHtml(claim),
+        text: winnerEmailText(claim),
       }),
       signal: controller.signal,
     });
@@ -144,9 +191,16 @@ async function sendWinnerEmail(claim) {
 }
 
 async function notifyHokaWinner(claimId) {
-  const claim = db.prepare('SELECT * FROM claims WHERE claimId = ?').get(claimId);
-  if (!claim || !claim.redemptionCode) {
-    console.warn(`[hoka] skip winner notify — missing claim or redemption code (${claimId})`);
+  let claim;
+  try {
+    claim = ensureWinnerRedemption(claimId);
+  } catch (err) {
+    console.error(`[hoka] redemption ensure failed for ${claimId}:`, err.message);
+    return;
+  }
+
+  if (!claim || !claim.redemptionCode || !claim.fulfilmentToken) {
+    console.warn(`[hoka] skip winner notify — missing claim or fulfilment link (${claimId})`);
     return;
   }
 
@@ -186,6 +240,7 @@ async function notifyHokaWinner(claimId) {
       emailStatus,
       error: errors.join('; ') || undefined,
       redemptionCode: claim.redemptionCode,
+      fulfilmentUrl: fulfilUrl(claim),
     },
   });
 
@@ -206,4 +261,11 @@ function notifyHokaWinnerSafe(claimId) {
   });
 }
 
-module.exports = { notifyHokaWinner, notifyHokaWinnerSafe, winnerSmsBody, resendConfigured };
+module.exports = {
+  notifyHokaWinner,
+  notifyHokaWinnerSafe,
+  winnerSmsBody,
+  winnerEmailHtml,
+  winnerEmailText,
+  resendConfigured,
+};
