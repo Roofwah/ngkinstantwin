@@ -122,15 +122,13 @@ export default function HokaEntryForm({
 
   const win = isHokaWin(reveal?.result);
   const first = normaliseName(fullName).split(/\s+/)[0];
-  const isEnterLayout = step === STEPS.FORM || step === STEPS.OTP || step === STEPS.SUBMITTING || step === STEPS.REVEAL;
-  const revealArt = step === STEPS.FORM
-    ? artSrc
-    : '/campaigns/hoka/verify.jpg';
+  const isForm = step === STEPS.FORM;
+  const revealArt = isForm ? artSrc : '/campaigns/hoka/verify.jpg';
 
   return (
     <HokaCampaignShell
       artSrc={revealArt}
-      heroClassName={isEnterLayout ? 'hoka-hero--enter' : ''}
+      heroClassName={isForm ? 'hoka-hero--enter' : 'hoka-hero--enter hoka-hero--verify'}
     >
       <HokaConfetti active={step === STEPS.REVEAL && win} />
       {step === STEPS.FORM && (

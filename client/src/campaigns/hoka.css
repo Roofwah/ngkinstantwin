@@ -51,6 +51,10 @@
   background: none;
 }
 
+.hoka-page--enter.hoka-page--verify .hoka-body {
+  padding: 14svh 16px 28px;
+}
+
 .hoka-form-panel {
   background: rgba(7, 20, 40, 0.92);
   padding: 18px 16px 16px;

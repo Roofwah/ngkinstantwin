@@ -13,7 +13,7 @@ export default function HokaResultView({ claim }) {
   return (
     <HokaCampaignShell
       artSrc="/campaigns/hoka/verify.jpg"
-      heroClassName="hoka-hero--enter"
+      heroClassName="hoka-hero--enter hoka-hero--verify"
     >
       <HokaConfetti active={win} />
       <div className="hoka-form-panel">

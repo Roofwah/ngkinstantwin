@@ -16,6 +16,7 @@ function publicFulfilment(claim) {
     redemptionCode: claim.redemptionCode || '—',
     status: claim.redemptionStatus || 'AWAITING_FULFILMENT',
     fulfilledAt: claim.fulfilledAt || null,
+    fulfilledBy: claim.fulfilledBy || null,
   };
 }
 
@@ -26,7 +27,7 @@ router.get('/:token', (req, res) => {
 });
 
 router.post('/:token/complete', (req, res) => {
-  const outcome = markFulfilled(req.params.token);
+  const outcome = markFulfilled(req.params.token, req.body?.fulfilledBy);
   if (outcome.error) return res.status(outcome.status || 400).json({ error: outcome.error });
 
   if (!outcome.already) {
@@ -35,6 +36,7 @@ router.post('/:token/complete', (req, res) => {
       details: {
         redemptionCode: outcome.claim.redemptionCode,
         fulfilledAt: outcome.claim.fulfilledAt,
+        fulfilledBy: outcome.claim.fulfilledBy,
       },
     });
   }

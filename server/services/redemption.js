@@ -39,17 +39,26 @@ function getClaimByFulfilmentToken(token) {
   return db.prepare('SELECT * FROM claims WHERE fulfilmentToken = ?').get(token);
 }
 
-function markFulfilled(token) {
+function markFulfilled(token, fulfilledBy) {
   const claim = getClaimByFulfilmentToken(token);
   if (!claim) return { error: 'Fulfilment record not found', status: 404 };
   if (claim.redemptionStatus === 'FULFILLED') {
     return { already: true, claim };
   }
+  const name = String(fulfilledBy || '').trim();
+  if (name.length < 2) {
+    return { error: 'Enter the name of the person who fulfilled the prize', status: 400 };
+  }
   const now = Date.now();
   db.prepare(`
-    UPDATE claims SET redemptionStatus = 'FULFILLED', fulfilledAt = ? WHERE fulfilmentToken = ?
-  `).run(now, token);
-  return { already: false, claim: { ...claim, redemptionStatus: 'FULFILLED', fulfilledAt: now } };
+    UPDATE claims
+    SET redemptionStatus = 'FULFILLED', fulfilledAt = ?, fulfilledBy = ?
+    WHERE fulfilmentToken = ?
+  `).run(now, name, token);
+  return {
+    already: false,
+    claim: { ...claim, redemptionStatus: 'FULFILLED', fulfilledAt: now, fulfilledBy: name },
+  };
 }
 
 module.exports = {

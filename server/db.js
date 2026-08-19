@@ -125,6 +125,7 @@ try { db.exec('ALTER TABLE claims ADD COLUMN fulfilledAt INTEGER'); } catch {}
 try { db.exec('ALTER TABLE claims ADD COLUMN fulfilmentToken TEXT'); } catch {}
 try { db.exec('ALTER TABLE claims ADD COLUMN winnerSmsStatus TEXT'); } catch {}
 try { db.exec('ALTER TABLE claims ADD COLUMN winnerEmailStatus TEXT'); } catch {}
+try { db.exec('ALTER TABLE claims ADD COLUMN fulfilledBy TEXT'); } catch {}
 try { db.exec('ALTER TABLE manifest ADD COLUMN campaignId TEXT'); } catch {}
 try { db.exec('CREATE INDEX idx_manifest_campaign ON manifest(campaignId)'); } catch {}
 try { db.exec('CREATE INDEX idx_claims_campaign ON claims(campaignId)'); } catch {}

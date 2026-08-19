@@ -217,9 +217,11 @@ export async function getFulfilment(token) {
   return handleResponse(res);
 }
 
-export async function completeFulfilment(token) {
+export async function completeFulfilment(token, fulfilledBy) {
   const res = await fetch(`${BASE}/fulfil/${encodeURIComponent(token)}/complete`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fulfilledBy }),
   });
   return handleResponse(res);
 }
