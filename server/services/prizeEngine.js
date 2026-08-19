@@ -1,38 +1,64 @@
 const db = require('../db');
+const { usesNthWinDemo, isWinSlot } = require('./demoControl');
 
-function getTotalClaimCount() {
-  return db.prepare('SELECT COUNT(*) as count FROM claims').get().count; // includes current claim (inserted before assignPrize)
+const DEFAULT_CAMPAIGN_ID = 'niterra-ngk-2026';
+
+function getTotalClaimCount(campaignId) {
+  if (!campaignId || campaignId === DEFAULT_CAMPAIGN_ID) {
+    return db.prepare(`
+      SELECT COUNT(*) as count FROM claims
+      WHERE campaignId = ? OR campaignId IS NULL OR campaignId = ''
+    `).get(DEFAULT_CAMPAIGN_ID).count;
+  }
+  return db.prepare('SELECT COUNT(*) as count FROM claims WHERE campaignId = ?').get(campaignId).count;
 }
 
-function assignPrize(claimId, claimTime) {
+function assignPrize(claimId, claimTime, campaignId = DEFAULT_CAMPAIGN_ID) {
+  const resolvedCampaignId = campaignId || DEFAULT_CAMPAIGN_ID;
   const demoMode = process.env.DEMO_MODE === 'true';
 
   if (demoMode) {
-    return assignDemoMode(claimId);
+    return assignDemoMode(claimId, resolvedCampaignId);
   }
 
-  // Real mode: find an open prize window matching the claim timestamp
   const prize = db.prepare(`
     SELECT * FROM manifest
     WHERE status = 'AVAILABLE'
+      AND campaignId = ?
       AND winningTimestamp <= ?
       AND (winningTimestamp + winningWindowSeconds * 1000) >= ?
     ORDER BY winningTimestamp DESC
     LIMIT 1
-  `).get(claimTime, claimTime);
+  `).get(resolvedCampaignId, claimTime, claimTime);
 
   if (!prize) return { result: 'NOT_WINNER', prize: null };
 
-  db.prepare(`UPDATE manifest SET status = 'ASSIGNED', assignedClaimId = ? WHERE prizeId = ?`)
-    .run(claimId, prize.prizeId);
+  db.prepare('UPDATE manifest SET status = ?, assignedClaimId = ? WHERE prizeId = ?')
+    .run('ASSIGNED', claimId, prize.prizeId);
 
   return { result: tierToResult(prize.tier), prize };
 }
 
-// Demo mode: every 2nd or 5th = Tier 1 (~60% win), every 12th = Tier 2, every 30th = Tier 3
-// Counter is based on total claims submitted (including this one, hence +1)
-function assignDemoMode(claimId) {
-  const count = getTotalClaimCount(); // claim already inserted, so this is the true 1-based position
+function assignAndReturn(claimId, prize) {
+  db.prepare('UPDATE manifest SET status = ?, assignedClaimId = ? WHERE prizeId = ?')
+    .run('ASSIGNED', claimId, prize.prizeId);
+  return { result: tierToResult(prize.tier), prize };
+}
+
+function assignDemoMode(claimId, campaignId) {
+  const count = getTotalClaimCount(campaignId);
+
+  if (usesNthWinDemo(campaignId)) {
+    if (!isWinSlot(campaignId, count)) return { result: 'NOT_WINNER', prize: null };
+    const prize = db.prepare(`
+      SELECT * FROM manifest
+      WHERE status = 'AVAILABLE' AND campaignId = ?
+      ORDER BY createdAt ASC, prizeId ASC
+      LIMIT 1
+    `).get(campaignId);
+    if (!prize) return { result: 'NOT_WINNER', prize: null };
+    return assignAndReturn(claimId, prize);
+  }
 
   let targetTier = null;
   if (count % 10 === 0) targetTier = 3;
@@ -42,15 +68,12 @@ function assignDemoMode(claimId) {
   if (targetTier === null) return { result: 'NOT_WINNER', prize: null };
 
   const prize = db.prepare(`
-    SELECT * FROM manifest WHERE status = 'AVAILABLE' AND tier = ? LIMIT 1
-  `).get(targetTier);
+    SELECT * FROM manifest WHERE status = 'AVAILABLE' AND tier = ? AND campaignId = ? LIMIT 1
+  `).get(targetTier, campaignId);
 
   if (!prize) return { result: 'NOT_WINNER', prize: null };
 
-  db.prepare(`UPDATE manifest SET status = 'ASSIGNED', assignedClaimId = ? WHERE prizeId = ?`)
-    .run(claimId, prize.prizeId);
-
-  return { result: tierToResult(prize.tier), prize };
+  return assignAndReturn(claimId, prize);
 }
 
 function tierToResult(tier) {

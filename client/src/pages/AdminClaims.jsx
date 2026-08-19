@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import { getAdminClaims } from '../api';
+import { useAdminCampaign } from '../admin/adminCampaign';
 
 const RESULT_BADGE = {
   NOT_WINNER:            'badge--blue',
@@ -20,32 +21,41 @@ const STATUS_BADGE = {
 };
 
 export default function AdminClaims() {
+  return (
+    <AdminLayout title="Claims">
+      <ClaimsBody />
+    </AdminLayout>
+  );
+}
+
+function ClaimsBody() {
+  const { campaignId } = useAdminCampaign();
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
-  useEffect(() => {
-    getAdminClaims()
+  function refresh() {
+    setLoading(true);
+    getAdminClaims(campaignId)
       .then(d => { setClaims(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => { refresh(); }, [campaignId]);
 
   const filtered = claims.filter(c => {
     const matchSearch =
       !search ||
-      c.claimId.includes(search) ||
-      c.mobile.includes(search) ||
-      c.receiptNumber.toLowerCase().includes(search.toLowerCase());
+      (c.claimId || '').includes(search) ||
+      (c.mobile || '').includes(search) ||
+      (c.receiptNumber || '').toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'ALL' || c.claimStatus === statusFilter;
     return matchSearch && matchStatus;
   });
 
   return (
-    <AdminLayout title="Claims" actions={
-      <button className="btn btn--ghost btn--sm" onClick={() => { setLoading(true); getAdminClaims().then(d => { setClaims(d); setLoading(false); }); }}>↻ Refresh</button>
-    }>
-      {/* Filters */}
+    <>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
         <input
           type="text"
@@ -117,6 +127,6 @@ export default function AdminClaims() {
           </table>
         </div>
       )}
-    </AdminLayout>
+    </>
   );
 }

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getClaim } from '../api';
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { getClaim, postLabEvent } from '../api';
+import HokaResultView from '../components/HokaResultView';
+import { isHokaCampaign } from '../campaigns/hokaCotswold';
 
 const CONFIGS = {
   TIER_1_INSTANT_WIN: {
@@ -11,7 +13,8 @@ const CONFIGS = {
     headline: 'You Won!',
     headlineColor: 'var(--green)',
     body: 'Congratulations! Your Tier 1 instant prize has been confirmed. You will be contacted on the mobile number you provided to arrange delivery.',
-    nextSteps: 'Your prize will be dispatched within 5–7 business days. No further action required.',
+    nextSteps: 'Your prize will be dispatched within 5–7 business days.',
+    deliveryLinkLabel: 'Click here to enter your delivery details.',
   },
   TIER_2_PROVISIONAL_WIN: {
     icon: null,
@@ -48,14 +51,26 @@ const CONFIGS = {
 export default function Result() {
   const { claimId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const labSession = searchParams.get('labSession');
   const [claim, setClaim] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getClaim(claimId)
-      .then(d => { setClaim(d); setLoading(false); })
+      .then(d => {
+        setClaim(d);
+        setLoading(false);
+        if (labSession) {
+          postLabEvent(labSession, 'reporting', {
+            claimId,
+            result: d.result,
+            prizeName: d.prizeName,
+          }).catch(() => {});
+        }
+      })
       .catch(() => navigate('/'));
-  }, [claimId, navigate]);
+  }, [claimId, navigate, labSession]);
 
   if (loading) {
     return (
@@ -66,6 +81,9 @@ export default function Result() {
   }
 
   const result = claim?.result || 'NOT_WINNER';
+  if (isHokaCampaign({ id: claim?.campaignId }) || claim?.redemptionCode || claim?.verificationMethod === 'hoka_entry') {
+    return <HokaResultView claim={claim} />;
+  }
   const cfg = CONFIGS[result] || CONFIGS.NOT_WINNER;
 
   return (
@@ -86,7 +104,9 @@ export default function Result() {
             </div>
 
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.2rem', fontWeight: 700, color: cfg.headlineColor, marginBottom: 8, letterSpacing: '0.02em' }}>
-              {cfg.headline}
+              {claim?.customerName && result !== 'NOT_WINNER'
+                ? `Congratulations, ${claim.customerName.split(' ')[0]}!`
+                : cfg.headline}
             </h1>
 
             {claim?.prizeName && result !== 'NOT_WINNER' && (
@@ -108,6 +128,7 @@ export default function Result() {
             <div style={{ display: 'grid', gap: 10, fontSize: '0.88rem' }}>
               {[
                 { label: 'Claim ID', value: <span className="mono">{claimId?.slice(0,8)}…</span> },
+                ...(claim?.customerName ? [{ label: 'Name', value: claim.customerName }] : []),
                 { label: 'Mobile', value: claim?.mobile?.slice(0,4) + '****' + claim?.mobile?.slice(-2) },
                 { label: 'Receipt #', value: claim?.receiptNumber },
                 { label: 'Brand', value: claim?.selectedBrand },
@@ -125,7 +146,12 @@ export default function Result() {
 
           {/* Next steps */}
           <div className="alert alert--info mt-16">
-            <strong>Next steps:</strong> {cfg.nextSteps}
+            <strong>Next steps:</strong> {cfg.nextSteps}{' '}
+            {cfg.deliveryLinkLabel && (
+              <Link to={`/delivery/${claimId}${labSession ? `?labSession=${encodeURIComponent(labSession)}` : ''}`}>
+                {cfg.deliveryLinkLabel}
+              </Link>
+            )}
           </div>
 
           {/* Compliance */}

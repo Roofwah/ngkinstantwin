@@ -7,6 +7,7 @@ const fs = require('fs');
 const db = require('../db');
 const { assignPrize } = require('../services/prizeEngine');
 const audit = require('../services/auditLogger');
+const { getDemoControl } = require('../services/demoControl');
 
 const uploadsDir = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
@@ -122,7 +123,15 @@ router.post('/', upload.single('receipt'), (req, res) => {
 router.get('/:claimId', (req, res) => {
   const claim = db.prepare('SELECT * FROM claims WHERE claimId = ?').get(req.params.claimId);
   if (!claim) return res.status(404).json({ error: 'Claim not found' });
-  const { ipAddress, ...safe } = claim;
+  const { ipAddress, fulfilmentToken, ...safe } = claim;
+  if (safe.mobile) {
+    safe.mobile = String(safe.mobile).slice(0, 4) + '****' + String(safe.mobile).slice(-2);
+  }
+  const demo = getDemoControl(claim.campaignId);
+  if (demo.enabled && demo.sweepstakesOnLose) {
+    safe.sweepstakesOnLose = true;
+    safe.sweepstakesMessage = demo.sweepstakesMessage;
+  }
   res.json(safe);
 });
 
@@ -147,7 +156,7 @@ router.post('/:claimId/reveal', (req, res) => {
   }
 
   const updated = db.prepare('SELECT * FROM claims WHERE claimId = ?').get(req.params.claimId);
-  const { ipAddress: _, ...safe } = updated;
+  const { ipAddress: _, fulfilmentToken, ...safe } = updated;
   res.json(safe);
 });
 

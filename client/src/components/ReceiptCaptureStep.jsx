@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { deriveStoreCodeFromInvoice, parseReceiptFile } from '../lib/receiptParse';
+import { postLabEvent } from '../api';
 
 const EMPTY = {
   invoiceNumber: '',
@@ -34,7 +35,7 @@ function FieldIssue({ issue }) {
 /**
  * Receipt capture after OTP — camera, gallery, PDF, or manual fallback.
  */
-export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submitting }) {
+export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submitting, labSessionId = null }) {
   const cameraRef = useRef(null);
   const galleryRef = useRef(null);
   const pdfRef = useRef(null);
@@ -47,7 +48,7 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
   const [form, setForm] = useState(EMPTY);
   const [readFlags, setReadFlags] = useState({});
   const [readIssues, setReadIssues] = useState([]);
-  const [spendNote, setSpendNote] = useState('');
+  const [timeOnReceipt, setTimeOnReceipt] = useState(false);
   const [invoiceTotal, setInvoiceTotal] = useState(null);
   const [error, setError] = useState('');
   const [scanning, setScanning] = useState(false);
@@ -70,17 +71,8 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
   function applyParsedFields(parsed) {
     setReadFlags(parsed.read || {});
     setReadIssues(parsed.issues || []);
+    setTimeOnReceipt(Boolean(parsed.timeOnReceipt));
     setInvoiceTotal(parsed.invoiceTotal || null);
-
-    let note = '';
-    if (parsed.spendConfidence === 'brand_line') {
-      note = 'Eligible brand line item(s) detected on the receipt.';
-    } else if (parsed.spendConfidence === 'single_line') {
-      note = 'One product line was read — confirm the amount is for qualifying NGK, NTK or KYB products (not other items on the receipt).';
-    } else if (!parsed.spendAmount && parsed.invoiceTotal) {
-      note = `Invoice total $${parsed.invoiceTotal} was read, but qualifying product lines could not be matched. Enter the amount spent on NGK, NTK or KYB products.`;
-    }
-    setSpendNote(note);
 
     setForm({
       invoiceNumber: parsed.invoiceNumber || '',
@@ -90,7 +82,7 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
       purchaseTime: parsed.purchaseTime || '',
       productDescription: parsed.productDescription || '',
       selectedBrand: parsed.detectedBrand || '',
-      spendAmount: parsed.spendAmount || '',
+      spendAmount: parsed.spendAmount || (parsed.invoiceTotal ? String(parsed.invoiceTotal) : ''),
     });
   }
 
@@ -101,9 +93,15 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
 
   async function runParse(file) {
     setScanning(true);
+    if (labSessionId) {
+      postLabEvent(labSessionId, 'reading_receipt').catch(() => {});
+    }
     try {
       const parsed = await parseReceiptFile(file, brands);
       applyParsedFields(parsed);
+      if (labSessionId) {
+        postLabEvent(labSessionId, 'purchase_validated').catch(() => {});
+      }
     } catch {
       setReadFlags({});
       setReadIssues([{
@@ -124,8 +122,12 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
     setError('');
     setReadFlags({});
     setReadIssues([]);
-    setSpendNote('');
+    setTimeOnReceipt(false);
     setInvoiceTotal(null);
+
+    if (labSessionId) {
+      postLabEvent(labSessionId, 'receipt_received', { receiptSource: source }).catch(() => {});
+    }
 
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
@@ -149,7 +151,7 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
     setFileName('');
     setReadFlags({});
     setReadIssues([]);
-    setSpendNote('');
+    setTimeOnReceipt(false);
     setInvoiceTotal(null);
     setForm(EMPTY);
   }
@@ -174,6 +176,9 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
     }
     if (!form.purchaseDate && !form.purchaseDateDisplay) {
       return 'Purchase date is required';
+    }
+    if (timeOnReceipt && !form.purchaseTime) {
+      return 'Purchase time is required — your receipt includes a TIME stamp';
     }
     if (!form.selectedBrand) {
       return 'Please select the brand purchased';
@@ -205,7 +210,7 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
     onSubmit({
       invoiceNumber,
       purchaseDate: form.purchaseDate || form.purchaseDateDisplay,
-      purchaseTime: form.purchaseTime || null,
+      purchaseTime: timeOnReceipt ? (form.purchaseTime || null) : null,
       storeName: form.storeName || null,
       storeCode: deriveStoreCodeFromInvoice(invoiceNumber),
       productDescription: form.productDescription.trim(),
@@ -226,7 +231,7 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
       <p style={{ color: 'var(--text-2)', fontSize: '0.88rem', marginBottom: 16, lineHeight: 1.45 }}>
         {mode === 'manual'
           ? 'Enter your receipt details manually. This entry will require verification before any prize is fulfilled.'
-          : 'Photograph the full receipt header and product lines. We\'ll read what we can — you only need to fill in what\'s missing.'}
+          : 'Photograph the full receipt header and product lines.'}
       </p>
 
       {error && <div className="alert alert--error" style={{ marginBottom: 14 }}>{error}</div>}
@@ -280,11 +285,11 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
           <p className="receipt-readout__title">Read from receipt</p>
           {readFlags.invoiceNumber && <ReadoutRow label="Invoice number" value={form.invoiceNumber} />}
           {readFlags.storeName && <ReadoutRow label="Store" value={form.storeName} />}
-          {(readFlags.purchaseDate || readFlags.purchaseTime) && (
-            <ReadoutRow label="Date" value={dateTimeDisplay} />
+          {(readFlags.purchaseDate || (timeOnReceipt && readFlags.purchaseTime)) && (
+            <ReadoutRow label={timeOnReceipt ? 'Date & time' : 'Date'} value={dateTimeDisplay} />
           )}
           {readFlags.spendAmount && (
-            <ReadoutRow label="Amount (line item)" value={`$${form.spendAmount}`} />
+            <ReadoutRow label="Amount" value={`$${form.spendAmount}`} />
           )}
           {invoiceTotal && !readFlags.spendAmount && (
             <ReadoutRow label="Invoice total" value={`$${invoiceTotal}`} />
@@ -311,18 +316,18 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
         </div>
       )}
 
-      {(!readFlags.purchaseDate || !readFlags.purchaseTime) && (mode === 'manual' || receiptFile) && (
+      {(!readFlags.purchaseDate || (timeOnReceipt && !readFlags.purchaseTime)) && (mode === 'manual' || receiptFile) && (
         <div className="field">
-          <label>Date &amp; time *</label>
+          <label>{timeOnReceipt ? 'Date & time *' : 'Date *'}</label>
           {!readFlags.purchaseDate && (
             <input type="date" value={form.purchaseDate}
               onChange={e => setField('purchaseDate', e.target.value)} style={{ marginBottom: 8 }} />
           )}
-          {!readFlags.purchaseTime && (
+          {timeOnReceipt && !readFlags.purchaseTime && (
             <input type="time" value={form.purchaseTime}
               onChange={e => setField('purchaseTime', e.target.value)} />
           )}
-          <FieldIssue issue={issueMap.purchaseDate || issueMap.purchaseTime} />
+          <FieldIssue issue={issueMap.purchaseDate || (timeOnReceipt ? issueMap.purchaseTime : null)} />
         </div>
       )}
 
@@ -350,7 +355,6 @@ export default function ReceiptCaptureStep({ brands, onSubmit, onBack, submittin
       {(!readFlags.spendAmount || mode === 'manual') && (
         <div className="field">
           <label>Amount — qualifying products ($) *</label>
-          {spendNote && <p className="field-hint" style={{ marginBottom: 8 }}>{spendNote}</p>}
           <input type="number" inputMode="decimal" placeholder="0.00" min="0" step="0.01"
             value={form.spendAmount} onChange={e => setField('spendAmount', e.target.value)} />
           <FieldIssue issue={issueMap.spendAmount} />

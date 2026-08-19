@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { issueToken, pollTokenStatus, getDeviceConfig, setDemoCampaign } from '../api';
+import { getPukHardware, listPukHardware, pukHardwarePath } from '../config/pukHardware';
 
 // ─── Device states ────────────────────────────────────────────────
 const STATE = {
@@ -88,6 +90,23 @@ const CAMPAIGN_UI = {
       { q: 'How to enter', a: 'Purchase participating Red Bull products and ask staff for your QR code.' },
     ],
   },
+  'hoka-2026': {
+    sub: 'Cotswold Outdoor × HOKA',
+    color: '#dfff00',
+    slides: [
+      { headline: 'WIN YOUR PURCHASE BACK', sub: 'HOKA Instant Win', src: '/campaigns/hoka/slide1.jpg' },
+      { headline: 'SCAN TO PLAY', sub: 'Spend $50 on HOKA', src: '/campaigns/hoka/slide2.jpg' },
+      { headline: 'INSTANT PRIZES', sub: 'Up to $200 back', src: '/campaigns/hoka/slide3.jpg' },
+      { headline: 'COTSWOLD BIRMINGHAM', sub: 'Ask staff for a scan', src: '/campaigns/hoka/slide5.jpg' },
+    ],
+    faq: [
+      { q: 'Campaign', a: 'HOKA Scan to Win at Cotswold Outdoor — spend $50 or more on qualifying HOKA products in one transaction.' },
+      { q: 'Start date', a: '1 August 2026' },
+      { q: 'End date', a: '31 August 2026' },
+      { q: 'How to enter', a: 'Ask staff to issue a QR on this PUK, scan with your phone, verify your mobile, and instantly see what you won.' },
+      { q: 'Prizes', a: 'Qualifying HOKA spend back, up to $200, plus instant prizes.' },
+    ],
+  },
 };
 
 function mergeCampaign(apiCampaign) {
@@ -110,28 +129,13 @@ const DEFAULT_CAMPAIGN = mergeCampaign({
   config: { themeColor: '#e86600' },
 });
 
-const DEVICE_CODE = 'PR-DEMO-001';
-
-// ─── PUK asset config ─────────────────────────────────────────────
-const BODY_SRC  = '/device/puk-body.png';
-const GLASS_SRC = '/device/puk-glass.png';
-
-const BODY_W = 400;
-const BODY_H = Math.round(BODY_W * (1372 / 1147));
-const BODY_R = 70;
-
-const _S = BODY_W / 1147;
-const SCREEN = {
-  top:    Math.round(228 * _S),
-  left:   Math.round(217 * _S),
-  width:  Math.round(749 * _S),
-  height: Math.round(917 * _S),
-  radius: 28,
-};
-
-const BTN_PWR = { top: SCREEN.top + 56, right: 0, w: 24, h: 52 };
-
 export default function DeviceSimulator() {
+  const { hwId } = useParams();
+  const navigate = useNavigate();
+  const hw = getPukHardware(hwId);
+  const SCREEN = hw.screen;
+  const DEVICE_CODE = hw.deviceCode;
+
   const [campaign, setCampaign]       = useState(DEFAULT_CAMPAIGN);
   const [campaignOptions, setCampaignOptions] = useState([]);
   const [deviceState, setDeviceState] = useState(STATE.IDLE);
@@ -143,6 +147,7 @@ export default function DeviceSimulator() {
   const [activePanel, setActivePanel] = useState(null);
   const [tapPending, setTapPending]     = useState(false);
   const [campaignModalOpen, setCampaignModalOpen] = useState(false);
+  const [hardwareModalOpen, setHardwareModalOpen] = useState(false);
   const [deviceScale, setDeviceScale] = useState(1);
 
   const pollRef      = useRef(null);
@@ -171,7 +176,7 @@ export default function DeviceSimulator() {
       })
       .catch((err) => console.warn('Device config load failed:', err.message));
     return () => { cancelled = true; };
-  }, []);
+  }, [DEVICE_CODE]);
 
   useEffect(() => {
     const prevTitle = document.title;
@@ -210,12 +215,12 @@ export default function DeviceSimulator() {
       const pad = 16;
       const availW = window.innerWidth - pad * 2;
       const availH = window.innerHeight - headerH - footerH - pad;
-      setDeviceScale(Math.min(1, availW / BODY_W, availH / BODY_H));
+      setDeviceScale(Math.min(1, availW / hw.bodyW, availH / hw.bodyH));
     }
     updateScale();
     window.addEventListener('resize', updateScale);
     return () => window.removeEventListener('resize', updateScale);
-  }, [tokenData, deviceState]);
+  }, [tokenData, deviceState, hw.bodyW, hw.bodyH]);
 
   useEffect(() => {
     function onKey(e) {
@@ -224,6 +229,7 @@ export default function DeviceSimulator() {
       if (e.key === 'm' || e.key === 'M') handleReset();
       if (e.key === 'Escape') {
         setCampaignModalOpen(false);
+        setHardwareModalOpen(false);
         setMenuOpen(false);
         setActivePanel(null);
       }
@@ -432,29 +438,49 @@ export default function DeviceSimulator() {
             PureRandom PUK Simulator
           </p>
           <p style={{ fontSize: '0.62rem', color: '#3a3a3a', letterSpacing: '0.08em', margin: '2px 0 0' }}>
-            {DEVICE_CODE} &middot; {campaign.name}
+            {hw.shortLabel} &middot; {DEVICE_CODE} &middot; {campaign.name}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setCampaignModalOpen(true)}
-          style={{
-            padding: '8px 12px',
-            background: '#111',
-            border: `1px solid ${campaign.color}44`,
-            borderRadius: 8,
-            color: campaign.color,
-            fontFamily: 'monospace',
-            fontSize: '0.62rem',
-            fontWeight: 700,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            cursor: 'pointer',
-            flexShrink: 0,
-          }}
-        >
-          Campaign
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          <button
+            type="button"
+            onClick={() => setHardwareModalOpen(true)}
+            style={{
+              padding: '8px 12px',
+              background: '#111',
+              border: '1px solid #2a2a2a',
+              borderRadius: 8,
+              color: '#888',
+              fontFamily: 'monospace',
+              fontSize: '0.62rem',
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+            }}
+          >
+            Hardware
+          </button>
+          <button
+            type="button"
+            onClick={() => setCampaignModalOpen(true)}
+            style={{
+              padding: '8px 12px',
+              background: '#111',
+              border: `1px solid ${campaign.color}44`,
+              borderRadius: 8,
+              color: campaign.color,
+              fontFamily: 'monospace',
+              fontSize: '0.62rem',
+              fontWeight: 700,
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+            }}
+          >
+            Campaign
+          </button>
+        </div>
       </header>
 
       {/* Device — scaled to fit viewport */}
@@ -469,21 +495,16 @@ export default function DeviceSimulator() {
       }}>
       <div style={{
         position: 'relative',
-        width: BODY_W,
-        height: BODY_H,
+        width: hw.bodyW,
+        height: hw.bodyH,
         transform: `scale(${deviceScale})`,
         transformOrigin: 'center center',
         filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.35))',
       }}>
 
-        {/* Layer 1: CSS placeholder (no asset) */}
-        {!BODY_SRC && (
-          <div style={{
-            position: 'absolute', inset: 0, zIndex: 0,
-            borderRadius: BODY_R,
-            background: 'linear-gradient(160deg, #222 0%, #181818 40%, #111 100%)',
-            border: '1px solid #2e2e2e',
-          }} />
+        {/* Layer 1: CSS chassis when no body PNG */}
+        {!hw.bodySrc && (
+          <PanelChassis hw={hw} />
         )}
 
         {/* Layer 2: Live screen */}
@@ -515,6 +536,7 @@ export default function DeviceSimulator() {
             isExpiring={isExpiring}
             screenW={SCREEN.width}
             screenH={SCREEN.height}
+            qrScale={hw.qrScale}
             tapPending={tapPending}
             menuOpen={menuOpen}
             activePanel={activePanel}
@@ -534,10 +556,10 @@ export default function DeviceSimulator() {
         </div>
 
         {/* Layer 3: Body PNG */}
-        {BODY_SRC && (
+        {hw.bodySrc && (
           <img
-            src={BODY_SRC}
-            width={BODY_W} height={BODY_H}
+            src={hw.bodySrc}
+            width={hw.bodyW} height={hw.bodyH}
             draggable={false} alt=""
             style={{
               position: 'absolute', inset: 0, zIndex: 2,
@@ -550,10 +572,10 @@ export default function DeviceSimulator() {
         )}
 
         {/* Layer 4: Glass overlay */}
-        {GLASS_SRC && (
+        {hw.glassSrc && (
           <img
-            src={GLASS_SRC}
-            width={BODY_W} height={BODY_H}
+            src={hw.glassSrc}
+            width={hw.bodyW} height={hw.bodyH}
             draggable={false} alt=""
             style={{
               position: 'absolute', inset: 0, zIndex: 3,
@@ -566,29 +588,33 @@ export default function DeviceSimulator() {
         )}
 
         {/* LED */}
-        <div style={{
-          position: 'absolute', zIndex: 4,
-          top: 17, left: '50%',
-          transform: 'translateX(-50%)',
-          width: 6, height: 6, borderRadius: '50%',
-          background: ledColor || 'transparent',
-          boxShadow: ledColor ? `0 0 6px ${ledColor}, 0 0 16px ${ledColor}80` : 'none',
-          transition: 'background 0.2s ease, box-shadow 0.2s ease',
-          pointerEvents: 'none',
-        }} />
+        {hw.hasLed && (
+          <div style={{
+            position: 'absolute', zIndex: 4,
+            top: 17, left: '50%',
+            transform: 'translateX(-50%)',
+            width: 6, height: 6, borderRadius: '50%',
+            background: ledColor || 'transparent',
+            boxShadow: ledColor ? `0 0 6px ${ledColor}, 0 0 16px ${ledColor}80` : 'none',
+            transition: 'background 0.2s ease, box-shadow 0.2s ease',
+            pointerEvents: 'none',
+          }} />
+        )}
 
         {/* PWR button hit area */}
-        <div
-          title="PWR — generate token"
-          onMouseDown={() => { if (deviceState !== STATE.GENERATING) handleGenerate(); }}
-          onTouchEnd={e => { e.preventDefault(); if (deviceState !== STATE.GENERATING) handleGenerate(); }}
-          style={{
-            position: 'absolute', zIndex: 5,
-            top: BTN_PWR.top, right: BTN_PWR.right,
-            width: BTN_PWR.w, height: BTN_PWR.h,
-            cursor: deviceState === STATE.GENERATING ? 'not-allowed' : 'pointer',
-          }}
-        />
+        {hw.btnPwr && (
+          <div
+            title="PWR — generate token"
+            onMouseDown={() => { if (deviceState !== STATE.GENERATING) handleGenerate(); }}
+            onTouchEnd={e => { e.preventDefault(); if (deviceState !== STATE.GENERATING) handleGenerate(); }}
+            style={{
+              position: 'absolute', zIndex: 5,
+              top: SCREEN.top + hw.btnPwr.topOffset, right: hw.btnPwr.right,
+              width: hw.btnPwr.w, height: hw.btnPwr.h,
+              cursor: deviceState === STATE.GENERATING ? 'not-allowed' : 'pointer',
+            }}
+          />
+        )}
       </div>
       </div>
 
@@ -627,6 +653,27 @@ export default function DeviceSimulator() {
           options={campaignOptions.length ? campaignOptions : [campaign]}
           onSelect={selectCampaign}
           onClose={() => setCampaignModalOpen(false)}
+        />
+      )}
+
+      {hardwareModalOpen && (
+        <HardwareModal
+          current={hw}
+          options={listPukHardware()}
+          onSelect={(next) => {
+            setHardwareModalOpen(false);
+            if (next.id === hw.id) return;
+            stopAll();
+            setTokenData(null);
+            setTimeLeft(null);
+            setErrorMsg('');
+            setDeviceState(STATE.IDLE);
+            setLedColor(null);
+            setMenuOpen(false);
+            setActivePanel(null);
+            navigate(pukHardwarePath(next.id));
+          }}
+          onClose={() => setHardwareModalOpen(false)}
         />
       )}
 
@@ -746,12 +793,125 @@ function CampaignModal({ campaign, options, onSelect, onClose }) {
   );
 }
 
+function HardwareModal({ current, options, onSelect, onClose }) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Switch PUK hardware"
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 40,
+        background: 'rgba(0,0,0,0.72)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 20,
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          width: 'min(420px, 100%)',
+          background: '#0c0c12',
+          border: '1px solid #222',
+          borderRadius: 14,
+          padding: 18,
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+          <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '0.16em', color: '#888' }}>
+            PUK HARDWARE
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              background: 'none', border: 'none', color: '#555',
+              fontSize: 22, lineHeight: 1, cursor: 'pointer',
+            }}
+          >
+            ×
+          </button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {options.map(h => {
+            const active = current.id === h.id;
+            return (
+              <button
+                key={h.id}
+                type="button"
+                onClick={() => onSelect(h)}
+                style={{
+                  padding: '12px 14px',
+                  background: active ? '#1a1a28' : '#111',
+                  color: active ? '#fff' : '#aaa',
+                  border: `1px solid ${active ? '#3a3a55' : '#222'}`,
+                  borderRadius: 8,
+                  fontFamily: 'monospace',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                {h.label}
+                <span style={{
+                  display: 'block',
+                  fontSize: '0.6rem',
+                  fontWeight: 400,
+                  opacity: 0.75,
+                  marginTop: 2,
+                  letterSpacing: '0.06em',
+                }}>
+                  {h.display} · {h.deviceCode}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PanelChassis({ hw }) {
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, zIndex: 0,
+      borderRadius: hw.bodyR,
+      background: 'linear-gradient(180deg, #2a2d33 0%, #16181c 42%, #0c0d10 100%)',
+      border: '1px solid #3a3d44',
+      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
+    }}>
+      <div style={{
+        position: 'absolute',
+        top: 6, left: 0, right: 0,
+        textAlign: 'center',
+        fontFamily: 'monospace',
+        fontSize: 7,
+        letterSpacing: '0.18em',
+        color: '#5a5e66',
+        pointerEvents: 'none',
+      }}>
+        {hw.shortLabel.toUpperCase()}
+      </div>
+      <div style={{
+        position: 'absolute',
+        bottom: 8, left: '50%', transform: 'translateX(-50%)',
+        width: 38, height: 6, borderRadius: 3,
+        background: '#08090b',
+        boxShadow: 'inset 0 0 0 1px #2a2d33',
+      }} />
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────
 // Screen content router
 // ─────────────────────────────────────────────────────────────────
 function ScreenContent({
   state, campaign, tokenData, tokenUrl, timeLeft, errorMsg,
-  formatTime, isExpiring, screenW, screenH,
+  formatTime, isExpiring, screenW, screenH, qrScale = 0.82,
   tapPending, menuOpen, activePanel,
   onOpenMenu, onCloseMenu, onOpenPanel, onClosePanel,
 }) {
@@ -803,7 +963,7 @@ function ScreenContent({
   // ── READY / SCANNED ───────────────────────────────────
   if (state === STATE.READY || state === STATE.SCANNED) {
     const isScanned = state === STATE.SCANNED;
-    const qrSize    = Math.round(screenW * 0.82);
+    const qrSize    = Math.round(screenW * qrScale);
 
     return (
       <div style={{ ...base, justifyContent: 'space-between', padding: '16px 0 32px' }}>

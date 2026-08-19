@@ -1,9 +1,12 @@
-const DEMO_DEVICE_CODES = new Set(['PR-DEMO-001', 'PR-UNIT-001']);
+const { isHokaDevice, HOKA_CAMPAIGN_ID } = require('../lib/hokaCampaign');
+
+const DEMO_DEVICE_CODES = new Set(['PR-DEMO-001', 'PR-UNIT-001', 'PR-PUK2-001']);
 const SETTINGS_KEY = 'activeCampaignId';
 const DEFAULT_CAMPAIGN_ID = 'niterra-ngk-2026';
 
 const DEMO_CAMPAIGN_IDS = [
   'niterra-ngk-2026',
+  'hoka-2026',
   'castrol-2026',
   'cocacola-2026',
   'vb-2026',
@@ -41,6 +44,11 @@ function setActiveDemoCampaignId(db, campaignId) {
 }
 
 function resolveCampaignId(db, device) {
+  // PUK2 desk unit is the HOKA / Cotswold Birmingham demo — do not follow the
+  // wrist Niterra campaign switcher.
+  if (isHokaDevice(device.deviceCode)) {
+    return device.campaignId || HOKA_CAMPAIGN_ID;
+  }
   if (isDemoDevice(device.deviceCode)) {
     return getActiveDemoCampaignId(db);
   }
@@ -86,6 +94,7 @@ function campaignBrandOptions(campaign) {
 }
 
 module.exports = {
+  DEMO_CAMPAIGN_IDS,
   DEMO_DEVICE_CODES,
   DEFAULT_CAMPAIGN_ID,
   isDemoDevice,

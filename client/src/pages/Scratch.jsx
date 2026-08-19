@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getClaim, revealClaim } from '../api';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { getClaim, revealClaim, postLabEvent } from '../api';
 
 const RESULT_CONFIG = {
   TIER_1_INSTANT_WIN:    { label: 'INSTANT PRIZE!',       color: '#00e676' },
@@ -12,6 +12,8 @@ const RESULT_CONFIG = {
 export default function Scratch() {
   const { claimId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const labSession = searchParams.get('labSession');
   const canvasRef = useRef(null);
   const isDrawing = useRef(false);
   const lastPos = useRef(null);
@@ -23,9 +25,15 @@ export default function Scratch() {
 
   useEffect(() => {
     getClaim(claimId)
-      .then(data => { setClaim(data); setLoading(false); })
+      .then(data => {
+        setClaim(data);
+        setLoading(false);
+        if (labSession) {
+          postLabEvent(labSession, 'checking_instant_win').catch(() => {});
+        }
+      })
       .catch(() => navigate('/'));
-  }, [claimId, navigate]);
+  }, [claimId, navigate, labSession]);
 
   const initCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -138,9 +146,17 @@ export default function Scratch() {
     }
 
     try { await revealClaim(claimId); } catch (_) { /* best-effort */ }
+    if (labSession) {
+      postLabEvent(labSession, 'prize_allocated', {
+        claimId,
+        result: claim?.result,
+        prizeName: claim?.prizeName,
+      }).catch(() => {});
+    }
 
     setNavigating(true);
-    setTimeout(() => navigate(`/result/${claimId}`), 1800);
+    const qs = labSession ? `?labSession=${encodeURIComponent(labSession)}` : '';
+    setTimeout(() => navigate(`/result/${claimId}${qs}`), 1800);
   }
 
   if (loading) {

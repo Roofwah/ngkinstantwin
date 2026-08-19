@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { validateToken, submitTokenClaim } from '../api';
 import { getInstantWinTheme } from '../config/instantWinThemes';
 import InstantWinForm from '../components/InstantWinForm';
+import { isHokaCampaign } from '../campaigns/hokaCotswold';
 
 const STEPS = { LOADING: 0, INVALID: 1 };
 
@@ -45,8 +46,9 @@ export default function TokenLanding() {
   }
 
   async function handleComplete(receiptPayload) {
-    const { claimId } = await submitTokenClaim({
+    const outcome = await submitTokenClaim({
       tokenId: tokenData.tokenId,
+      customerName: receiptPayload.customerName,
       mobile: receiptPayload.mobile,
       invoiceNumber: receiptPayload.invoiceNumber,
       purchaseDate: receiptPayload.purchaseDate,
@@ -59,8 +61,10 @@ export default function TokenLanding() {
       receiptSource: receiptPayload.receiptSource,
       verificationMethod: receiptPayload.verificationMethod,
       receiptFile: receiptPayload.receiptFile,
+      postcode: receiptPayload.postcode,
     });
-    navigate(`/scratch/${claimId}`);
+    if (isHokaCampaign(tokenData.campaign)) return outcome;
+    navigate(`/scratch/${outcome.claimId}`);
   }
 
   if (step === STEPS.LOADING && !tokenData) {

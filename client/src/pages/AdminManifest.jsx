@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import { getAdminManifest } from '../api';
+import { useAdminCampaign } from '../admin/adminCampaign';
 
 const STATUS_BADGE = {
   AVAILABLE: 'badge--green',
@@ -9,27 +10,35 @@ const STATUS_BADGE = {
 };
 
 export default function AdminManifest() {
+  return (
+    <AdminLayout title="Prize Manifest">
+      <ManifestBody />
+    </AdminLayout>
+  );
+}
+
+function ManifestBody() {
+  const { campaignId, campaign } = useAdminCampaign();
   const [manifest, setManifest] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('ALL');
 
   useEffect(() => {
-    getAdminManifest()
+    setLoading(true);
+    getAdminManifest(campaignId)
       .then(d => { setManifest(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  }, [campaignId]);
 
   const filtered = filter === 'ALL' ? manifest : manifest.filter(p => p.status === filter);
-
   const now = Date.now();
 
   return (
-    <AdminLayout title="Prize Manifest">
+    <>
       <div style={{ marginBottom: 16 }}>
         <p style={{ fontSize: '0.82rem', color: 'var(--text-2)', marginBottom: 12 }}>
-          The prize manifest was generated deterministically from the PureRandom seed. Each prize has a scheduled
-          winning timestamp and window. When a claim is submitted within a prize's window, that prize is assigned.
-          Winning timestamps are only visible in this admin view — never exposed to customers.
+          Prize pool for <strong>{campaign?.name || campaignId}</strong> only. Generating a manifest on the dashboard
+          replaces this campaign’s rows — other campaigns are left alone.
         </p>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {['ALL', 'AVAILABLE', 'ASSIGNED', 'VOIDED'].map(s => (
@@ -51,7 +60,7 @@ export default function AdminManifest() {
         <div style={{ textAlign: 'center', padding: 40 }}><span className="spinner" /></div>
       ) : manifest.length === 0 ? (
         <div className="alert alert--warn">
-          No manifest found. Go to Dashboard → Generate Manifest to create the prize schedule.
+          No prizes for this campaign. Go to Dashboard → Generate Manifest.
         </div>
       ) : (
         <div className="table-wrap">
@@ -106,6 +115,6 @@ export default function AdminManifest() {
           </table>
         </div>
       )}
-    </AdminLayout>
+    </>
   );
 }

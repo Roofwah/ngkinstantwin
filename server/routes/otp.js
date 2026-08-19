@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { isOtpDemoMode, getOtpMode, birdEnvStatus } = require('../lib/otpMode');
+const { sendBirdSms } = require('../lib/birdSms');
 
 // In-memory OTP store: mobile -> { code, expiresAt, attempts }
 const otpStore = new Map();
@@ -12,13 +13,6 @@ const MAX_ATTEMPTS = 5;
 function generateCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
-
-function toE164(mobile) {
-  // mobile is already normalised to 04XXXXXXXX
-  return '+61' + mobile.slice(1);
-}
-
-const { getBirdEnv } = require('../lib/otpMode');
 
 // GET /api/otp/status — safe diagnostic (no secret values)
 router.get('/status', (req, res) => {
@@ -47,21 +41,12 @@ router.post('/send', async (req, res) => {
   }
 
   try {
-    const bird = getBirdEnv();
-    const url = `https://api.bird.com/workspaces/${bird.workspaceId}/channels/${bird.channelId}/messages`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `AccessKey ${bird.accessKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        receiver: { contacts: [{ identifierValue: toE164(mobile) }] },
-        body: { type: 'text', text: { text: `Your FLOW Mktg code is: ${code}. Valid for 10 minutes.` } },
-      }),
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || 'SMS send failed');
+    const sms = await sendBirdSms(
+      mobile,
+      `Your FLOW Mktg code is: ${code}. Valid for 10 minutes.`,
+      { required: true },
+    );
+    if (!sms.ok) throw new Error(sms.error || 'SMS send failed');
     res.json({ sent: true, demo: false });
   } catch (err) {
     console.error('Bird SMS error:', err.message);

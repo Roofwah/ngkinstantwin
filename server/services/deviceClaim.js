@@ -3,6 +3,32 @@ const db = require('../db');
 const { assignPrize } = require('./prizeEngine');
 const { log } = require('./auditLogger');
 const { campaignBrandOptions } = require('./demoCampaign');
+const { getSession } = require('./labSession');
+const { attachRedemption } = require('./redemption');
+const { notifyHokaWinnerSafe } = require('./winnerNotify');
+const {
+  isHokaCampaign,
+  isInstantWin,
+  hokaMinSpend,
+  hokaPrizeName,
+  HOKA_STORE_NAME,
+} = require('../lib/hokaCampaign');
+
+function labAllowsDuplicateReceipts(labSessionId) {
+  if (!labSessionId) return false;
+  const session = getSession(labSessionId);
+  return Boolean(session?.rules?.allowDuplicateReceipts);
+}
+
+/** Demo / lab — skip duplicate-invoice enforcement (check remains for production). */
+function shouldBypassDuplicateInvoice(body) {
+  if (body.labSessionId) return true;
+  return process.env.DEMO_MODE === 'true';
+}
+
+function clearClaimForDuplicateReceipt(invoiceNumber) {
+  db.prepare('DELETE FROM claims WHERE receiptNumber = ?').run(invoiceNumber);
+}
 
 function normaliseMobile(mobile) {
   const s = (mobile || '').replace(/[\s\-()]/g, '');
@@ -10,9 +36,62 @@ function normaliseMobile(mobile) {
   return s;
 }
 
+function normaliseCustomerName(name) {
+  return String(name || '').trim().replace(/\s+/g, ' ');
+}
+
+function isValidCustomerName(name) {
+  return name.length >= 2 && /^[A-Za-z][A-Za-z\s'.-]*$/.test(name);
+}
+
 function deriveStoreCode(invoiceNumber) {
   const digits = String(invoiceNumber || '').replace(/\D/g, '');
   return digits.length >= 3 ? digits.slice(0, 3) : '';
+}
+
+function isValidAuPostcode(raw) {
+  return /^\d{4}$/.test(String(raw || '').trim());
+}
+
+function formatAuPostcode(raw) {
+  return String(raw || '').replace(/\D/g, '').slice(0, 4);
+}
+
+function validateHokaPayload(body, campaign, deviceRow) {
+  const errors = [];
+  const postcode = formatAuPostcode(body.postcode);
+  if (!isValidAuPostcode(postcode)) {
+    errors.push('Enter a valid Australian postcode');
+  }
+
+  const spend = parseFloat(body.spendAmount);
+  const minSpend = hokaMinSpend(campaign);
+  if (!spend || spend < minSpend) {
+    errors.push(`Minimum qualifying purchase is $${minSpend.toFixed(2)}`);
+  }
+
+  if (!body.selectedBrand) {
+    errors.push('Item purchased is required');
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+  const invoiceNumber = `HOKA${Date.now()}${Math.floor(Math.random() * 900 + 100)}`;
+
+  return {
+    errors,
+    invoiceNumber,
+    purchaseDate: today,
+    purchaseTime: null,
+    storeCode: deviceRow?.storeCode || 'BHM',
+    storeName: deviceRow?.storeName || HOKA_STORE_NAME,
+    productDescription: body.selectedBrand || null,
+    selectedBrand: body.selectedBrand,
+    spendAmount: spend,
+    receiptSource: 'manual',
+    verificationMethod: 'hoka_entry',
+    receiptValidationStatus: 'not_required',
+    postcode,
+  };
 }
 
 function validateReceiptPayload(body, file) {
@@ -74,6 +153,9 @@ function validateReceiptPayload(body, file) {
 }
 
 function resolveClaimStatus(result, verificationMethod) {
+  if (verificationMethod === 'hoka_entry') {
+    return isInstantWin(result) ? 'VALIDATED' : 'ELIGIBLE';
+  }
   if (verificationMethod === 'manual') {
     return 'VALIDATION_PENDING';
   }
@@ -100,36 +182,55 @@ function createClaimWithReceipt({
     return { error: 'Invalid mobile number', status: 400 };
   }
 
+  const customerName = normaliseCustomerName(body.customerName);
+  if (!isValidCustomerName(customerName)) {
+    return { error: 'Full name is required', status: 400 };
+  }
+
   const allowedBrands = campaignBrandOptions(campaign);
   if (!allowedBrands.includes(body.selectedBrand)) {
     return { error: 'Invalid brand for this campaign', status: 400 };
   }
 
-  const validated = validateReceiptPayload(body, file);
+  const hoka = isHokaCampaign(campaign);
+  const deviceRow = deviceCode
+    ? db.prepare('SELECT * FROM devices WHERE deviceCode = ?').get(deviceCode)
+    : null;
+
+  const validated = hoka
+    ? validateHokaPayload(body, campaign, deviceRow)
+    : validateReceiptPayload(body, file);
   if (validated.errors.length) {
     return { error: validated.errors[0], errors: validated.errors, status: 400 };
   }
 
-  const dup = db.prepare('SELECT claimId FROM claims WHERE receiptNumber = ?').get(validated.invoiceNumber);
-  if (dup) {
-    return { error: 'This invoice number has already been used.', status: 409 };
+  const bypassDuplicate = hoka || shouldBypassDuplicateInvoice(body);
+  if (bypassDuplicate) {
+    clearClaimForDuplicateReceipt(validated.invoiceNumber);
+  } else {
+    const dup = db.prepare('SELECT claimId FROM claims WHERE receiptNumber = ?').get(validated.invoiceNumber);
+    if (dup) {
+      return { error: 'This invoice number has already been used.', status: 409 };
+    }
   }
 
   const claimId = uuidv4();
   const now = Date.now();
   const receiptFilename = file ? file.filename : null;
+  const resolvedCampaignId = campaignId || campaign?.id || null;
 
   db.prepare(`
     INSERT INTO claims
-      (claimId, mobile, receiptNumber, receiptFilename, spendAmount, selectedBrand,
+      (claimId, mobile, customerName, receiptNumber, receiptFilename, spendAmount, selectedBrand,
        termsAccepted, result, claimStatus, createdAt, ipAddress,
        purchaseDate, purchaseTime, storeCode, storeName, productSku, productDescription,
-       receiptSource, verificationMethod, receiptValidationStatus)
-    VALUES (?, ?, ?, ?, ?, ?, 1, 'NOT_WINNER', 'ELIGIBLE', ?, ?,
-            ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       receiptSource, verificationMethod, receiptValidationStatus, campaignId, postcode)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 1, 'NOT_WINNER', 'ELIGIBLE', ?, ?,
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     claimId,
     normMobile,
+    customerName,
     validated.invoiceNumber,
     receiptFilename,
     validated.spendAmount,
@@ -145,14 +246,30 @@ function createClaimWithReceipt({
     validated.receiptSource,
     validated.verificationMethod,
     validated.receiptValidationStatus,
+    resolvedCampaignId,
+    validated.postcode || null,
   );
 
-  const { result, prize } = assignPrize(claimId, now);
+  const { result, prize } = assignPrize(claimId, now, resolvedCampaignId);
   const claimStatus = resolveClaimStatus(result, validated.verificationMethod);
+  let prizeName = prize?.prizeName || null;
+  if (hoka && isInstantWin(result)) {
+    prizeName = hokaPrizeName(campaign, result, validated.spendAmount, prize);
+  }
 
   db.prepare(`
     UPDATE claims SET result = ?, claimStatus = ?, prizeId = ?, prizeName = ? WHERE claimId = ?
-  `).run(result, claimStatus, prize?.prizeId || null, prize?.prizeName || null, claimId);
+  `).run(result, claimStatus, prize?.prizeId || null, prizeName, claimId);
+
+  if (hoka && isInstantWin(result)) {
+    try {
+      attachRedemption(claimId);
+      notifyHokaWinnerSafe(claimId);
+    } catch (err) {
+      console.error(`[hoka] redemption persist failed for ${claimId}:`, err.message);
+      log('hoka_redemption_failed', { claimId, details: { error: err.message, result } });
+    }
+  }
 
   if (tokenId && tokenRecord) {
     db.prepare('UPDATE issued_tokens SET status = ?, redeemedAt = ?, claimId = ? WHERE id = ?')
@@ -166,6 +283,7 @@ function createClaimWithReceipt({
       deviceCode,
       campaignId,
       mobile: normMobile.slice(0, 4) + '****',
+      customerName,
       result,
       invoiceNumber: validated.invoiceNumber,
       receiptSource: validated.receiptSource,

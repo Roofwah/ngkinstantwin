@@ -1017,6 +1017,16 @@ tbody tr:hover td { background: var(--bg-3); }
   margin-top: 12px;
 }
 
+.admin-campaign-select {
+  width: 100%;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 0.82rem;
+}
+
 .admin-nav__link {
   display: flex;
   align-items: center;
@@ -1107,6 +1117,61 @@ tbody tr:hover td { background: var(--bg-3); }
   color: var(--amber);
   text-align: center;
   letter-spacing: 0.04em;
+}
+
+.demo-control-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: var(--text-2);
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+.demo-control-check input {
+  margin-top: 3px;
+}
+
+.demo-control-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.demo-next {
+  margin-top: 6px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.demo-next.is-win {
+  background: var(--green-glow);
+  color: var(--green);
+}
+
+.demo-next.is-miss {
+  background: var(--bg-3);
+  color: var(--blue);
+}
+
+.table-wrap input {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: 8px 10px;
+  width: 100%;
+}
+
+@media (max-width: 700px) {
+  .demo-control-grid { grid-template-columns: 1fr; }
 }
 
 /* ─── Mobile sidebar toggle ──────────────────────────────────────── */

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { getDeviceConfig, submitDirectClaim } from '../api';
+import { getDeviceConfig, submitDirectClaim, setDemoCampaign, postLabEvent } from '../api';
 import { getInstantWinTheme } from '../config/instantWinThemes';
 import InstantWinForm from '../components/InstantWinForm';
+import { isHokaCampaign } from '../campaigns/hokaCotswold';
 
 const DEFAULT_DEVICE = 'PR-DEMO-001';
 
@@ -11,10 +12,25 @@ export default function InstantWinDirect() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const deviceCode = searchParams.get('device') || DEFAULT_DEVICE;
+  const labSession = searchParams.get('labSession');
+  const campaignParam = searchParams.get('campaign');
+  const entryNotified = useRef(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [config, setConfig] = useState(null);
+
+  useEffect(() => {
+    if (campaignParam && deviceCode !== 'PR-PUK2-001') {
+      setDemoCampaign(campaignParam).catch(() => {});
+    }
+  }, [campaignParam, deviceCode]);
+
+  useEffect(() => {
+    if (!labSession || entryNotified.current) return;
+    entryNotified.current = true;
+    postLabEvent(labSession, 'entry_opened').catch(() => {});
+  }, [labSession]);
 
   useEffect(() => {
     getDeviceConfig(deviceCode)
@@ -29,8 +45,12 @@ export default function InstantWinDirect() {
   }, [deviceCode]);
 
   async function handleComplete(receiptPayload) {
-    const { claimId } = await submitDirectClaim({
+    const qs = labSession ? `?labSession=${encodeURIComponent(labSession)}` : '';
+    const outcome = await submitDirectClaim({
       deviceCode,
+      campaignId: campaignParam || config?.campaign?.id,
+      labSessionId: labSession,
+      customerName: receiptPayload.customerName,
       mobile: receiptPayload.mobile,
       invoiceNumber: receiptPayload.invoiceNumber,
       purchaseDate: receiptPayload.purchaseDate,
@@ -43,8 +63,10 @@ export default function InstantWinDirect() {
       receiptSource: receiptPayload.receiptSource,
       verificationMethod: receiptPayload.verificationMethod,
       receiptFile: receiptPayload.receiptFile,
+      postcode: receiptPayload.postcode,
     });
-    navigate(`/scratch/${claimId}`);
+    if (isHokaCampaign(config?.campaign)) return outcome;
+    navigate(`/scratch/${outcome.claimId}${qs}`);
   }
 
   if (loading) {
@@ -89,6 +111,7 @@ export default function InstantWinDirect() {
       showTokenBar={false}
       campaignLayout
       campaignArtSrc={campaignArt}
+      labSessionId={labSession}
       onComplete={handleComplete}
     />
   );

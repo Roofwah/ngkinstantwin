@@ -14,6 +14,7 @@ const {
 } = require('../services/demoCampaign');
 const { receiptUpload } = require('../lib/receiptUpload');
 const { createClaimWithReceipt } = require('../services/deviceClaim');
+const { advanceSession, attachClaimToSession } = require('../services/labSession');
 
 const TOKEN_TTL_MS = 10 * 60 * 1000; // 10 minutes — token stays claimable after device returns home
 
@@ -50,6 +51,36 @@ function buildConfigResponse(deviceCode) {
   };
 }
 
+// GET /api/device/sync?deviceCode=PR-DEMO-001 — campaign package for OTA slide download
+router.get('/sync', (req, res) => {
+  const deviceCode = req.query.deviceCode;
+  if (!deviceCode) return res.status(400).json({ error: 'deviceCode required' });
+
+  const device = getDevice(deviceCode);
+  if (!device) return res.status(404).json({ error: 'Device not found or inactive' });
+
+  const campaignId = resolveCampaignId(db, device);
+  const campaign = loadCampaign(db, campaignId);
+  if (!campaign) return res.status(404).json({ error: 'No active campaign' });
+
+  const { buildCampaignPackage } = require('../services/campaignPackage');
+  const pkg = buildCampaignPackage(campaign);
+  if (!pkg) {
+    return res.status(404).json({
+      error: 'Campaign package not published',
+      campaignId,
+      hint: 'Add JPEGs under server/public/campaign-packages/<campaignId>/slide1.jpg …',
+    });
+  }
+
+  res.json({
+    deviceCode,
+    package: pkg,
+    demoQrPath: '/demo/device',
+    serverTime: new Date().toISOString(),
+  });
+});
+
 // GET /api/device/config?deviceCode=PR-DEMO-001
 router.get('/config', (req, res) => {
   const deviceCode = req.query.deviceCode;
@@ -59,6 +90,25 @@ router.get('/config', (req, res) => {
   if (!payload) return res.status(404).json({ error: 'Device not found or no active campaign' });
 
   res.json(payload);
+});
+
+// GET /api/device/active-campaign?deviceCode=PR-DEMO-001 — tiny payload for PUK polling
+router.get('/active-campaign', (req, res) => {
+  const deviceCode = req.query.deviceCode;
+  if (!deviceCode) return res.status(400).json({ error: 'deviceCode required' });
+
+  const device = getDevice(deviceCode);
+  if (!device) return res.status(404).json({ error: 'Device not found or inactive' });
+
+  const campaignId = resolveCampaignId(db, device);
+  const campaign = loadCampaign(db, campaignId);
+  if (!campaign) return res.status(404).json({ error: 'No active campaign' });
+
+  res.json({
+    deviceCode,
+    campaignId: campaign.id,
+    campaignName: campaign.name,
+  });
 });
 
 // PUT /api/device/demo-campaign — set active demo campaign (shared by simulator + physical PUK)
@@ -76,15 +126,27 @@ router.put('/demo-campaign', (req, res) => {
   }
 });
 
+function resolveIssueCampaignId(device, requestedCampaignId) {
+  let campaignId = resolveCampaignId(db, device);
+  if (device.deviceCode === 'PR-PUK2-001') {
+    return campaignId;
+  }
+  if (!isDemoDevice(device.deviceCode) || !requestedCampaignId) {
+    return campaignId;
+  }
+  const row = db.prepare('SELECT id FROM campaigns WHERE id = ? AND status = ?').get(requestedCampaignId, 'active');
+  return row ? requestedCampaignId : campaignId;
+}
+
 // POST /api/device/issue-token
 router.post('/issue-token', (req, res) => {
-  const { deviceCode } = req.body;
+  const { deviceCode, campaignId: requestedCampaignId } = req.body;
   if (!deviceCode) return res.status(400).json({ error: 'deviceCode required' });
 
   const device = getDevice(deviceCode);
   if (!device) return res.status(404).json({ error: 'Device not found or inactive' });
 
-  const campaignId = resolveCampaignId(db, device);
+  const campaignId = resolveIssueCampaignId(device, requestedCampaignId);
   const campaign = loadCampaign(db, campaignId);
   if (!campaign || campaign.status !== 'active') {
     return res.status(404).json({ error: 'No active campaign for this device' });
@@ -163,7 +225,7 @@ router.get('/token-status/:token', (req, res) => {
 router.post('/direct-claim', receiptUpload.single('receipt'), (req, res) => {
   try {
     const deviceCode = req.body.deviceCode || 'PR-DEMO-001';
-    const { mobile, campaignId: bodyCampaignId } = req.body;
+    const { mobile, campaignId: bodyCampaignId, labSessionId } = req.body;
 
     if (!mobile) return res.status(400).json({ error: 'mobile required' });
 
@@ -193,7 +255,22 @@ router.post('/direct-claim', receiptUpload.single('receipt'), (req, res) => {
       });
     }
 
-    res.json({ claimId: outcome.claimId, success: true });
+    if (labSessionId) {
+      advanceSession(labSessionId, 'checking_instant_win');
+      attachClaimToSession(labSessionId, outcome.claimId);
+    }
+
+    const claim = db.prepare(
+      'SELECT result, prizeName, redemptionCode FROM claims WHERE claimId = ?'
+    ).get(outcome.claimId);
+
+    res.json({
+      claimId: outcome.claimId,
+      success: true,
+      result: claim?.result || null,
+      prizeName: claim?.prizeName || null,
+      redemptionCode: claim?.redemptionCode || null,
+    });
   } catch (err) {
     console.error('Direct claim error:', err);
     if (err.message?.includes('UNIQUE')) {
@@ -239,7 +316,17 @@ router.post('/claim', receiptUpload.single('receipt'), (req, res) => {
       });
     }
 
-    res.json({ claimId: outcome.claimId, success: true });
+    const claim = db.prepare(
+      'SELECT result, prizeName, redemptionCode FROM claims WHERE claimId = ?'
+    ).get(outcome.claimId);
+
+    res.json({
+      claimId: outcome.claimId,
+      success: true,
+      result: claim?.result || null,
+      prizeName: claim?.prizeName || null,
+      redemptionCode: claim?.redemptionCode || null,
+    });
   } catch (err) {
     console.error('Token claim error:', err);
     if (err.message?.includes('UNIQUE')) {

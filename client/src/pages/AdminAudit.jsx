@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import { getAdminAudit } from '../api';
+import { useAdminCampaign } from '../admin/adminCampaign';
 
 const ACTION_BADGE = {
   MANIFEST_GENERATED: 'badge--blue',
@@ -13,15 +14,27 @@ const ACTION_BADGE = {
 };
 
 export default function AdminAudit() {
+  return (
+    <AdminLayout title="Audit Log">
+      <AuditBody />
+    </AdminLayout>
+  );
+}
+
+function AuditBody() {
+  const { campaignId } = useAdminCampaign();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
 
-  useEffect(() => {
-    getAdminAudit()
+  function refresh() {
+    setLoading(true);
+    getAdminAudit(campaignId)
       .then(d => { setLogs(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => { refresh(); }, [campaignId]);
 
   const filtered = filter
     ? logs.filter(l => l.action === filter)
@@ -30,9 +43,7 @@ export default function AdminAudit() {
   const actions = [...new Set(logs.map(l => l.action))];
 
   return (
-    <AdminLayout title="Audit Log" actions={
-      <button className="btn btn--ghost btn--sm" onClick={() => { setLoading(true); getAdminAudit().then(d => { setLogs(d); setLoading(false); }); }}>↻ Refresh</button>
-    }>
+    <>
       <div className="card mb-16" style={{ fontSize: '0.82rem', color: 'var(--text-2)' }}>
         <strong style={{ color: 'var(--text)' }}>Tamper-evident audit chain:</strong> Each log entry includes a SHA-256 hash
         that chains the previous entry's hash, creating a verifiable audit trail. Any modification to a log entry
@@ -106,6 +117,6 @@ export default function AdminAudit() {
           </table>
         </div>
       )}
-    </AdminLayout>
+    </>
   );
 }

@@ -1,0 +1,377 @@
+.hoka-page {
+  min-height: 100dvh;
+  background: #071428;
+  color: #f7f4ee;
+  font-family: 'DM Sans', Inter, system-ui, sans-serif;
+}
+
+.hoka-confetti {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.hoka-page * {
+  box-sizing: border-box;
+}
+
+.hoka-hero {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.hoka-hero img {
+  width: 100%;
+  display: block;
+  max-height: 34svh;
+  object-fit: cover;
+  object-position: center 18%;
+}
+
+.hoka-page--enter {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  background-color: #071428;
+  background-repeat: no-repeat;
+  background-position: top center;
+  background-size: 100% auto;
+}
+
+.hoka-page--enter .hoka-body {
+  width: 100%;
+  max-width: none;
+  min-height: 100dvh;
+  padding: calc(26svh + 80px) 16px 28px;
+  background: none;
+}
+
+.hoka-form-panel {
+  background: rgba(7, 20, 40, 0.92);
+  padding: 18px 16px 16px;
+}
+
+.hoka-form-panel .hoka-field {
+  padding: 8px 10px 10px;
+  margin-left: -10px;
+  margin-right: -10px;
+  background: rgba(5, 14, 28, 0.55);
+}
+
+.hoka-form-panel .hoka-title {
+  margin-bottom: 6px;
+}
+
+.hoka-form-panel .hoka-lede {
+  margin-bottom: 16px;
+  color: rgba(247, 244, 238, 0.92);
+}
+
+.hoka-form-panel .hoka-legal {
+  margin-top: 14px;
+}
+
+.hoka-form-panel .hoka-field label {
+  color: rgba(247, 244, 238, 0.88);
+}
+
+.hoka-page--enter .hoka-store {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.hoka-page--enter .hoka-lede {
+  margin-bottom: 12px;
+}
+
+.hoka-hero__fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42%;
+  background: linear-gradient(180deg, transparent, #071428 92%);
+  pointer-events: none;
+}
+
+.hoka-body {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 8px 22px 40px;
+}
+
+.hoka-kicker {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #dfff00;
+}
+
+.hoka-title {
+  margin: 0 0 8px;
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-size: clamp(2.1rem, 8vw, 2.8rem);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.hoka-lede {
+  margin: 0 0 22px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: rgba(247, 244, 238, 0.78);
+}
+
+.hoka-store {
+  display: inline-block;
+  margin-bottom: 18px;
+  padding: 6px 10px;
+  border: 1px solid rgba(223, 255, 0, 0.28);
+  color: #dfff00;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hoka-store--field {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 52px;
+  margin-bottom: 0;
+  padding: 0 14px;
+  background: rgba(7, 20, 40, 0.55);
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+}
+
+.hoka-field {
+  margin-bottom: 16px;
+}
+
+.hoka-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(247, 244, 238, 0.7);
+}
+
+.hoka-field input,
+.hoka-field select {
+  width: 100%;
+  height: 52px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 2px;
+  background: #f7f4ee;
+  color: #071428;
+  font-family: inherit;
+  font-size: 1.05rem;
+}
+
+.hoka-field input:focus,
+.hoka-field select:focus {
+  outline: 2px solid #dfff00;
+  outline-offset: 2px;
+}
+
+.hoka-prefix {
+  display: flex;
+  align-items: center;
+  background: #f7f4ee;
+}
+
+.hoka-prefix span {
+  padding: 0 0 0 14px;
+  color: #071428;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.hoka-prefix input {
+  border: 0;
+  background: transparent;
+  flex: 1;
+}
+
+.hoka-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 8px;
+  height: 56px;
+  border: 0;
+  border-radius: 2px;
+  background: #dfff00;
+  color: #071428;
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.hoka-cta:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.hoka-ghost {
+  width: 100%;
+  margin-top: 12px;
+  background: transparent;
+  border: 0;
+  color: rgba(247, 244, 238, 0.7);
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.hoka-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #3a1420;
+  color: #ffd4dc;
+  font-size: 0.9rem;
+}
+
+.hoka-demo {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: rgba(223, 255, 0, 0.12);
+  color: #dfff00;
+  font-size: 0.9rem;
+}
+
+.hoka-legal {
+  margin-top: 22px;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: rgba(247, 244, 238, 0.5);
+}
+
+.hoka-result {
+  text-align: left;
+}
+
+.hoka-result h1 {
+  margin: 0 0 10px;
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-size: clamp(2.4rem, 9vw, 3.2rem);
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+
+.hoka-prize {
+  margin: 18px 0;
+  padding: 18px 0;
+  border-top: 1px solid rgba(223, 255, 0, 0.35);
+  border-bottom: 1px solid rgba(223, 255, 0, 0.35);
+}
+
+.hoka-prize span {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #dfff00;
+  margin-bottom: 6px;
+}
+
+.hoka-prize strong {
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.hoka-prize-art {
+  display: block;
+  width: min(240px, 72%);
+  max-height: 220px;
+  margin: 10px auto 12px;
+  object-fit: contain;
+}
+
+.hoka-code {
+  margin-top: 18px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.35rem;
+  letter-spacing: 0.12em;
+  color: #dfff00;
+}
+
+.hoka-win-flag {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #dfff00;
+}
+
+.hoka-prize--reveal {
+  background: rgba(223, 255, 0, 0.08);
+  border: 1px solid rgba(223, 255, 0, 0.45);
+  padding: 22px 18px;
+  animation: hokaPrizeIn 0.55s ease-out;
+}
+
+.hoka-prize--reveal strong {
+  font-size: clamp(1.8rem, 7vw, 2.4rem);
+  line-height: 1.05;
+}
+
+.hoka-sweepstakes {
+  margin: 18px 0 8px;
+  padding: 14px 16px;
+  border: 1px solid rgba(223, 255, 0, 0.28);
+  color: #dfff00;
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@keyframes hokaPrizeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hoka-status {
+  margin: 18px 0;
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-size: 1.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #dfff00;
+}
+
+.hoka-rows {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0 24px;
+  font-size: 0.92rem;
+}
+
+.hoka-rows div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(247, 244, 238, 0.12);
+}
+
+.hoka-rows span {
+  color: rgba(247, 244, 238, 0.55);
+}

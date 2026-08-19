@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { sendOtp, verifyOtp } from '../api';
+import { sendOtp, verifyOtp, postLabEvent } from '../api';
 import { CampaignShell, CampaignLegalFooter } from './CampaignArtFrame';
 import ReceiptCaptureStep from './ReceiptCaptureStep';
+import HokaEntryForm from './HokaEntryForm';
+import { isHokaCampaign } from '../campaigns/hokaCotswold';
 
 export const FORM_STEPS = { MOBILE: 1, OTP: 2, RECEIPT: 3, SUBMITTING: 4 };
 
@@ -9,6 +11,14 @@ function normaliseMobile(raw) {
   const s = raw.replace(/[\s\-()]/g, '');
   if (/^\+614/.test(s)) return '0' + s.slice(3);
   return s;
+}
+
+function normaliseName(raw) {
+  return String(raw || '').trim().replace(/\s+/g, ' ');
+}
+
+function isValidName(name) {
+  return name.length >= 2 && /^[A-Za-z][A-Za-z\s'.-]*$/.test(name);
 }
 
 function brandLogoPath(brand) {
@@ -147,7 +157,7 @@ function PromoHeader({ theme, campaign, brands }) {
 }
 
 function StepIndicator({ step }) {
-  const stepLabels = ['Mobile', 'Verify', 'Receipt'];
+  const stepLabels = ['Details', 'Verify', 'Receipt'];
   const currentStep = step - 1;
   return (
     <div className="steps">
@@ -167,9 +177,24 @@ function StepIndicator({ step }) {
 }
 
 /**
- * Shared instant-win form: mobile → OTP → receipt capture.
+ * Shared instant-win form: name + mobile → OTP → receipt capture.
  */
-export default function InstantWinForm({
+export default function InstantWinForm(props) {
+  if (isHokaCampaign(props.campaign)) {
+    return (
+      <HokaEntryForm
+        campaign={props.campaign}
+        device={props.device}
+        brands={props.brands}
+        labSessionId={props.labSessionId}
+        onComplete={props.onComplete}
+      />
+    );
+  }
+  return <NiterraInstantWinForm {...props} />;
+}
+
+function NiterraInstantWinForm({
   theme,
   campaign,
   device,
@@ -181,9 +206,11 @@ export default function InstantWinForm({
   onComplete,
   campaignLayout = false,
   campaignArtSrc = '/instant-win/bg.png',
+  labSessionId = null,
 }) {
   const [step, setStep] = useState(FORM_STEPS.MOBILE);
   const [error, setError] = useState('');
+  const [fullName, setFullName] = useState('');
   const [mobile, setMobile] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpSending, setOtpSending] = useState(false);
@@ -193,6 +220,11 @@ export default function InstantWinForm({
 
   async function handleSendOtp() {
     setError('');
+    const name = normaliseName(fullName);
+    if (!isValidName(name)) {
+      setError('Enter your full name (at least 2 characters)');
+      return;
+    }
     const norm = normaliseMobile(mobile);
     if (!/^04\d{8}$/.test(norm)) {
       setError('Enter a valid Australian mobile (04XX XXX XXX or +61 4XX XXX XXX)');
@@ -203,6 +235,9 @@ export default function InstantWinForm({
       const res = await sendOtp(norm);
       setOtpDemo(!!res.demo);
       setStep(FORM_STEPS.OTP);
+      if (labSessionId) {
+        postLabEvent(labSessionId, 'otp_sent', { mobile: norm, customerName: name }).catch(() => {});
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -218,6 +253,12 @@ export default function InstantWinForm({
     try {
       await verifyOtp(norm, otpCode);
       setStep(FORM_STEPS.RECEIPT);
+      if (labSessionId) {
+        postLabEvent(labSessionId, 'customer_verified', {
+          mobile: norm,
+          customerName: normaliseName(fullName),
+        }).catch(() => {});
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -229,8 +270,12 @@ export default function InstantWinForm({
     setError('');
     setSubmitting(true);
     setStep(FORM_STEPS.SUBMITTING);
+    if (labSessionId) {
+      postLabEvent(labSessionId, 'submitting').catch(() => {});
+    }
     try {
       await onComplete({
+        customerName: normaliseName(fullName),
         mobile: normaliseMobile(mobile),
         ...receiptData,
       });
@@ -255,14 +300,26 @@ export default function InstantWinForm({
   const mobileStep = step === FORM_STEPS.MOBILE && (
     <div className={`card${campaignLayout ? ' campaign-shell__card' : ''}`}>
       <h2 className={campaignLayout ? 'enter-form__title' : undefined} style={campaignLayout ? undefined : { fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 700, marginBottom: 20, color: 'var(--text-2)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-        Your Mobile Number
+        Your Details
       </h2>
+      <div className="field">
+        <label>Full Name *</label>
+        <input
+          type="text"
+          placeholder="First and last name"
+          value={fullName}
+          onChange={e => { setFullName(e.target.value); setError(''); }}
+          autoComplete="name"
+          autoFocus
+        />
+        <span className="field-hint">As shown on your receipt — used to verify your entry</span>
+      </div>
       <div className="field">
         <label>Mobile Number *</label>
         <input type="tel" placeholder="0412 345 678" value={mobile}
           onChange={e => { setMobile(e.target.value); setError(''); }}
           onKeyDown={e => e.key === 'Enter' && handleSendOtp()}
-          autoComplete="tel" autoFocus />
+          autoComplete="tel" />
         <span className="field-hint">We'll send a one-time code to verify it's you</span>
       </div>
       <button className="btn btn--primary btn--full" onClick={handleSendOtp} disabled={otpSending}>
@@ -299,7 +356,7 @@ export default function InstantWinForm({
       </div>
       <button className="btn btn--ghost btn--full" style={{ fontSize: '0.85rem', padding: '10px' }}
         onClick={() => { setStep(FORM_STEPS.MOBILE); setOtpCode(''); setError(''); }}>
-        Change number
+        Change details
       </button>
     </div>
   );
@@ -308,6 +365,7 @@ export default function InstantWinForm({
     <ReceiptCaptureStep
       brands={brands}
       submitting={submitting}
+      labSessionId={labSessionId}
       onBack={() => { setStep(FORM_STEPS.OTP); setError(''); }}
       onSubmit={handleReceiptSubmit}
     />
@@ -319,7 +377,7 @@ export default function InstantWinForm({
         <CampaignShell artSrc={campaignArtSrc}>
           <div className="campaign-shell__panel">
             <StepIndicator step={step} />
-            {error && step !== FORM_STEPS.RECEIPT && <div className="alert alert--error">{error}</div>}
+            {error && <div className="alert alert--error">{error}</div>}
             {mobileStep}
             {otpStep}
             {receiptStep}
@@ -341,7 +399,7 @@ export default function InstantWinForm({
       <main style={{ flex: 1, padding: '28px 16px' }}>
         <div className="container">
           <StepIndicator step={step} />
-          {error && step !== FORM_STEPS.RECEIPT && <div className="alert alert--error">{error}</div>}
+          {error && <div className="alert alert--error">{error}</div>}
           {mobileStep}
           {otpStep}
           {receiptStep}

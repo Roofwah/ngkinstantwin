@@ -1,8 +1,18 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../components/AdminLayout';
 import { getAdminClaims, reconcileClaim } from '../api';
+import { useAdminCampaign } from '../admin/adminCampaign';
 
 export default function AdminReconciliation() {
+  return (
+    <AdminLayout title="Reconciliation">
+      <ReconciliationBody />
+    </AdminLayout>
+  );
+}
+
+function ReconciliationBody() {
+  const { campaignId } = useAdminCampaign();
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notes, setNotes] = useState({});
@@ -12,14 +22,14 @@ export default function AdminReconciliation() {
   async function load() {
     setLoading(true);
     try {
-      const all = await getAdminClaims();
+      const all = await getAdminClaims(campaignId);
       setClaims(all.filter(c => c.claimStatus === 'VALIDATION_PENDING'));
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [campaignId]);
 
   async function handleAction(claimId, action) {
     setProcessing(p => ({ ...p, [claimId]: action }));
@@ -38,9 +48,7 @@ export default function AdminReconciliation() {
   const TIER_LABEL = { TIER_2_PROVISIONAL_WIN: 'Tier 2', TIER_3_PROVISIONAL_WIN: 'Tier 3' };
 
   return (
-    <AdminLayout title="Reconciliation" actions={
-      <button className="btn btn--ghost btn--sm" onClick={load}>↻ Refresh</button>
-    }>
+    <>
       <div className="card mb-16" style={{ fontSize: '0.85rem', color: 'var(--text-2)' }}>
         <strong style={{ color: 'var(--text)' }}>Retailer Validation (Mock)</strong><br />
         This screen simulates the weekly retailer reconciliation process.
@@ -162,6 +170,6 @@ export default function AdminReconciliation() {
           })}
         </div>
       )}
-    </AdminLayout>
+    </>
   );
 }
