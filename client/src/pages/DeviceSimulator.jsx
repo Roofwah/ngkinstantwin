@@ -96,6 +96,7 @@ const CAMPAIGN_UI = {
   'hoka-2026': {
     sub: 'Cotswold Outdoor × HOKA',
     color: '#dfff00',
+    idleVideo: '/campaigns/hoka/hoka.mp4',
     slides: [
       { headline: 'WIN YOUR PURCHASE BACK', sub: 'HOKA Instant Win', src: '/campaigns/hoka/slide1.jpg' },
       { headline: 'SCAN TO PLAY', sub: 'Spend $50 on HOKA', src: '/campaigns/hoka/slide2.jpg' },
@@ -120,6 +121,7 @@ function mergeCampaign(apiCampaign) {
     sub: apiCampaign.brand || ui.sub || '',
     color: apiCampaign.config?.themeColor || ui.color || '#888',
     slides: ui.slides || [{ headline: apiCampaign.name, sub: apiCampaign.tagline || '' }],
+    idleVideo: ui.idleVideo || apiCampaign.config?.idleVideoUrl || null,
     faq: ui.faq || [{ q: 'Campaign', a: apiCampaign.mechanic || apiCampaign.tagline || '' }],
   };
 }
@@ -149,8 +151,7 @@ export default function DeviceSimulator() {
   const [menuOpen, setMenuOpen]       = useState(false);
   const [activePanel, setActivePanel] = useState(null);
   const [tapPending, setTapPending]     = useState(false);
-  const [campaignModalOpen, setCampaignModalOpen] = useState(false);
-  const [hardwareModalOpen, setHardwareModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [deviceScale, setDeviceScale] = useState(1);
 
   const pollRef      = useRef(null);
@@ -231,8 +232,7 @@ export default function DeviceSimulator() {
       if (e.key === 'g' || e.key === 'G') handleGenerate();
       if (e.key === 'm' || e.key === 'M') handleReset();
       if (e.key === 'Escape') {
-        setCampaignModalOpen(false);
-        setHardwareModalOpen(false);
+        setSettingsModalOpen(false);
         setMenuOpen(false);
         setActivePanel(null);
       }
@@ -401,7 +401,7 @@ export default function DeviceSimulator() {
       const data = await setDemoCampaign(c.id);
       const next = data.config?.campaign ? mergeCampaign(data.config.campaign) : c;
       setCampaign(next);
-      setCampaignModalOpen(false);
+      setSettingsModalOpen(false);
       handleReset();
     } catch (err) {
       setErrorMsg(err.message || 'Failed to switch campaign');
@@ -448,46 +448,6 @@ export default function DeviceSimulator() {
           <p style={{ fontSize: '0.62rem', color: '#3a3a3a', letterSpacing: '0.08em', margin: '2px 0 0' }}>
             {hw.shortLabel} &middot; {DEVICE_CODE} &middot; {campaign.name}
           </p>
-        </div>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-          <button
-            type="button"
-            onClick={() => setHardwareModalOpen(true)}
-            style={{
-              padding: '8px 12px',
-              background: '#111',
-              border: '1px solid #2a2a2a',
-              borderRadius: 8,
-              color: '#888',
-              fontFamily: 'monospace',
-              fontSize: '0.62rem',
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-            }}
-          >
-            Hardware
-          </button>
-          <button
-            type="button"
-            onClick={() => setCampaignModalOpen(true)}
-            style={{
-              padding: '8px 12px',
-              background: '#111',
-              border: `1px solid ${campaign.color}44`,
-              borderRadius: 8,
-              color: campaign.color,
-              fontFamily: 'monospace',
-              fontSize: '0.62rem',
-              fontWeight: 700,
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              cursor: 'pointer',
-            }}
-          >
-            Campaign
-          </button>
         </div>
       </header>
 
@@ -655,21 +615,49 @@ export default function DeviceSimulator() {
         </div>
       )}
 
-      {campaignModalOpen && (
-        <CampaignModal
-          campaign={campaign}
-          options={campaignOptions.length ? campaignOptions : [campaign]}
-          onSelect={selectCampaign}
-          onClose={() => setCampaignModalOpen(false)}
-        />
-      )}
+      <button
+        type="button"
+        aria-label="Open simulator settings"
+        onClick={() => setSettingsModalOpen(true)}
+        style={{
+          position: 'fixed',
+          bottom: tokenData && deviceState !== STATE.IDLE ? 56 : 'max(20px, env(safe-area-inset-bottom, 0px))',
+          right: 'max(20px, env(safe-area-inset-right, 0px))',
+          zIndex: 50,
+          width: 52,
+          height: 52,
+          borderRadius: '50%',
+          background: '#14141f',
+          border: '1px solid #2e2e44',
+          boxShadow: '0 6px 24px rgba(0,0,0,0.5)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#aaa',
+          transition: 'background 0.15s ease, color 0.15s ease, transform 0.15s ease',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = '#1e1e2e';
+          e.currentTarget.style.color = '#fff';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = '#14141f';
+          e.currentTarget.style.color = '#aaa';
+        }}
+      >
+        <CogIcon />
+      </button>
 
-      {hardwareModalOpen && (
-        <HardwareModal
-          current={hw}
-          options={listPukHardware()}
-          onSelect={(next) => {
-            setHardwareModalOpen(false);
+      {settingsModalOpen && (
+        <SettingsModal
+          campaign={campaign}
+          campaignOptions={campaignOptions.length ? campaignOptions : [campaign]}
+          onSelectCampaign={selectCampaign}
+          hw={hw}
+          hardwareOptions={listPukHardware()}
+          onSelectHardware={(next) => {
+            setSettingsModalOpen(false);
             if (next.id === hw.id) return;
             stopAll();
             setTokenData(null);
@@ -681,7 +669,7 @@ export default function DeviceSimulator() {
             setActivePanel(null);
             navigate(pukHardwarePath(next.id));
           }}
-          onClose={() => setHardwareModalOpen(false)}
+          onClose={() => setSettingsModalOpen(false)}
         />
       )}
 
@@ -690,14 +678,40 @@ export default function DeviceSimulator() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Campaign picker modal
+// Settings modal — campaign + hardware
 // ─────────────────────────────────────────────────────────────────
-function CampaignModal({ campaign, options, onSelect, onClose }) {
+function CogIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+      <path
+        d="M19.4 13.5a7.8 7.8 0 0 0 .1-3l2-1.2-2-3.5-2.3.7a7.9 7.9 0 0 0-2.6-1.5L14.5 2h-5L9.4 5.5a7.9 7.9 0 0 0-2.6 1.5l-2.3-.7-2 3.5 2 1.2a7.8 7.8 0 0 0-.1 3l-2 1.2 2 3.5 2.3-.7a7.9 7.9 0 0 0 2.6 1.5L9.5 22h5l.5-3.5a7.9 7.9 0 0 0 2.6-1.5l2.3.7 2-3.5-2-1.2Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function SettingsModal({
+  campaign,
+  campaignOptions,
+  onSelectCampaign,
+  hw,
+  hardwareOptions,
+  onSelectHardware,
+  onClose,
+}) {
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Switch campaign"
+      aria-label="Simulator settings"
       onClick={onClose}
       style={{
         position: 'fixed',
@@ -716,19 +730,24 @@ function CampaignModal({ campaign, options, onSelect, onClose }) {
         onClick={e => e.stopPropagation()}
         style={{
           width: '100%',
-          maxWidth: 340,
+          maxWidth: 380,
+          maxHeight: 'min(85vh, 640px)',
           background: '#0a0a0a',
           border: '1px solid #1c1c1c',
           borderRadius: 14,
-          padding: '20px 18px 18px',
           boxShadow: '0 24px 48px rgba(0,0,0,0.5)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 16,
+          padding: '18px 18px 14px',
+          borderBottom: '1px solid #1a1a1a',
+          flexShrink: 0,
         }}>
           <span style={{
             fontFamily: 'monospace',
@@ -737,7 +756,7 @@ function CampaignModal({ campaign, options, onSelect, onClose }) {
             textTransform: 'uppercase',
             color: '#666',
           }}>
-            Switch Campaign
+            Simulator Settings
           </span>
           <button
             type="button"
@@ -758,124 +777,110 @@ function CampaignModal({ campaign, options, onSelect, onClose }) {
             ×
           </button>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {options.map(c => {
-            const active = campaign.id === c.id;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => onSelect(c)}
-                style={{
-                  padding: '12px 14px',
-                  background: active ? c.color : '#111',
-                  color: active ? '#000' : '#aaa',
-                  border: `1px solid ${active ? c.color : '#222'}`,
-                  borderRadius: 8,
-                  fontFamily: 'monospace',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.1em',
-                  cursor: 'pointer',
-                  textTransform: 'uppercase',
-                  textAlign: 'left',
-                }}
-              >
-                {c.name}
-                <span style={{
-                  display: 'block',
-                  fontSize: '0.6rem',
-                  fontWeight: 400,
-                  opacity: 0.75,
-                  marginTop: 2,
-                  letterSpacing: '0.06em',
-                }}>
-                  {c.sub}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
 
-function HardwareModal({ current, options, onSelect, onClose }) {
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Switch PUK hardware"
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 40,
-        background: 'rgba(0,0,0,0.72)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 20,
-      }}
-    >
-      <div
-        onClick={e => e.stopPropagation()}
-        style={{
-          width: 'min(420px, 100%)',
-          background: '#0c0c12',
-          border: '1px solid #222',
-          borderRadius: 14,
-          padding: 18,
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <span style={{ fontFamily: 'monospace', fontSize: 11, letterSpacing: '0.16em', color: '#888' }}>
-            PUK HARDWARE
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: 'none', border: 'none', color: '#555',
-              fontSize: 22, lineHeight: 1, cursor: 'pointer',
-            }}
-          >
-            ×
-          </button>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {options.map(h => {
-            const active = current.id === h.id;
-            return (
-              <button
-                key={h.id}
-                type="button"
-                onClick={() => onSelect(h)}
-                style={{
-                  padding: '12px 14px',
-                  background: active ? '#1a1a28' : '#111',
-                  color: active ? '#fff' : '#aaa',
-                  border: `1px solid ${active ? '#3a3a55' : '#222'}`,
-                  borderRadius: 8,
-                  fontFamily: 'monospace',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                }}
-              >
-                {h.label}
-                <span style={{
-                  display: 'block',
-                  fontSize: '0.6rem',
-                  fontWeight: 400,
-                  opacity: 0.75,
-                  marginTop: 2,
-                  letterSpacing: '0.06em',
-                }}>
-                  {h.display} · {h.deviceCode}
-                </span>
-              </button>
-            );
-          })}
+        <div style={{ overflowY: 'auto', padding: '16px 18px 18px' }}>
+          <section style={{ marginBottom: 22 }}>
+            <h3 style={{
+              margin: '0 0 10px',
+              fontFamily: 'monospace',
+              fontSize: '0.62rem',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: '#555',
+              fontWeight: 700,
+            }}>
+              Campaign
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {campaignOptions.map(c => {
+                const active = campaign.id === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => onSelectCampaign(c)}
+                    style={{
+                      padding: '12px 14px',
+                      background: active ? c.color : '#111',
+                      color: active ? '#000' : '#aaa',
+                      border: `1px solid ${active ? c.color : '#222'}`,
+                      borderRadius: 8,
+                      fontFamily: 'monospace',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.1em',
+                      cursor: 'pointer',
+                      textTransform: 'uppercase',
+                      textAlign: 'left',
+                    }}
+                  >
+                    {c.name}
+                    <span style={{
+                      display: 'block',
+                      fontSize: '0.6rem',
+                      fontWeight: 400,
+                      opacity: 0.75,
+                      marginTop: 2,
+                      letterSpacing: '0.06em',
+                    }}>
+                      {c.sub}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section>
+            <h3 style={{
+              margin: '0 0 10px',
+              fontFamily: 'monospace',
+              fontSize: '0.62rem',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: '#555',
+              fontWeight: 700,
+            }}>
+              Hardware
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {hardwareOptions.map(h => {
+                const active = hw.id === h.id;
+                return (
+                  <button
+                    key={h.id}
+                    type="button"
+                    onClick={() => onSelectHardware(h)}
+                    style={{
+                      padding: '12px 14px',
+                      background: active ? '#1a1a28' : '#111',
+                      color: active ? '#fff' : '#aaa',
+                      border: `1px solid ${active ? '#3a3a55' : '#222'}`,
+                      borderRadius: 8,
+                      fontFamily: 'monospace',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.08em',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    {h.label}
+                    <span style={{
+                      display: 'block',
+                      fontSize: '0.6rem',
+                      fontWeight: 400,
+                      opacity: 0.75,
+                      marginTop: 2,
+                      letterSpacing: '0.06em',
+                    }}>
+                      {h.display} · {h.deviceCode}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
         </div>
       </div>
     </div>
@@ -1096,22 +1101,102 @@ function ScreenContent({
 // ─────────────────────────────────────────────────────────────────
 function IdleSlideshow({ campaign, tapPending }) {
   const [slideIdx, setSlideIdx] = useState(0);
-  const [fading,   setFading]   = useState(false);
+  const [fading, setFading] = useState(false);
+  const [playingVideo, setPlayingVideo] = useState(false);
+  const videoRef = useRef(null);
+  const idleVideo = campaign.idleVideo;
 
   useEffect(() => {
     setSlideIdx(0);
+    setPlayingVideo(false);
   }, [campaign]);
 
   useEffect(() => {
+    if (playingVideo) return undefined;
     const t = setInterval(() => {
       setFading(true);
       setTimeout(() => {
-        setSlideIdx(i => (i + 1) % campaign.slides.length);
+        setSlideIdx((i) => {
+          if (idleVideo && i >= campaign.slides.length - 1) {
+            setPlayingVideo(true);
+            return i;
+          }
+          return (i + 1) % campaign.slides.length;
+        });
         setFading(false);
       }, 300);
     }, 3200);
     return () => clearInterval(t);
-  }, [campaign]);
+  }, [campaign, playingVideo, idleVideo]);
+
+  useEffect(() => {
+    if (!playingVideo || !videoRef.current) return;
+    videoRef.current.play().catch(() => {});
+  }, [playingVideo]);
+
+  const hint = (
+    <div style={{ zIndex: 2, textAlign: 'center' }}>
+      <div style={{
+        fontFamily: 'monospace', fontSize: 7.5, letterSpacing: '0.1em',
+        color: tapPending ? campaign.color : 'rgba(255,255,255,0.2)',
+        transition: 'color 0.15s ease',
+      }}>
+        {tapPending ? 'TAP AGAIN TO ISSUE' : 'DOUBLE TAP TO ISSUE QR'}
+      </div>
+    </div>
+  );
+
+  const swipeHint = (
+    <div style={{
+      position: 'absolute', bottom: 7, left: '50%',
+      transform: 'translateX(-50%)',
+      opacity: 0.25, pointerEvents: 'none', zIndex: 2,
+      animation: 'swipeHint 2s ease-in-out infinite',
+    }}>
+      <svg width="14" height="9" viewBox="0 0 14 9">
+        <polyline points="1,8 7,1 13,8" stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
+
+  if (playingVideo && idleVideo) {
+    return (
+      <div style={{
+        width: '100%', height: '100%',
+        background: '#000',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'flex-end',
+        padding: '20px 0 14px',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        <video
+          ref={videoRef}
+          src={idleVideo}
+          autoPlay
+          muted
+          playsInline
+          onEnded={() => {
+            setPlayingVideo(false);
+            setSlideIdx(0);
+          }}
+          style={{
+            position: 'absolute', inset: 0,
+            width: '100%', height: '100%',
+            objectFit: 'cover',
+            pointerEvents: 'none',
+          }}
+        />
+        {hint}
+        {swipeHint}
+        <style>{`
+          @keyframes swipeHint {
+            0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.18; }
+            50%       { transform: translateX(-50%) translateY(-4px); opacity: 0.35; }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   const slide = campaign.slides[slideIdx];
 
@@ -1173,27 +1258,10 @@ function IdleSlideshow({ campaign, tapPending }) {
       )}
 
       {/* Double-tap hint */}
-      <div style={{ zIndex: 2, textAlign: 'center' }}>
-        <div style={{
-          fontFamily: 'monospace', fontSize: 7.5, letterSpacing: '0.1em',
-          color: tapPending ? campaign.color : 'rgba(255,255,255,0.2)',
-          transition: 'color 0.15s ease',
-        }}>
-          {tapPending ? 'TAP AGAIN TO ISSUE' : 'DOUBLE TAP TO ISSUE QR'}
-        </div>
-      </div>
+      {hint}
 
       {/* Swipe-up arrow */}
-      <div style={{
-        position: 'absolute', bottom: 7, left: '50%',
-        transform: 'translateX(-50%)',
-        opacity: 0.25, pointerEvents: 'none', zIndex: 2,
-        animation: 'swipeHint 2s ease-in-out infinite',
-      }}>
-        <svg width="14" height="9" viewBox="0 0 14 9">
-          <polyline points="1,8 7,1 13,8" stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </div>
+      {swipeHint}
 
       <style>{`
         @keyframes swipeHint {
