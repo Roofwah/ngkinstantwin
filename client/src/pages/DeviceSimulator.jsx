@@ -41,10 +41,11 @@ const CAMPAIGN_UI = {
     sub: 'Refresh & Win',
     color: '#E8112D',
     slides: [
-      { headline: 'REFRESH & WIN', sub: 'Coca-Cola Promotion' },
-      { headline: 'SCAN TO PLAY', sub: 'Instant prizes await' },
-      { headline: 'WIN DAILY', sub: 'New prizes every day' },
-      { headline: 'BUY & SCAN', sub: 'Every Coke counts' },
+      { headline: 'REFRESH & WIN', sub: 'Coca-Cola Promotion', src: '/campaigns/coke/slide1.jpg' },
+      { headline: 'SCAN TO PLAY', sub: 'Instant prizes await', src: '/campaigns/coke/slide2.jpg' },
+      { headline: 'WIN DAILY', sub: 'New prizes every day', src: '/campaigns/coke/slide3.jpg' },
+      { headline: 'BUY & SCAN', sub: 'Every Coke counts', src: '/campaigns/coke/slide4.jpg' },
+      { headline: 'REFRESH & WIN', sub: 'Coca-Cola Promotion', src: '/campaigns/coke/slide5.jpg' },
     ],
     faq: [
       { q: 'Campaign', a: 'Coca-Cola Refresh & Win — participating convenience and grocery stores.' },
