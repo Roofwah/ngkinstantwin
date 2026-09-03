@@ -5,7 +5,7 @@ import { issueToken, pollTokenStatus, getDeviceConfig, setDemoCampaign } from '.
 import { getPukHardware, listPukHardware, pukHardwarePath } from '../config/pukHardware';
 
 const PUK2_ENTER_QR_URL =
-  'https://pure-random-instant-win-production.up.railway.app/enter?device=PR-PUK2-001';
+  'https://pure-random-instant-win-production.up.railway.app/enter?campaign=niterra-ngk-2026';
 
 // ─── Device states ────────────────────────────────────────────────
 const STATE = {
@@ -23,11 +23,10 @@ const CAMPAIGN_UI = {
   'niterra-ngk-2026': {
     sub: 'NGK / NTK / KYB',
     color: '#e86600',
+    idleVideo: '/campaigns/niterra/ngk.mp4',
+    qrBg: '/campaigns/niterra/scan.jpg',
     slides: [
-      { headline: 'INSTANT WIN', sub: 'Buy NGK · NTK · KYB', src: '/campaigns/niterra/slide1.jpg' },
-      { headline: 'SCAN & WIN', sub: 'Prize drawn instantly', src: '/campaigns/niterra/slide2.jpg' },
-      { headline: 'UP TO $500', sub: 'In prizes to be won',  src: '/campaigns/niterra/slide3.jpg' },
-      { headline: 'EVERY PURCHASE', sub: 'Earns a scan',     src: '/campaigns/niterra/slide4.jpg' },
+      { headline: 'UP TO $500', sub: 'In prizes to be won', src: '/campaigns/niterra/slide3.jpg' },
     ],
     faq: [
       { q: 'Campaign', a: 'Niterra Instant Win — NGK, NTK & KYB products at participating stores.' },
@@ -123,6 +122,7 @@ function mergeCampaign(apiCampaign) {
     color: apiCampaign.config?.themeColor || ui.color || '#888',
     slides: ui.slides || [{ headline: apiCampaign.name, sub: apiCampaign.tagline || '' }],
     idleVideo: ui.idleVideo || apiCampaign.config?.idleVideoUrl || null,
+    qrBg: ui.qrBg || apiCampaign.config?.qrBgUrl || null,
     faq: ui.faq || [{ q: 'Campaign', a: apiCampaign.mechanic || apiCampaign.tagline || '' }],
   };
 }
@@ -978,10 +978,25 @@ function ScreenContent({
   if (state === STATE.READY || state === STATE.SCANNED) {
     const isScanned = state === STATE.SCANNED;
     const qrSize    = Math.round(screenW * qrScale);
+    const qrBg = campaign.qrBg;
 
     return (
-      <div style={{ ...base, justifyContent: 'space-between', padding: '16px 0 32px' }}>
+      <div style={{ ...base, justifyContent: 'space-between', padding: qrBg ? 0 : '16px 0 32px', position: 'relative', overflow: 'hidden' }}>
+        {qrBg && (
+          <img
+            src={qrBg}
+            alt=""
+            style={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              objectFit: 'cover',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
 
+        <div style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', width: '100%', height: '100%', padding: qrBg ? '16px 0 32px' : undefined }}>
+        {!qrBg && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
           <div style={{
             width: 7, height: 7, borderRadius: '50%',
@@ -995,25 +1010,28 @@ function ScreenContent({
             {isScanned ? 'SCANNED' : 'SCAN TO PLAY'}
           </span>
         </div>
+        )}
 
         <div style={{
-          background: isScanned ? '#040d04' : '#fff',
-          borderRadius: 14, padding: 10,
-          boxShadow: isScanned
+          background: qrBg ? 'transparent' : (isScanned ? '#040d04' : '#fff'),
+          borderRadius: qrBg ? 0 : 14,
+          padding: qrBg ? 0 : 10,
+          boxShadow: qrBg ? 'none' : (isScanned
             ? '0 0 0 2px #00c85380, 0 0 24px rgba(0,200,83,0.12)'
-            : '0 0 40px rgba(255,255,255,0.14)',
+            : '0 0 40px rgba(255,255,255,0.14)'),
           position: 'relative',
           transition: 'all 0.35s ease',
+          marginTop: qrBg ? 'auto' : undefined,
         }}>
           <QRCodeSVG
             value={tokenUrl || 'https://purerandom.io'}
             size={qrSize} level="M"
-            bgColor={isScanned ? '#040d04' : '#ffffff'}
+            bgColor={qrBg ? 'transparent' : (isScanned ? '#040d04' : '#ffffff')}
             fgColor={isScanned ? '#00c853' : '#000000'}
           />
           {isScanned && (
             <div style={{
-              position: 'absolute', inset: 0, borderRadius: 14,
+              position: 'absolute', inset: 0, borderRadius: qrBg ? 0 : 14,
               background: 'rgba(0,6,0,0.5)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
@@ -1026,21 +1044,24 @@ function ScreenContent({
         </div>
 
         <div style={{ textAlign: 'center' }}>
+          {!qrBg && (
           <div style={{ fontFamily: 'monospace', fontSize: 8.5, color: '#252525', letterSpacing: '0.1em', marginBottom: 8 }}>
             {tokenData?.token}
           </div>
+          )}
           <div style={{
             fontFamily: 'monospace', fontSize: 26, fontWeight: 700, letterSpacing: '0.06em',
-            color: isExpiring ? '#ff5252' : (isScanned ? '#ffab00' : campaign.color),
-            textShadow: `0 0 24px ${isExpiring ? 'rgba(255,82,82,0.35)' : 'rgba(232,102,0,0.25)'}`,
+            color: isExpiring ? '#ff5252' : (isScanned ? '#ffab00' : (qrBg ? '#fff' : campaign.color)),
+            textShadow: qrBg ? '0 1px 8px rgba(0,0,0,0.8)' : `0 0 24px ${isExpiring ? 'rgba(255,82,82,0.35)' : 'rgba(232,102,0,0.25)'}`,
           }}>
             {formatTime(timeLeft)}
           </div>
-          {isScanned && (
+          {isScanned && !qrBg && (
             <div style={{ fontFamily: 'monospace', fontSize: 7, color: '#ffab0088', letterSpacing: '0.12em', marginTop: 6 }}>
               AWAITING CUSTOMER
             </div>
           )}
+        </div>
         </div>
 
       </div>

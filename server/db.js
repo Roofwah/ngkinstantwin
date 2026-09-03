@@ -158,7 +158,7 @@ const DEMO_CAMPAIGNS = [
     mechanic: 'Spend $50+ on eligible NGK, NTK or KYB products',
     startDate: '2026-06-01',
     endDate: '2026-12-31',
-    config: { themeColor: '#e86600', eligibleBrands: ['NGK', 'NTK', 'KYB'], landingHeroUrl: '/instant-win/hero.png' },
+    config: { themeColor: '#e86600', eligibleBrands: ['NGK', 'NTK', 'KYB'], landingHeroUrl: '/instant-win/hero.png', idleVideoUrl: '/campaigns/niterra/ngk.mp4' },
   },
   {
     id: 'hoka-2026',
