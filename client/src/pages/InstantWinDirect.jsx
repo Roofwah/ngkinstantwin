@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
 import { getDeviceConfig, submitDirectClaim, setDemoCampaign, postLabEvent } from '../api';
 import { getInstantWinTheme } from '../config/instantWinThemes';
 import InstantWinForm from '../components/InstantWinForm';
 import { isHokaCampaign } from '../campaigns/hokaCotswold';
+import { NITERRA_CAMPAIGN_ID } from '../campaigns/niterraRepco';
 
 const DEFAULT_DEVICE = 'PR-DEMO-001';
 
@@ -33,6 +34,7 @@ export default function InstantWinDirect() {
   }, [labSession]);
 
   useEffect(() => {
+    if (campaignParam === NITERRA_CAMPAIGN_ID) return;
     getDeviceConfig(deviceCode)
       .then(data => {
         setConfig(data);
@@ -42,7 +44,15 @@ export default function InstantWinDirect() {
         setError(err.message || 'Could not load campaign');
         setLoading(false);
       });
-  }, [deviceCode]);
+  }, [deviceCode, campaignParam]);
+
+  if (campaignParam === NITERRA_CAMPAIGN_ID) {
+    const qs = new URLSearchParams();
+    if (deviceCode !== DEFAULT_DEVICE) qs.set('device', deviceCode);
+    if (labSession) qs.set('labSession', labSession);
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return <Navigate to={`/enter/repco${suffix}`} replace />;
+  }
 
   async function handleComplete(receiptPayload) {
     const qs = labSession ? `?labSession=${encodeURIComponent(labSession)}` : '';

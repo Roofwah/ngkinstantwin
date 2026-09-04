@@ -13,6 +13,7 @@ const {
   hokaPrizeName,
   HOKA_STORE_NAME,
 } = require('../lib/hokaCampaign');
+const { validateNiterraCrosswordPayload } = require('../lib/niterraCampaign');
 
 function labAllowsDuplicateReceipts(labSessionId) {
   if (!labSessionId) return false;
@@ -153,7 +154,7 @@ function validateReceiptPayload(body, file) {
 }
 
 function resolveClaimStatus(result, verificationMethod) {
-  if (verificationMethod === 'hoka_entry') {
+  if (verificationMethod === 'hoka_entry' || verificationMethod === 'niterra_crossword') {
     return isInstantWin(result) ? 'VALIDATED' : 'ELIGIBLE';
   }
   if (verificationMethod === 'manual') {
@@ -193,18 +194,21 @@ function createClaimWithReceipt({
   }
 
   const hoka = isHokaCampaign(campaign);
+  const niterraCrossword = body.verificationMethod === 'niterra_crossword';
   const deviceRow = deviceCode
     ? db.prepare('SELECT * FROM devices WHERE deviceCode = ?').get(deviceCode)
     : null;
 
   const validated = hoka
     ? validateHokaPayload(body, campaign, deviceRow)
-    : validateReceiptPayload(body, file);
+    : niterraCrossword
+      ? validateNiterraCrosswordPayload(body, campaign, deviceRow, campaignBrandOptions(campaign))
+      : validateReceiptPayload(body, file);
   if (validated.errors.length) {
     return { error: validated.errors[0], errors: validated.errors, status: 400 };
   }
 
-  const bypassDuplicate = hoka || shouldBypassDuplicateInvoice(body);
+  const bypassDuplicate = hoka || niterraCrossword || shouldBypassDuplicateInvoice(body);
   if (bypassDuplicate) {
     clearClaimForDuplicateReceipt(validated.invoiceNumber);
   } else {
@@ -261,13 +265,13 @@ function createClaimWithReceipt({
     UPDATE claims SET result = ?, claimStatus = ?, prizeId = ?, prizeName = ? WHERE claimId = ?
   `).run(result, claimStatus, prize?.prizeId || null, prizeName, claimId);
 
-  if (hoka && isInstantWin(result)) {
+  if (isInstantWin(result) && (hoka || niterraCrossword)) {
     try {
       attachRedemption(claimId);
       notifyHokaWinnerSafe(claimId);
     } catch (err) {
-      console.error(`[hoka] redemption persist failed for ${claimId}:`, err.message);
-      log('hoka_redemption_failed', { claimId, details: { error: err.message, result } });
+      console.error(`[instant-win] redemption persist failed for ${claimId}:`, err.message);
+      log('instant_win_redemption_failed', { claimId, details: { error: err.message, result } });
     }
   }
 

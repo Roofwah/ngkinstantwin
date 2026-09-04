@@ -4,8 +4,17 @@ import { QRCodeSVG } from 'qrcode.react';
 import { issueToken, pollTokenStatus, getDeviceConfig, setDemoCampaign } from '../api';
 import { getPukHardware, listPukHardware, pukHardwarePath } from '../config/pukHardware';
 
-const PUK2_ENTER_QR_URL =
-  'https://pure-random-instant-win-production.up.railway.app/enter?campaign=niterra-ngk-2026';
+const PROD_ENTER_REPCO_URL =
+  'https://pure-random-instant-win-production.up.railway.app/enter/repco';
+
+function resolvePhoneEnterUrl() {
+  if (typeof window === 'undefined') return null;
+  const { hostname, origin } = window.location;
+  if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+    return `${origin}/enter/repco`;
+  }
+  return null;
+}
 
 // ─── Device states ────────────────────────────────────────────────
 const STATE = {
@@ -33,7 +42,7 @@ const CAMPAIGN_UI = {
       { q: 'Start date', a: '1 July 2026' },
       { q: 'End date', a: '31 August 2026' },
       { q: 'How to enter', a: 'Purchase any eligible NGK, NTK or KYB product from a participating store. Ask staff to issue a QR code on this device, then scan with your phone.' },
-      { q: 'Prizes', a: 'Tier 1: $50 gift card (1 in 5 chance). Tier 2: $200 gift card (1 in 12). Tier 3: $500 tool kit (1 in 30). All other valid entries receive a weekly draw entry.' },
+      { q: 'Prizes', a: 'Instant win: NGK Racing Cap or KYB Workshop Cap. All other valid entries receive a weekly draw entry.' },
     ],
   },
   'cocacola-2026': {
@@ -154,6 +163,9 @@ export default function DeviceSimulator() {
   const [tapPending, setTapPending]     = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [deviceScale, setDeviceScale] = useState(1);
+  const [enterRepcoUrl, setEnterRepcoUrl] = useState(
+    () => resolvePhoneEnterUrl() || PROD_ENTER_REPCO_URL,
+  );
 
   const pollRef      = useRef(null);
   const timerRef     = useRef(null);
@@ -182,6 +194,22 @@ export default function DeviceSimulator() {
       .catch((err) => console.warn('Device config load failed:', err.message));
     return () => { cancelled = true; };
   }, [DEVICE_CODE]);
+
+  useEffect(() => {
+    const direct = resolvePhoneEnterUrl();
+    if (direct) {
+      setEnterRepcoUrl(direct);
+      return;
+    }
+    fetch('/api/lab/network-hint')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.phoneBaseUrl) {
+          setEnterRepcoUrl(`${data.phoneBaseUrl}/enter/repco`);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const prevTitle = document.title;
@@ -261,7 +289,7 @@ export default function DeviceSimulator() {
     try {
       const staticPuk2Qr = hw.id === 'puk2';
       const data = staticPuk2Qr
-        ? { token: DEVICE_CODE, url: PUK2_ENTER_QR_URL }
+        ? { token: DEVICE_CODE, url: enterRepcoUrl }
         : await issueToken(DEVICE_CODE);
       setTokenData(data);
       setDeviceState(STATE.READY);

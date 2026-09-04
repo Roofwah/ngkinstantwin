@@ -3,14 +3,50 @@ const { log } = require('./auditLogger');
 const { sendBirdSms } = require('../lib/birdSms');
 const { getBaseUrl, getLanIpv4 } = require('../lib/baseUrl');
 const { HOKA_STORE_NAME, maskMobile } = require('../lib/hokaCampaign');
+const { NITERRA_CAMPAIGN_ID, NITERRA_STORE_NAME, niterraPrizeImagePath } = require('../lib/niterraCampaign');
 const { ensureWinnerRedemption } = require('./redemption');
+
+function isNiterraClaim(claim) {
+  if (!claim) return false;
+  if (claim.campaignId === NITERRA_CAMPAIGN_ID) return true;
+  return claim.verificationMethod === 'niterra_crossword';
+}
+
+function winnerEmailBranding(claim) {
+  if (isNiterraClaim(claim)) {
+    const store = claim.storeName || NITERRA_STORE_NAME;
+    return {
+      kicker: 'NITERRA × REPCO',
+      title: 'Instant Winner',
+      subject: `${store} — Instant Winner`,
+      accent: '#e31837',
+      buttonText: '#ffffff',
+      defaultStore: NITERRA_STORE_NAME,
+    };
+  }
+  const store = claim?.storeName || HOKA_STORE_NAME;
+  return {
+    kicker: 'COTSWOLD OUTDOOR × HOKA',
+    title: 'Instant Winner',
+    subject: `${store} — Instant Winner`,
+    accent: '#dfff00',
+    buttonText: '#0a1628',
+    defaultStore: HOKA_STORE_NAME,
+  };
+}
+
+function redemptionStatusLabel(claim) {
+  const status = String(claim?.redemptionStatus || 'AWAITING_FULFILMENT').replace(/_/g, ' ');
+  return status;
+}
 
 function firstName(fullName) {
   return String(fullName || 'there').trim().split(/\s+/)[0] || 'there';
 }
 
 function winnerSmsBody(claim) {
-  const store = claim.storeName || HOKA_STORE_NAME;
+  const store = claim.storeName
+    || (isNiterraClaim(claim) ? NITERRA_STORE_NAME : HOKA_STORE_NAME);
   return [
     `Congratulations ${firstName(claim.customerName)}!`,
     ``,
@@ -40,14 +76,16 @@ function fulfilUrl(claim) {
   return `${appBaseUrl()}/fulfil/${claim.fulfilmentToken}`;
 }
 
-function fulfilButtonBlock(url) {
+function fulfilButtonBlock(url, branding) {
   const safeUrl = escapeHtml(url);
+  const accent = branding?.accent || '#dfff00';
+  const textColor = branding?.buttonText || '#0a1628';
   return `
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:28px auto 12px;">
       <tr>
-        <td align="center" bgcolor="#dfff00" style="border-radius:8px;">
+        <td align="center" bgcolor="${accent}" style="border-radius:8px;">
           <a href="${safeUrl}" target="_blank" rel="noopener noreferrer"
-             style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:0.08em;color:#0a1628;text-decoration:none;background:#dfff00;border-radius:8px;">
+             style="display:inline-block;padding:14px 32px;font-family:Arial,sans-serif;font-size:14px;font-weight:700;letter-spacing:0.08em;color:${textColor};text-decoration:none;background:${accent};border-radius:8px;">
             FULFIL PRIZE
           </a>
         </td>
@@ -57,7 +95,7 @@ function fulfilButtonBlock(url) {
       Tap the button to open the staff fulfilment page, or use this link:
     </p>
     <p style="font-size:12px;text-align:center;margin:0 0 8px;word-break:break-all;">
-      <a href="${safeUrl}" style="color:#dfff00;text-decoration:underline;">${safeUrl}</a>
+      <a href="${safeUrl}" style="color:${accent};text-decoration:underline;">${safeUrl}</a>
     </p>
     <p style="font-size:12px;color:#9aa6b8;text-align:center;margin:0;">
       The button opens the fulfilment page. It does not mark the prize fulfilled.
@@ -67,17 +105,20 @@ function fulfilButtonBlock(url) {
 function winnerEmailText(claim) {
   const url = fulfilUrl(claim);
   const value = Number(claim.spendAmount || 0).toFixed(2);
+  const branding = winnerEmailBranding(claim);
+  const store = claim.storeName || branding.defaultStore;
+  const status = redemptionStatusLabel(claim);
   const lines = [
-    'COTSWOLD OUTDOOR × HOKA — Instant Winner',
+    `${branding.kicker} — ${branding.title}`,
     '',
-    `Store: ${claim.storeName || HOKA_STORE_NAME}`,
+    `Store: ${store}`,
     `Winner: ${claim.customerName || '—'}`,
     `Mobile: ${maskMobile(claim.mobile)}`,
     `Purchase: ${claim.selectedBrand || '—'}`,
     `Purchase Value: $${value}`,
     `Prize: ${claim.prizeName || '—'}`,
     `Redemption Code: ${claim.redemptionCode || '—'}`,
-    'Status: AWAITING FULFILMENT',
+    `Status: ${status}`,
     '',
   ];
   if (url) {
@@ -87,26 +128,41 @@ function winnerEmailText(claim) {
   return lines.join('\n');
 }
 
+function prizeImageBlock(claim) {
+  const assetPath = isNiterraClaim(claim) ? niterraPrizeImagePath(claim.prizeName) : null;
+  if (!assetPath) return '';
+  const src = `${appBaseUrl()}${assetPath}`;
+  const alt = escapeHtml(claim.prizeName || 'Prize');
+  return `
+    <div style="text-align:center;margin:0 0 20px;">
+      <img src="${escapeHtml(src)}" alt="${alt}" width="200" style="max-width:200px;height:auto;display:inline-block;" />
+    </div>`;
+}
+
 function winnerEmailHtml(claim) {
   const url = fulfilUrl(claim);
   const value = Number(claim.spendAmount || 0).toFixed(2);
+  const branding = winnerEmailBranding(claim);
+  const store = claim.storeName || branding.defaultStore;
+  const status = redemptionStatusLabel(claim);
   return `<!DOCTYPE html>
 <html>
 <body style="margin:0;padding:24px;background:#0a1628;font-family:Arial,sans-serif;color:#f4f1ea;">
   <div style="max-width:560px;margin:0 auto;background:#102038;border-radius:12px;padding:28px;">
-    <p style="letter-spacing:0.14em;font-size:12px;color:#dfff00;margin:0 0 8px;">COTSWOLD OUTDOOR × HOKA</p>
-    <h1 style="margin:0 0 20px;font-size:22px;">Instant Winner</h1>
+    <p style="letter-spacing:0.14em;font-size:12px;color:${branding.accent};margin:0 0 8px;">${escapeHtml(branding.kicker)}</p>
+    <h1 style="margin:0 0 20px;font-size:22px;">${escapeHtml(branding.title)}</h1>
+    ${prizeImageBlock(claim)}
     <table style="width:100%;border-collapse:collapse;font-size:14px;color:#f4f1ea;">
-      ${row('Store', claim.storeName || HOKA_STORE_NAME)}
+      ${row('Store', store)}
       ${row('Winner', claim.customerName || '—')}
       ${row('Mobile', maskMobile(claim.mobile))}
       ${row('Purchase', claim.selectedBrand || '—')}
       ${row('Purchase Value', `$${value}`)}
       ${row('Prize', claim.prizeName || '—')}
       ${row('Redemption Code', claim.redemptionCode || '—')}
-      ${row('Status', 'AWAITING FULFILMENT')}
+      ${row('Status', status)}
     </table>
-    ${url ? fulfilButtonBlock(url) : '<p style="color:#ff8a80;text-align:center;">Fulfilment link unavailable — contact support.</p>'}
+    ${url ? fulfilButtonBlock(url, branding) : '<p style="color:#ff8a80;text-align:center;">Fulfilment link unavailable — contact support.</p>'}
   </div>
 </body>
 </html>`;
@@ -144,7 +200,8 @@ function resendConfigured() {
 async function sendWinnerEmail(claim) {
   const apiKey = envVal('RESEND_API_KEY');
   const to = envVal('WINNER_NOTIFY_EMAIL', 'chris@flowmarketing.com.au');
-  const from = envVal('RESEND_FROM', 'Cotswold Instant Win <onboarding@resend.dev>');
+  const from = envVal('RESEND_FROM', 'Turnstyle Draw <draw@status.turnstylehost.com>');
+  const branding = winnerEmailBranding(claim);
 
   if (!apiKey) {
     console.warn(`[resend] RESEND_API_KEY not set — would email ${to} for ${claim.claimId}`);
@@ -166,7 +223,7 @@ async function sendWinnerEmail(claim) {
       body: JSON.stringify({
         from,
         to: [to],
-        subject: 'Cotswold Birmingham — Instant Winner',
+        subject: branding.subject,
         html: winnerEmailHtml(claim),
         text: winnerEmailText(claim),
       }),
@@ -233,9 +290,10 @@ async function notifyHokaWinner(claimId) {
     UPDATE claims SET winnerSmsStatus = ?, winnerEmailStatus = ? WHERE claimId = ?
   `).run(smsStatus, emailStatus, claimId);
 
-  log('hoka_winner_notify', {
+  log('instant_winner_notify', {
     claimId,
     details: {
+      campaignId: claim.campaignId,
       smsStatus,
       emailStatus,
       error: errors.join('; ') || undefined,
@@ -245,15 +303,15 @@ async function notifyHokaWinner(claimId) {
   });
 
   if (errors.length) {
-    console.error(`[hoka] winner notify incomplete for ${claimId}: ${errors.join('; ')}`);
+    console.error(`[winner-notify] incomplete for ${claimId}: ${errors.join('; ')}`);
   }
 }
 
 function notifyHokaWinnerSafe(claimId) {
   setImmediate(() => {
     notifyHokaWinner(claimId).catch((err) => {
-      console.error(`[hoka] winner notify crashed for ${claimId}:`, err.message);
-      log('hoka_winner_notify_failed', {
+      console.error(`[winner-notify] crashed for ${claimId}:`, err.message);
+      log('instant_winner_notify_failed', {
         claimId,
         details: { error: err.message },
       });

@@ -6,24 +6,15 @@ const DEFAULT_CAMPAIGN_ID = 'niterra-ngk-2026';
 const NITERRA_PRIZES = {
   tier1: [
     { prizeName: 'NGK Racing Cap', value: 15 },
-    { prizeName: 'NGK Stubby Cooler', value: 20 },
-    { prizeName: 'Gift Voucher $25', value: 25 },
-    { prizeName: 'Workshop Gloves', value: 30 },
-    { prizeName: 'NGK Keyring Set', value: 10 },
-    { prizeName: 'NGK Water Bottle', value: 18 },
-    { prizeName: 'Gift Voucher $25', value: 25 },
     { prizeName: 'KYB Workshop Cap', value: 15 },
   ],
   tier2: [
-    { prizeName: '$250 Gift Voucher', value: 250 },
-    { prizeName: 'NGK Professional Tool Kit', value: 350 },
-    { prizeName: 'KYB Suspension Pack', value: 500 },
-    { prizeName: '$500 Workshop Pack', value: 500 },
+    { prizeName: 'NGK Racing Cap', value: 15 },
+    { prizeName: 'KYB Workshop Cap', value: 15 },
   ],
   tier3: [
-    { prizeName: 'Bathurst Experience Package', value: 2500 },
-    { prizeName: 'Major Workshop Upgrade Pack', value: 3000 },
-    { prizeName: '$5,000 Major Prize', value: 5000 },
+    { prizeName: 'NGK Racing Cap', value: 15 },
+    { prizeName: 'KYB Workshop Cap', value: 15 },
   ],
 };
 

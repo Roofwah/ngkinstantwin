@@ -103,7 +103,6 @@ app.listen(PORT, () => {
   console.log(`   Seed      : ${process.env.MOCK_SEED || '(default)'}`);
   console.log(`   Admin     : ${baseUrl}/admin`);
   console.log(`   PUK demo  : ${baseUrl}/demo/device`);
-  console.log(`   PUK2      : ${baseUrl}/demo/device/puk2`);
   if (warning) console.warn(`\n   ⚠️  ${warning}\n`);
   else console.log('');
 });

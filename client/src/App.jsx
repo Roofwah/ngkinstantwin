@@ -6,6 +6,7 @@ import Result from './pages/Result';
 import DeliveryDetails from './pages/DeliveryDetails';
 import TokenLanding from './pages/TokenLanding';
 import InstantWinDirect from './pages/InstantWinDirect';
+import NiterraCrosswordEnter from './pages/NiterraCrosswordEnter';
 import DeviceSimulator from './pages/DeviceSimulator';
 import Lab from './pages/Lab';
 import LabDisplay from './pages/LabDisplay';
@@ -39,6 +40,7 @@ export default function App() {
         {/* Pure Random device flow */}
         <Route path="/t/:token"            element={<TokenLanding />} />
         <Route path="/enter"               element={<InstantWinDirect />} />
+        <Route path="/enter/repco"         element={<NiterraCrosswordEnter />} />
         <Route path="/demo/device"         element={<DeviceSimulator />} />
         <Route path="/demo/device/:hwId"   element={<DeviceSimulator />} />
         <Route path="/lab"                 element={<Lab />} />

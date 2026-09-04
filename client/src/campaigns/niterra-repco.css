@@ -1,0 +1,330 @@
+/* Niterra / Repco crossword entry — layout matches HOKA iwbg form */
+.ngk-page {
+  --ngk-accent: #e31837;
+  min-height: 100dvh;
+  background: #071428;
+  color: #f7f4ee;
+  font-family: 'DM Sans', Inter, system-ui, sans-serif;
+}
+
+.ngk-page * {
+  box-sizing: border-box;
+}
+
+.ngk-page--enter {
+  position: relative;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  background-color: #071428;
+  background-repeat: no-repeat;
+  background-position: center -50px;
+  background-size: 100% auto;
+}
+
+.ngk-page--enter .ngk-body {
+  width: 100%;
+  max-width: none;
+  min-height: 100dvh;
+  padding: calc(26svh + 130px) 16px 28px;
+  background: none;
+}
+
+.ngk-page--enter.ngk-page--verify .ngk-body {
+  padding: calc(26svh + 130px) 16px 28px;
+}
+
+/* Top logo bar — removed; logos are in iwbg.png artwork */
+
+.ngk-form-panel {
+  background: rgba(7, 20, 40, 0.92);
+  padding: 18px 16px 16px;
+}
+
+.ngk-form-panel .ngk-field {
+  padding: 8px 10px 10px;
+  margin-left: -10px;
+  margin-right: -10px;
+  background: rgba(5, 14, 28, 0.55);
+}
+
+.ngk-form-panel .ngk-title {
+  margin-bottom: 6px;
+}
+
+.ngk-form-panel .ngk-lede {
+  margin-bottom: 16px;
+  color: rgba(247, 244, 238, 0.92);
+}
+
+.ngk-form-panel .ngk-legal {
+  margin-top: 14px;
+}
+
+.ngk-form-panel .ngk-field label {
+  color: rgba(247, 244, 238, 0.88);
+}
+
+.ngk-page--enter .ngk-store {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.ngk-page--enter .ngk-lede {
+  margin-bottom: 12px;
+}
+
+.ngk-body {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 8px 22px 40px;
+}
+
+.ngk-title {
+  margin: 0 0 8px;
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-size: clamp(2.1rem, 8vw, 2.8rem);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.ngk-lede {
+  margin: 0 0 22px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: rgba(247, 244, 238, 0.78);
+}
+
+.ngk-store {
+  display: inline-block;
+  margin-bottom: 18px;
+  padding: 6px 10px;
+  border: 1px solid rgba(227, 24, 55, 0.35);
+  color: var(--ngk-accent);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ngk-store--field {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 52px;
+  margin-bottom: 0;
+  padding: 0 14px;
+  background: rgba(7, 20, 40, 0.55);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ngk-accent);
+  border: 1px solid rgba(227, 24, 55, 0.28);
+}
+
+.ngk-field {
+  margin-bottom: 16px;
+}
+
+.ngk-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(247, 244, 238, 0.7);
+}
+
+.ngk-field input,
+.ngk-field select {
+  width: 100%;
+  height: 52px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 2px;
+  background: #f7f4ee;
+  color: #071428;
+  font-family: inherit;
+  font-size: 1.05rem;
+}
+
+.ngk-field input:focus,
+.ngk-field select:focus {
+  outline: 2px solid #e86600;
+  outline-offset: 2px;
+}
+
+.ngk-prefix {
+  display: flex;
+  align-items: center;
+  background: #f7f4ee;
+}
+
+.ngk-prefix span {
+  padding: 0 0 0 14px;
+  color: #071428;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.ngk-prefix input {
+  border: 0;
+  background: transparent;
+  flex: 1;
+}
+
+.ngk-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 8px;
+  height: 56px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--ngk-accent);
+  color: #fff;
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ngk-cta:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.ngk-ghost {
+  width: 100%;
+  margin-top: 12px;
+  background: transparent;
+  border: 0;
+  color: rgba(247, 244, 238, 0.7);
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.ngk-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #3a1420;
+  color: #ffd4dc;
+  font-size: 0.9rem;
+}
+
+.ngk-demo {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: rgba(232, 102, 0, 0.12);
+  color: #ffb366;
+  font-size: 0.9rem;
+}
+
+.ngk-legal {
+  margin-top: 22px;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: rgba(247, 244, 238, 0.5);
+}
+
+.ngk-result {
+  text-align: left;
+}
+
+.ngk-result h1 {
+  margin: 0 0 10px;
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-size: clamp(2.4rem, 9vw, 3.2rem);
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+
+.ngk-prize {
+  margin: 18px 0;
+  padding: 18px 0;
+  border-top: 1px solid rgba(232, 102, 0, 0.35);
+  border-bottom: 1px solid rgba(232, 102, 0, 0.35);
+}
+
+.ngk-prize span {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #e86600;
+  margin-bottom: 6px;
+}
+
+.ngk-prize strong {
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.ngk-prize-art {
+  display: block;
+  width: min(240px, 72%);
+  max-height: 220px;
+  margin: 10px auto 12px;
+  object-fit: contain;
+}
+
+.ngk-prize--reveal {
+  background: rgba(232, 102, 0, 0.08);
+  border: 1px solid rgba(232, 102, 0, 0.45);
+  padding: 22px 18px;
+  animation: ngkPrizeIn 0.55s ease-out;
+}
+
+.ngk-sweepstakes {
+  margin: 18px 0 8px;
+  padding: 14px 16px;
+  border: 1px solid rgba(232, 102, 0, 0.28);
+  color: #e86600;
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ngk-result--win .ngk-lede {
+  color: rgba(247, 244, 238, 0.88);
+}
+
+.ngk-lede--win-notify {
+  margin-top: 18px;
+  margin-bottom: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.ngk-ref {
+  margin-top: 16px;
+}
+
+.ngk-ref__label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(247, 244, 238, 0.65);
+}
+
+.ngk-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.35rem;
+  letter-spacing: 0.12em;
+  color: var(--ngk-accent);
+}
+
+@keyframes ngkPrizeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
