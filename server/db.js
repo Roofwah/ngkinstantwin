@@ -289,7 +289,7 @@ if (!existingDevice) {
     'PR-DEMO-001',
     'Pure Random Demo Device',
     'Repco',
-    'Waurn Ponds VIC',
+    'Repco Waurn Ponds',
     '247',
     'niterra-ngk-2026',
     'active',
@@ -333,7 +333,7 @@ if (!existingPuk2) {
     'PR-PUK2-001',
     'PUK2 Niterra Demo',
     'Repco',
-    'Waurn Ponds VIC',
+    'Repco Waurn Ponds',
     '247',
     'niterra-ngk-2026',
     'active',
@@ -344,13 +344,13 @@ if (!existingPuk2) {
 }
 
 db.prepare(`UPDATE devices SET retailer = ?, storeName = ?, storeCode = ?, locationLabel = ? WHERE deviceCode IN ('PR-DEMO-001', 'PR-UNIT-001')`)
-  .run('Repco', 'Waurn Ponds VIC', '247', 'Store 247');
+  .run('Repco', 'Repco Waurn Ponds', '247', 'Store 247');
 
 db.prepare(`UPDATE devices SET name = ?, retailer = ?, storeName = ?, storeCode = ?, campaignId = ?, locationLabel = ?, updatedAt = ? WHERE deviceCode = ?`)
   .run(
     'PUK2 Niterra Demo',
     'Repco',
-    'Waurn Ponds VIC',
+    'Repco Waurn Ponds',
     '247',
     'niterra-ngk-2026',
     'Store 247',

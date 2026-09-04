@@ -19,7 +19,7 @@ export default {
   accessPoint: {
     qrId: 'QR-REPCO-247',
     storeId: '247',
-    location: 'Waurn Ponds VIC',
+    location: 'Repco Waurn Ponds',
   },
   qualifyingPurchase: 'Purchase eligible NGK, NTK or KYB products from Repco',
   eligibleBrands: ['NGK', 'NTK', 'KYB'],

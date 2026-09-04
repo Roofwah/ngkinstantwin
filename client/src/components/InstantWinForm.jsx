@@ -194,6 +194,10 @@ export default function InstantWinForm(props) {
   return <NiterraInstantWinForm {...props} />;
 }
 
+function formatEntryStoreName(device) {
+  return device?.storeName || 'Repco Waurn Ponds';
+}
+
 function NiterraInstantWinForm({
   theme,
   campaign,
@@ -208,6 +212,7 @@ function NiterraInstantWinForm({
   campaignArtSrc = '/instant-win/bg.png',
   labSessionId = null,
 }) {
+  const storeName = formatEntryStoreName(device);
   const [step, setStep] = useState(FORM_STEPS.MOBILE);
   const [error, setError] = useState('');
   const [fullName, setFullName] = useState('');
@@ -315,6 +320,11 @@ function NiterraInstantWinForm({
         <span className="field-hint">As shown on your receipt — used to verify your entry</span>
       </div>
       <div className="field">
+        <label>Store</label>
+        <div className="enter-form__store" aria-readonly="true">{storeName}</div>
+        <span className="field-hint">Store is set from this PUK — {storeName}.</span>
+      </div>
+      <div className="field">
         <label>Mobile Number *</label>
         <input type="tel" placeholder="0412 345 678" value={mobile}
           onChange={e => { setMobile(e.target.value); setError(''); }}
@@ -381,7 +391,7 @@ function NiterraInstantWinForm({
             {mobileStep}
             {otpStep}
             {receiptStep}
-            <CampaignLegalFooter storeName={device?.storeName} />
+            <CampaignLegalFooter storeName={storeName} />
           </div>
         </CampaignShell>
       </div>
@@ -420,7 +430,7 @@ function NiterraInstantWinForm({
 
           <p className="compliance-note" style={{ marginTop: 12 }}>
             Instant win outcomes are determined by a secure server-side prize manifest prior to reveal.
-            {device?.storeName && ` · ${device.storeName}`}
+            {storeName && ` · ${storeName}`}
           </p>
         </div>
       </main>
