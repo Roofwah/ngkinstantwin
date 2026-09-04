@@ -158,7 +158,7 @@ const DEMO_CAMPAIGNS = [
     mechanic: 'Spend $50+ on eligible NGK, NTK or KYB products',
     startDate: '2026-06-01',
     endDate: '2026-12-31',
-    config: { themeColor: '#e86600', eligibleBrands: ['NGK', 'NTK', 'KYB'], landingHeroUrl: '/instant-win/hero.png', idleVideoUrl: '/campaigns/niterra/ngk.mp4' },
+    config: { themeColor: '#e86600', eligibleBrands: ['NGK', 'NTK', 'KYB'], landingHeroUrl: '/instant-win/hero.png', idleVideoUrl: '/campaigns/niterra/ngk.mp4', qrBgUrl: '/campaigns/niterra/scan.jpg' },
   },
   {
     id: 'hoka-2026',
@@ -331,13 +331,13 @@ if (!existingPuk2) {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
     'device-puk2-001',
     'PR-PUK2-001',
-    'PUK2 Cotswold Birmingham',
-    'Cotswold Outdoor',
-    'Cotswold Outdoor Birmingham',
-    'BHM',
-    'hoka-2026',
+    'PUK2 Niterra Demo',
+    'Repco',
+    'Waurn Ponds VIC',
+    '247',
+    'niterra-ngk-2026',
     'active',
-    'Birmingham',
+    'Store 247',
     now,
     now
   );
@@ -348,12 +348,12 @@ db.prepare(`UPDATE devices SET retailer = ?, storeName = ?, storeCode = ?, locat
 
 db.prepare(`UPDATE devices SET name = ?, retailer = ?, storeName = ?, storeCode = ?, campaignId = ?, locationLabel = ?, updatedAt = ? WHERE deviceCode = ?`)
   .run(
-    'PUK2 Cotswold Birmingham',
-    'Cotswold Outdoor',
-    'Cotswold Outdoor Birmingham',
-    'BHM',
-    'hoka-2026',
-    'Birmingham',
+    'PUK2 Niterra Demo',
+    'Repco',
+    'Waurn Ponds VIC',
+    '247',
+    'niterra-ngk-2026',
+    'Store 247',
     Date.now(),
     'PR-PUK2-001',
   );
