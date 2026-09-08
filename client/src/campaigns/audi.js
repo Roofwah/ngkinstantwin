@@ -31,6 +31,7 @@ export function audiModels(campaign) {
 export const AUDI_VOUCHER_NAME = 'Audi service or accessories voucher';
 export const AUDI_VOUCHER_MIN = 500;
 export const AUDI_VOUCHER_MAX = 800;
+export const AUDI_VOUCHER_STEP = 50;
 
 export const AUDI_IDLE_VIDEO = '/campaigns/audi/audi.mp4';
 

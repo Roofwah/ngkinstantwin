@@ -295,7 +295,7 @@
 .audi-prize--reveal {
   background: rgba(187, 10, 48, 0.1);
   border: 1px solid rgba(187, 10, 48, 0.4);
-  padding: 22px 18px;
+  padding: 28px 12px 24px;
   animation: audiPrizeIn 0.55s ease-out;
   text-align: center;
 }
@@ -304,35 +304,43 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  gap: 4px;
-  margin: 4px 0 14px;
+  gap: 6px;
+  margin: 0 0 16px;
+  min-height: clamp(5rem, 26vw, 8.5rem);
   font-family: 'Barlow Condensed', Rajdhani, sans-serif;
   font-weight: 700;
-  line-height: 1;
+  line-height: 0.9;
   color: #fff;
 }
 
 .audi-voucher-amount__currency {
-  margin-top: 0.35em;
-  font-size: clamp(1.6rem, 6vw, 2rem);
+  margin-top: 0.28em;
+  font-size: clamp(2.4rem, 11vw, 4rem);
   color: var(--audi-accent);
 }
 
 .audi-voucher-amount__value {
-  font-size: clamp(3.4rem, 14vw, 4.6rem);
-  letter-spacing: -0.02em;
+  font-size: clamp(5.5rem, 28vw, 9rem);
+  letter-spacing: -0.03em;
   font-variant-numeric: tabular-nums;
+  transition: transform 0.12s ease-out;
+}
+
+.audi-voucher-amount--pulse .audi-voucher-amount__value {
+  transform: scale(1.06);
 }
 
 .audi-voucher-label {
   display: block;
   font-family: 'DM Sans', Inter, system-ui, sans-serif;
-  font-size: 1rem;
+  font-size: clamp(0.92rem, 3.8vw, 1.05rem);
   font-weight: 600;
   line-height: 1.35;
   letter-spacing: 0.02em;
   text-transform: none;
-  color: rgba(247, 244, 238, 0.92);
+  color: rgba(247, 244, 238, 0.88);
+  max-width: 18em;
+  margin: 0 auto;
 }
 
 .audi-sweepstakes {

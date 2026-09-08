@@ -248,7 +248,10 @@ export default function AudiEntryForm({
             <h1>Congratulations{first ? ` ${first}` : ''}!</h1>
             <p className="audi-lede audi-lede--emphasis">You&apos;ve won</p>
             <div className="audi-prize audi-prize--reveal">
-              <AudiVoucherCounter value={reveal?.prizeValue} />
+              <AudiVoucherCounter
+                key={reveal?.claimId || 'voucher'}
+                value={reveal?.prizeValue}
+              />
               <strong className="audi-voucher-label">
                 {reveal?.prizeName || AUDI_VOUCHER_NAME}
               </strong>
