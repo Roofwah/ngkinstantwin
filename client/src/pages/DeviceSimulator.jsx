@@ -4,14 +4,23 @@ import { QRCodeSVG } from 'qrcode.react';
 import { issueToken, pollTokenStatus, getDeviceConfig, setDemoCampaign } from '../api';
 import { getPukHardware, listPukHardware, pukHardwarePath } from '../config/pukHardware';
 
-const PROD_ENTER_REPCO_URL =
-  'https://pure-random-instant-win-production.up.railway.app/enter/repco';
+const PROD_BASE = 'https://pure-random-instant-win-production.up.railway.app';
 
-function resolvePhoneEnterUrl() {
+const CAMPAIGN_ENTER_PATH = {
+  'niterra-ngk-2026': '/enter/repco',
+  'audi-2026': '/enter/audi-instant-win',
+};
+
+function campaignEnterPath(campaignId) {
+  return CAMPAIGN_ENTER_PATH[campaignId] || '/enter/repco';
+}
+
+function resolvePhoneEnterUrl(campaignId = 'niterra-ngk-2026') {
+  const path = campaignEnterPath(campaignId);
   if (typeof window === 'undefined') return null;
   const { hostname, origin } = window.location;
   if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-    return `${origin}/enter/repco`;
+    return `${origin}${path}`;
   }
   return null;
 }
@@ -43,6 +52,21 @@ const CAMPAIGN_UI = {
       { q: 'End date', a: '31 August 2026' },
       { q: 'How to enter', a: 'Purchase any eligible NGK, NTK or KYB product from a participating store. Ask staff to issue a QR code on this device, then scan with your phone.' },
       { q: 'Prizes', a: 'Instant win: NGK Racing Cap or KYB Workshop Cap. All other valid entries receive a weekly draw entry.' },
+    ],
+  },
+  'audi-2026': {
+    sub: 'Audi Instant Win',
+    color: '#bb0a30',
+    idleVideo: '/campaigns/audi/audi.mp4',
+    idleFallback: '/campaigns/audi/iwbg.png',
+    slides: [],
+    qrBg: '/campaigns/audi/scan.jpg',
+    qrPadBg: '#ffffff',
+    qrPadRadius: 10,
+    faq: [
+      { q: 'Campaign', a: 'Audi Instant Win — enter after a qualifying purchase at participating Audi dealers.' },
+      { q: 'How to enter', a: 'Scan the QR code on this device, enter your model and the last 4 digits of your contract number, and verify your mobile. No receipt upload required.' },
+      { q: 'Prizes', a: 'Every entry wins an Audi service or accessories voucher — values from $500 up to $800.' },
     ],
   },
   'cocacola-2026': {
@@ -131,7 +155,12 @@ function mergeCampaign(apiCampaign) {
     color: apiCampaign.config?.themeColor || ui.color || '#888',
     slides: ui.slides || [{ headline: apiCampaign.name, sub: apiCampaign.tagline || '' }],
     idleVideo: ui.idleVideo || apiCampaign.config?.idleVideoUrl || null,
+    idleVideoStart: ui.idleVideoStart ?? apiCampaign.config?.idleVideoStart ?? 0,
+    idleFallback: ui.idleFallback || apiCampaign.config?.idleFallbackUrl || null,
     qrBg: ui.qrBg || apiCampaign.config?.qrBgUrl || null,
+    qrFgColor: ui.qrFgColor || apiCampaign.config?.qrFgColor || null,
+    qrPadBg: ui.qrPadBg || apiCampaign.config?.qrPadBg || null,
+    qrPadRadius: ui.qrPadRadius ?? apiCampaign.config?.qrPadRadius ?? 0,
     faq: ui.faq || [{ q: 'Campaign', a: apiCampaign.mechanic || apiCampaign.tagline || '' }],
   };
 }
@@ -163,8 +192,8 @@ export default function DeviceSimulator() {
   const [tapPending, setTapPending]     = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [deviceScale, setDeviceScale] = useState(1);
-  const [enterRepcoUrl, setEnterRepcoUrl] = useState(
-    () => resolvePhoneEnterUrl() || PROD_ENTER_REPCO_URL,
+  const [enterUrl, setEnterUrl] = useState(
+    () => resolvePhoneEnterUrl('niterra-ngk-2026') || `${PROD_BASE}${campaignEnterPath('niterra-ngk-2026')}`,
   );
 
   const pollRef      = useRef(null);
@@ -196,20 +225,23 @@ export default function DeviceSimulator() {
   }, [DEVICE_CODE]);
 
   useEffect(() => {
-    const direct = resolvePhoneEnterUrl();
+    const path = campaignEnterPath(campaign.id);
+    const direct = resolvePhoneEnterUrl(campaign.id);
     if (direct) {
-      setEnterRepcoUrl(direct);
+      setEnterUrl(direct);
       return;
     }
     fetch('/api/lab/network-hint')
       .then((res) => res.json())
       .then((data) => {
         if (data?.phoneBaseUrl) {
-          setEnterRepcoUrl(`${data.phoneBaseUrl}/enter/repco`);
+          setEnterUrl(`${data.phoneBaseUrl}${path}`);
+        } else {
+          setEnterUrl(`${PROD_BASE}${path}`);
         }
       })
-      .catch(() => {});
-  }, []);
+      .catch(() => setEnterUrl(`${PROD_BASE}${path}`));
+  }, [campaign.id]);
 
   useEffect(() => {
     const prevTitle = document.title;
@@ -289,7 +321,7 @@ export default function DeviceSimulator() {
     try {
       const staticPuk2Qr = hw.id === 'puk2';
       const data = staticPuk2Qr
-        ? { token: DEVICE_CODE, url: enterRepcoUrl }
+        ? { token: DEVICE_CODE, url: enterUrl }
         : await issueToken(DEVICE_CODE);
       setTokenData(data);
       setDeviceState(STATE.READY);
@@ -1007,6 +1039,10 @@ function ScreenContent({
     const isScanned = state === STATE.SCANNED;
     const qrSize    = Math.round(screenW * qrScale);
     const qrBg = campaign.qrBg;
+    const qrFg = campaign.qrFgColor || (isScanned ? '#00c853' : '#000000');
+    const qrPadBg = campaign.qrPadBg;
+    const qrPadRadius = campaign.qrPadRadius || 0;
+    const qrModuleBg = qrPadBg || (qrBg ? 'transparent' : (isScanned ? '#040d04' : '#ffffff'));
 
     return (
       <div style={{ ...base, justifyContent: 'space-between', padding: qrBg ? 0 : '16px 0 32px', position: 'relative', overflow: 'hidden' }}>
@@ -1041,9 +1077,9 @@ function ScreenContent({
         )}
 
         <div style={{
-          background: qrBg ? 'transparent' : (isScanned ? '#040d04' : '#fff'),
-          borderRadius: qrBg ? 0 : 14,
-          padding: qrBg ? 0 : 10,
+          background: qrPadBg || (qrBg ? 'transparent' : (isScanned ? '#040d04' : '#fff')),
+          borderRadius: qrPadBg ? qrPadRadius : (qrBg ? 0 : 14),
+          padding: qrPadBg ? 10 : (qrBg ? 0 : 10),
           boxShadow: qrBg ? 'none' : (isScanned
             ? '0 0 0 2px #00c85380, 0 0 24px rgba(0,200,83,0.12)'
             : '0 0 40px rgba(255,255,255,0.14)'),
@@ -1054,8 +1090,8 @@ function ScreenContent({
           <QRCodeSVG
             value={tokenUrl || 'https://purerandom.io'}
             size={qrSize} level="M"
-            bgColor={qrBg ? 'transparent' : (isScanned ? '#040d04' : '#ffffff')}
-            fgColor={isScanned ? '#00c853' : '#000000'}
+            bgColor={qrModuleBg}
+            fgColor={qrFg}
           />
           {isScanned && (
             <div style={{
@@ -1152,17 +1188,27 @@ function ScreenContent({
 function IdleSlideshow({ campaign, tapPending }) {
   const [slideIdx, setSlideIdx] = useState(0);
   const [fading, setFading] = useState(false);
-  const [playingVideo, setPlayingVideo] = useState(false);
+  const [playingVideo, setPlayingVideo] = useState(
+    () => Boolean(campaign.idleVideo && campaign.slides.length === 0),
+  );
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const videoRef = useRef(null);
   const idleVideo = campaign.idleVideo;
+  const idleFallback = campaign.idleFallback;
+  const idleVideoStart = campaign.idleVideoStart || 0;
+  const videoOnly = campaign.slides.length === 0;
+  const showIdleVideo = Boolean(idleVideo && !videoFailed && (videoOnly || playingVideo));
 
   useEffect(() => {
     setSlideIdx(0);
-    setPlayingVideo(false);
-  }, [campaign]);
+    setVideoFailed(false);
+    setVideoReady(false);
+    setPlayingVideo(Boolean(idleVideo && videoOnly));
+  }, [campaign, idleVideo, videoOnly]);
 
   useEffect(() => {
-    if (playingVideo) return undefined;
+    if (showIdleVideo || videoOnly) return undefined;
     const t = setInterval(() => {
       setFading(true);
       setTimeout(() => {
@@ -1177,12 +1223,23 @@ function IdleSlideshow({ campaign, tapPending }) {
       }, 300);
     }, 3200);
     return () => clearInterval(t);
-  }, [campaign, playingVideo, idleVideo]);
+  }, [campaign, showIdleVideo, videoOnly, idleVideo]);
+
+  const startIdleVideo = useCallback(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (idleVideoStart > 0 && v.currentTime < idleVideoStart) {
+      v.currentTime = idleVideoStart;
+    }
+    v.play()
+      .then(() => setVideoReady(true))
+      .catch(() => setVideoFailed(true));
+  }, [idleVideoStart]);
 
   useEffect(() => {
-    if (!playingVideo || !videoRef.current) return;
-    videoRef.current.play().catch(() => {});
-  }, [playingVideo]);
+    if (!showIdleVideo) return;
+    startIdleVideo();
+  }, [showIdleVideo, idleVideo, startIdleVideo]);
 
   const hint = (
     <div style={{ zIndex: 2, textAlign: 'center' }}>
@@ -1209,7 +1266,7 @@ function IdleSlideshow({ campaign, tapPending }) {
     </div>
   );
 
-  if (playingVideo && idleVideo) {
+  if (showIdleVideo) {
     return (
       <div style={{
         width: '100%', height: '100%',
@@ -1219,14 +1276,42 @@ function IdleSlideshow({ campaign, tapPending }) {
         padding: '20px 0 14px',
         position: 'relative', overflow: 'hidden',
       }}>
+        {idleFallback && (
+          <img
+            src={idleFallback}
+            alt=""
+            style={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              objectFit: 'cover',
+              pointerEvents: 'none',
+              opacity: videoReady ? 0 : 1,
+              transition: 'opacity 0.4s ease',
+            }}
+          />
+        )}
         <video
           ref={videoRef}
           src={idleVideo}
+          poster={idleFallback || undefined}
           autoPlay
           muted
           playsInline
+          preload="auto"
+          loop={videoOnly}
+          onLoadedMetadata={startIdleVideo}
+          onCanPlay={startIdleVideo}
+          onPlaying={() => setVideoReady(true)}
+          onError={() => setVideoFailed(true)}
           onEnded={() => {
+            if (videoOnly) {
+              const v = videoRef.current;
+              if (v && idleVideoStart > 0) v.currentTime = idleVideoStart;
+              v?.play().catch(() => setVideoFailed(true));
+              return;
+            }
             setPlayingVideo(false);
+            setVideoReady(false);
             setSlideIdx(0);
           }}
           style={{
@@ -1234,6 +1319,7 @@ function IdleSlideshow({ campaign, tapPending }) {
             width: '100%', height: '100%',
             objectFit: 'cover',
             pointerEvents: 'none',
+            zIndex: 1,
           }}
         />
         {hint}
@@ -1249,6 +1335,43 @@ function IdleSlideshow({ campaign, tapPending }) {
   }
 
   const slide = campaign.slides[slideIdx];
+
+  if (!slide) {
+    if (idleFallback) {
+      return (
+        <div style={{
+          width: '100%', height: '100%',
+          background: '#000',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'flex-end',
+          padding: '20px 0 14px',
+          position: 'relative', overflow: 'hidden',
+        }}>
+          <img
+            src={idleFallback}
+            alt=""
+            style={{
+              position: 'absolute', inset: 0,
+              width: '100%', height: '100%',
+              objectFit: 'cover',
+              pointerEvents: 'none',
+            }}
+          />
+          {hint}
+          {swipeHint}
+        </div>
+      );
+    }
+    return (
+      <div style={{
+        width: '100%', height: '100%',
+        background: '#000',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        {hint}
+      </div>
+    );
+  }
 
   return (
     <div style={{

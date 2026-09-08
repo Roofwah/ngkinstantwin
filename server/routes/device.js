@@ -260,15 +260,19 @@ router.post('/direct-claim', receiptUpload.single('receipt'), (req, res) => {
       attachClaimToSession(labSessionId, outcome.claimId);
     }
 
-    const claim = db.prepare(
-      'SELECT result, prizeName, redemptionCode FROM claims WHERE claimId = ?'
-    ).get(outcome.claimId);
+    const claim = db.prepare(`
+      SELECT c.result, c.prizeName, c.redemptionCode, m.value AS prizeValue
+      FROM claims c
+      LEFT JOIN manifest m ON m.prizeId = c.prizeId
+      WHERE c.claimId = ?
+    `).get(outcome.claimId);
 
     res.json({
       claimId: outcome.claimId,
       success: true,
       result: claim?.result || null,
       prizeName: claim?.prizeName || null,
+      prizeValue: claim?.prizeValue ?? null,
       redemptionCode: claim?.redemptionCode || null,
     });
   } catch (err) {
@@ -316,15 +320,19 @@ router.post('/claim', receiptUpload.single('receipt'), (req, res) => {
       });
     }
 
-    const claim = db.prepare(
-      'SELECT result, prizeName, redemptionCode FROM claims WHERE claimId = ?'
-    ).get(outcome.claimId);
+    const claim = db.prepare(`
+      SELECT c.result, c.prizeName, c.redemptionCode, m.value AS prizeValue
+      FROM claims c
+      LEFT JOIN manifest m ON m.prizeId = c.prizeId
+      WHERE c.claimId = ?
+    `).get(outcome.claimId);
 
     res.json({
       claimId: outcome.claimId,
       success: true,
       result: claim?.result || null,
       prizeName: claim?.prizeName || null,
+      prizeValue: claim?.prizeValue ?? null,
       redemptionCode: claim?.redemptionCode || null,
     });
   } catch (err) {

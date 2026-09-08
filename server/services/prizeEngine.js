@@ -2,6 +2,7 @@ const db = require('../db');
 const { usesNthWinDemo, isWinSlot } = require('./demoControl');
 
 const DEFAULT_CAMPAIGN_ID = 'niterra-ngk-2026';
+const { AUDI_CAMPAIGN_ID, AUDI_VOUCHER_MIN } = require('../lib/audiCampaign');
 
 function getTotalClaimCount(campaignId) {
   if (!campaignId || campaignId === DEFAULT_CAMPAIGN_ID) {
@@ -19,6 +20,17 @@ function assignPrize(claimId, claimTime, campaignId = DEFAULT_CAMPAIGN_ID) {
 
   if (demoMode) {
     return assignDemoMode(claimId, resolvedCampaignId);
+  }
+
+  if (resolvedCampaignId === AUDI_CAMPAIGN_ID) {
+    const prize = db.prepare(`
+      SELECT * FROM manifest
+      WHERE status = 'AVAILABLE' AND campaignId = ? AND value >= ?
+      ORDER BY RANDOM()
+      LIMIT 1
+    `).get(resolvedCampaignId, AUDI_VOUCHER_MIN);
+    if (prize) return assignAndReturn(claimId, prize);
+    return { result: 'NOT_WINNER', prize: null };
   }
 
   const prize = db.prepare(`
@@ -47,6 +59,16 @@ function assignAndReturn(claimId, prize) {
 
 function assignDemoMode(claimId, campaignId) {
   const count = getTotalClaimCount(campaignId);
+
+  if (campaignId === AUDI_CAMPAIGN_ID) {
+    const prize = db.prepare(`
+      SELECT * FROM manifest
+      WHERE status = 'AVAILABLE' AND campaignId = ? AND value >= ?
+      ORDER BY RANDOM()
+      LIMIT 1
+    `).get(campaignId, AUDI_VOUCHER_MIN);
+    if (prize) return assignAndReturn(claimId, prize);
+  }
 
   if (usesNthWinDemo(campaignId)) {
     if (!isWinSlot(campaignId, count)) return { result: 'NOT_WINNER', prize: null };

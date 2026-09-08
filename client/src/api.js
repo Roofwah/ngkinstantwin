@@ -144,6 +144,7 @@ export async function submitDirectClaim({
   productDescription,
   selectedBrand,
   spendAmount,
+  contractNumber,
   receiptSource,
   verificationMethod,
   receiptFile,
@@ -162,6 +163,7 @@ export async function submitDirectClaim({
   if (storeName) fd.append('storeName', storeName);
   if (productDescription) fd.append('productDescription', productDescription);
   if (postcode) fd.append('postcode', postcode);
+  if (contractNumber) fd.append('contractNumber', contractNumber);
   fd.append('selectedBrand', selectedBrand);
   fd.append('spendAmount', String(spendAmount));
   if (receiptSource) fd.append('receiptSource', receiptSource);
@@ -186,6 +188,7 @@ export async function submitTokenClaim({
   productDescription,
   selectedBrand,
   spendAmount,
+  contractNumber,
   receiptSource,
   verificationMethod,
   receiptFile,
@@ -202,6 +205,7 @@ export async function submitTokenClaim({
   if (storeName) fd.append('storeName', storeName);
   if (productDescription) fd.append('productDescription', productDescription);
   if (postcode) fd.append('postcode', postcode);
+  if (contractNumber) fd.append('contractNumber', contractNumber);
   fd.append('selectedBrand', selectedBrand);
   fd.append('spendAmount', String(spendAmount));
   if (receiptSource) fd.append('receiptSource', receiptSource);

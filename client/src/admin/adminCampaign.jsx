@@ -47,5 +47,6 @@ export function useAdminCampaign() {
 export function campaignPreviewPath(campaignId) {
   if (campaignId === 'hoka-2026') return '/enter?device=PR-PUK2-001';
   if (campaignId === 'niterra-ngk-2026') return '/enter/repco';
+  if (campaignId === 'audi-2026') return '/enter/audi-instant-win';
   return `/enter?campaign=${encodeURIComponent(campaignId)}`;
 }

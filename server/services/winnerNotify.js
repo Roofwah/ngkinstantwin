@@ -4,6 +4,7 @@ const { sendBirdSms } = require('../lib/birdSms');
 const { getBaseUrl, getLanIpv4 } = require('../lib/baseUrl');
 const { HOKA_STORE_NAME, maskMobile } = require('../lib/hokaCampaign');
 const { NITERRA_CAMPAIGN_ID, NITERRA_STORE_NAME, niterraPrizeImagePath } = require('../lib/niterraCampaign');
+const { AUDI_CAMPAIGN_ID, AUDI_STORE_NAME, audiPrizeImagePath, isAudiVerificationMethod } = require('../lib/audiCampaign');
 const { ensureWinnerRedemption } = require('./redemption');
 
 function isNiterraClaim(claim) {
@@ -12,7 +13,24 @@ function isNiterraClaim(claim) {
   return claim.verificationMethod === 'niterra_crossword';
 }
 
+function isAudiClaim(claim) {
+  if (!claim) return false;
+  if (claim.campaignId === AUDI_CAMPAIGN_ID) return true;
+  return isAudiVerificationMethod(claim.verificationMethod);
+}
+
 function winnerEmailBranding(claim) {
+  if (isAudiClaim(claim)) {
+    const store = claim.storeName || AUDI_STORE_NAME;
+    return {
+      kicker: 'AUDI INSTANT WIN',
+      title: 'Instant Winner',
+      subject: `${store} — Instant Winner`,
+      accent: '#bb0a30',
+      buttonText: '#ffffff',
+      defaultStore: AUDI_STORE_NAME,
+    };
+  }
   if (isNiterraClaim(claim)) {
     const store = claim.storeName || NITERRA_STORE_NAME;
     return {
@@ -44,13 +62,29 @@ function firstName(fullName) {
   return String(fullName || 'there').trim().split(/\s+/)[0] || 'there';
 }
 
+function claimPrizeValue(claim) {
+  if (!claim?.prizeId) return null;
+  const row = db.prepare('SELECT value FROM manifest WHERE prizeId = ?').get(claim.prizeId);
+  const value = Number(row?.value);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function audiPrizeLabel(claim) {
+  const value = claimPrizeValue(claim);
+  if (value) return `$${value} Audi service or accessories voucher`;
+  return claim.prizeName || 'Audi service or accessories voucher';
+}
+
 function winnerSmsBody(claim) {
   const store = claim.storeName
-    || (isNiterraClaim(claim) ? NITERRA_STORE_NAME : HOKA_STORE_NAME);
+    || (isAudiClaim(claim) ? AUDI_STORE_NAME : isNiterraClaim(claim) ? NITERRA_STORE_NAME : HOKA_STORE_NAME);
+  const prizeLine = isAudiClaim(claim)
+    ? `You've won ${audiPrizeLabel(claim)} at ${store}.`
+    : `You've won ${claim.prizeName} at ${store}.`;
   return [
     `Congratulations ${firstName(claim.customerName)}!`,
     ``,
-    `You've won ${claim.prizeName} at ${store}.`,
+    prizeLine,
     ``,
     `Show this message to a staff member to redeem your prize.`,
     ``,
@@ -104,7 +138,6 @@ function fulfilButtonBlock(url, branding) {
 
 function winnerEmailText(claim) {
   const url = fulfilUrl(claim);
-  const value = Number(claim.spendAmount || 0).toFixed(2);
   const branding = winnerEmailBranding(claim);
   const store = claim.storeName || branding.defaultStore;
   const status = redemptionStatusLabel(claim);
@@ -114,13 +147,21 @@ function winnerEmailText(claim) {
     `Store: ${store}`,
     `Winner: ${claim.customerName || '—'}`,
     `Mobile: ${maskMobile(claim.mobile)}`,
-    `Purchase: ${claim.selectedBrand || '—'}`,
-    `Purchase Value: $${value}`,
-    `Prize: ${claim.prizeName || '—'}`,
+  ];
+  if (isAudiClaim(claim)) {
+    lines.push(`Model: ${claim.selectedBrand || '—'}`);
+    lines.push(`Contract (last 4 digits): ${claim.receiptNumber || '—'}`);
+  } else {
+    const value = Number(claim.spendAmount || 0).toFixed(2);
+    lines.push(`Purchase: ${claim.selectedBrand || '—'}`);
+    lines.push(`Purchase Value: $${value}`);
+  }
+  lines.push(
+    `Prize: ${isAudiClaim(claim) ? audiPrizeLabel(claim) : (claim.prizeName || '—')}`,
     `Redemption Code: ${claim.redemptionCode || '—'}`,
     `Status: ${status}`,
     '',
-  ];
+  );
   if (url) {
     lines.push('FULFIL PRIZE:', url, '');
     lines.push('Open the link above to confirm fulfilment on the staff page.');
@@ -129,7 +170,9 @@ function winnerEmailText(claim) {
 }
 
 function prizeImageBlock(claim) {
-  const assetPath = isNiterraClaim(claim) ? niterraPrizeImagePath(claim.prizeName) : null;
+  let assetPath = null;
+  if (isNiterraClaim(claim)) assetPath = niterraPrizeImagePath(claim.prizeName);
+  else if (isAudiClaim(claim)) assetPath = audiPrizeImagePath(claim.prizeName);
   if (!assetPath) return '';
   const src = `${appBaseUrl()}${assetPath}`;
   const alt = escapeHtml(claim.prizeName || 'Prize');
@@ -141,10 +184,12 @@ function prizeImageBlock(claim) {
 
 function winnerEmailHtml(claim) {
   const url = fulfilUrl(claim);
-  const value = Number(claim.spendAmount || 0).toFixed(2);
   const branding = winnerEmailBranding(claim);
   const store = claim.storeName || branding.defaultStore;
   const status = redemptionStatusLabel(claim);
+  const purchaseRows = isAudiClaim(claim)
+    ? `${row('Model', claim.selectedBrand || '—')}${row('Contract (last 4 digits)', claim.receiptNumber || '—')}`
+    : `${row('Purchase', claim.selectedBrand || '—')}${row('Purchase Value', `$${Number(claim.spendAmount || 0).toFixed(2)}`)}`;
   return `<!DOCTYPE html>
 <html>
 <body style="margin:0;padding:24px;background:#0a1628;font-family:Arial,sans-serif;color:#f4f1ea;">
@@ -156,9 +201,8 @@ function winnerEmailHtml(claim) {
       ${row('Store', store)}
       ${row('Winner', claim.customerName || '—')}
       ${row('Mobile', maskMobile(claim.mobile))}
-      ${row('Purchase', claim.selectedBrand || '—')}
-      ${row('Purchase Value', `$${value}`)}
-      ${row('Prize', claim.prizeName || '—')}
+      ${purchaseRows}
+      ${row('Prize', isAudiClaim(claim) ? audiPrizeLabel(claim) : (claim.prizeName || '—'))}
       ${row('Redemption Code', claim.redemptionCode || '—')}
       ${row('Status', status)}
     </table>

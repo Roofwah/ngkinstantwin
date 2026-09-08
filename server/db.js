@@ -149,6 +149,8 @@ try { db.exec('CREATE UNIQUE INDEX idx_tokens_token ON issued_tokens(token)'); }
 try { db.exec('CREATE INDEX idx_tokens_status ON issued_tokens(status)'); } catch {}
 try { db.exec('ALTER TABLE campaigns ADD COLUMN config TEXT'); } catch {}
 
+const { audiDemoPrizes } = require('./lib/audiCampaign');
+
 const DEMO_CAMPAIGNS = [
   {
     id: 'niterra-ngk-2026',
@@ -238,6 +240,37 @@ const DEMO_CAMPAIGNS = [
     endDate: '2026-12-31',
     config: { themeColor: '#003087', eligibleBrands: ['Red Bull', 'Red Bull Sugarfree', 'Red Bull Zero'] },
   },
+  {
+    id: 'audi-2026',
+    name: 'Audi Instant Win',
+    brand: 'Audi',
+    tagline: 'Enter for your chance to win instantly',
+    mechanic: 'Qualifying Audi purchase at participating dealers',
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    config: {
+      themeColor: '#bb0a30',
+      entryVariant: 'audi-instant-win',
+      entryPath: '/enter/audi-instant-win',
+      eligibleBrands: ['A3', 'A4', 'A5', 'A6', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9'],
+      formArtUrl: '/campaigns/audi/iwbg.png',
+      idleVideoUrl: '/campaigns/audi/audi.mp4',
+      idleFallbackUrl: '/campaigns/audi/iwbg.png',
+      qrBgUrl: '/campaigns/audi/scan.jpg',
+      qrPadBg: '#ffffff',
+      qrPadRadius: 10,
+      defaultStoreName: 'Audi Centre Zetland',
+      defaultStoreLocation: 'Zetland NSW',
+      defaultStoreCode: 'zetland',
+      retailer: 'Audi',
+      demoControl: {
+        enabled: true,
+        winEvery: 1,
+        sweepstakesOnLose: false,
+        prizes: audiDemoPrizes(),
+      },
+    },
+  },
 ];
 
 function parseCampaignConfig(raw) {
@@ -261,7 +294,14 @@ for (const c of DEMO_CAMPAIGNS) {
             claimOffset: prev.demoControl?.claimOffset || 0,
           },
         }
-      : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
+      : c.id === 'audi-2026' && c.config.demoControl
+        ? {
+            demoControl: {
+              ...c.config.demoControl,
+              claimOffset: prev.demoControl?.claimOffset || 0,
+            },
+          }
+        : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
   });
   if (!existing) {
     db.prepare(`INSERT INTO campaigns (id, name, brand, tagline, mechanic, startDate, endDate, status, config)

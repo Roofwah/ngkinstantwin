@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const db = require('../db');
 const { loadCampaign } = require('./demoCampaign');
+const { audiDemoPrizes } = require('../lib/audiCampaign');
 
 const DEFAULT_SWEEPSTAKES =
   "You're not an instant winner this time. You've been automatically entered into the sweepstakes prize draw.";
@@ -43,6 +44,16 @@ function defaultControl(campaignId) {
       sweepstakesMessage: DEFAULT_SWEEPSTAKES,
       claimOffset: 0,
       prizes: HOKA_DEFAULT_PRIZES,
+    };
+  }
+  if (campaignId === 'audi-2026') {
+    return {
+      enabled: true,
+      winEvery: 1,
+      sweepstakesOnLose: false,
+      sweepstakesMessage: DEFAULT_SWEEPSTAKES,
+      claimOffset: 0,
+      prizes: audiDemoPrizes(),
     };
   }
   return {

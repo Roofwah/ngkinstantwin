@@ -14,6 +14,11 @@ const {
   HOKA_STORE_NAME,
 } = require('../lib/hokaCampaign');
 const { validateNiterraCrosswordPayload } = require('../lib/niterraCampaign');
+const { validateAudiEntryPayload, isAudiVerificationMethod, audiVoucherDisplayName } = require('../lib/audiCampaign');
+
+function isCrosswordEntry(method) {
+  return method === 'niterra_crossword' || isAudiVerificationMethod(method);
+}
 
 function labAllowsDuplicateReceipts(labSessionId) {
   if (!labSessionId) return false;
@@ -154,7 +159,7 @@ function validateReceiptPayload(body, file) {
 }
 
 function resolveClaimStatus(result, verificationMethod) {
-  if (verificationMethod === 'hoka_entry' || verificationMethod === 'niterra_crossword') {
+  if (verificationMethod === 'hoka_entry' || isCrosswordEntry(verificationMethod)) {
     return isInstantWin(result) ? 'VALIDATED' : 'ELIGIBLE';
   }
   if (verificationMethod === 'manual') {
@@ -194,21 +199,26 @@ function createClaimWithReceipt({
   }
 
   const hoka = isHokaCampaign(campaign);
-  const niterraCrossword = body.verificationMethod === 'niterra_crossword';
+  const crosswordEntry = isCrosswordEntry(body.verificationMethod);
   const deviceRow = deviceCode
     ? db.prepare('SELECT * FROM devices WHERE deviceCode = ?').get(deviceCode)
     : null;
 
-  const validated = hoka
-    ? validateHokaPayload(body, campaign, deviceRow)
-    : niterraCrossword
-      ? validateNiterraCrosswordPayload(body, campaign, deviceRow, campaignBrandOptions(campaign))
-      : validateReceiptPayload(body, file);
+  let validated;
+  if (hoka) {
+    validated = validateHokaPayload(body, campaign, deviceRow);
+  } else if (body.verificationMethod === 'niterra_crossword') {
+    validated = validateNiterraCrosswordPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
+  } else if (isAudiVerificationMethod(body.verificationMethod)) {
+    validated = validateAudiEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
+  } else {
+    validated = validateReceiptPayload(body, file);
+  }
   if (validated.errors.length) {
     return { error: validated.errors[0], errors: validated.errors, status: 400 };
   }
 
-  const bypassDuplicate = hoka || niterraCrossword || shouldBypassDuplicateInvoice(body);
+  const bypassDuplicate = hoka || crosswordEntry || shouldBypassDuplicateInvoice(body);
   if (bypassDuplicate) {
     clearClaimForDuplicateReceipt(validated.invoiceNumber);
   } else {
@@ -254,18 +264,21 @@ function createClaimWithReceipt({
     validated.postcode || null,
   );
 
+  const isAudi = isAudiVerificationMethod(validated.verificationMethod);
   const { result, prize } = assignPrize(claimId, now, resolvedCampaignId);
   const claimStatus = resolveClaimStatus(result, validated.verificationMethod);
   let prizeName = prize?.prizeName || null;
   if (hoka && isInstantWin(result)) {
     prizeName = hokaPrizeName(campaign, result, validated.spendAmount, prize);
+  } else if (isAudi && prize) {
+    prizeName = audiVoucherDisplayName();
   }
 
   db.prepare(`
     UPDATE claims SET result = ?, claimStatus = ?, prizeId = ?, prizeName = ? WHERE claimId = ?
   `).run(result, claimStatus, prize?.prizeId || null, prizeName, claimId);
 
-  if (isInstantWin(result) && (hoka || niterraCrossword)) {
+  if (isInstantWin(result) && (hoka || crosswordEntry)) {
     try {
       attachRedemption(claimId);
       notifyHokaWinnerSafe(claimId);

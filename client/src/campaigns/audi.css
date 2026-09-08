@@ -1,0 +1,386 @@
+/* Audi Instant Win — direct entry form (dealer / service & parts) */
+.audi-page {
+  --audi-accent: #bb0a30;
+  --audi-bg: #0a0a0a;
+  min-height: 100dvh;
+  background: var(--audi-bg);
+  color: #f7f4ee;
+  font-family: 'DM Sans', Inter, system-ui, sans-serif;
+}
+
+.audi-page * {
+  box-sizing: border-box;
+}
+
+.audi-confetti {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.audi-page--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--audi-bg);
+}
+
+.audi-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--audi-accent);
+  border-radius: 50%;
+  animation: audiSpin 0.8s linear infinite;
+}
+
+.audi-unavailable {
+  text-align: center;
+  padding: 24px;
+  max-width: 360px;
+}
+
+.audi-unavailable h2 {
+  margin: 0 0 8px;
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+}
+
+.audi-unavailable p {
+  margin: 0;
+  color: rgba(247, 244, 238, 0.65);
+  line-height: 1.5;
+}
+
+.audi-page--enter {
+  position: relative;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  background-color: var(--audi-bg);
+  background-repeat: no-repeat;
+  background-position: center 60px;
+  background-size: 100% auto;
+}
+
+.audi-page--enter .audi-body {
+  width: 100%;
+  max-width: none;
+  min-height: 100dvh;
+  padding: calc(26svh + 220px) 16px 28px;
+  background: none;
+}
+
+.audi-page--enter.audi-page--verify .audi-body {
+  padding: calc(26svh + 220px) 16px 28px;
+}
+
+.audi-body {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 8px 22px 40px;
+}
+
+.audi-kicker {
+  margin: 0 0 6px;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--audi-accent);
+}
+
+.audi-form {
+  padding: 4px 0 0;
+}
+
+.audi-form--plain {
+  padding-top: 12px;
+}
+
+.audi-title {
+  margin: 0 0 8px;
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-size: clamp(2rem, 7.5vw, 2.6rem);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.audi-lede {
+  margin: 0 0 20px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: rgba(247, 244, 238, 0.78);
+}
+
+.audi-lede--emphasis {
+  font-size: 1.1rem;
+  color: rgba(247, 244, 238, 0.92);
+}
+
+.audi-dealer {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 52px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(187, 10, 48, 0.35);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #fff;
+}
+
+.audi-field {
+  margin-bottom: 14px;
+}
+
+.audi-field label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(247, 244, 238, 0.72);
+}
+
+.audi-field input,
+.audi-field select {
+  width: 100%;
+  height: 52px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 2px;
+  background: #f7f4ee;
+  color: #0a0a0a;
+  font-family: inherit;
+  font-size: 1.05rem;
+}
+
+.audi-field input:focus,
+.audi-field select:focus {
+  outline: 2px solid var(--audi-accent);
+  outline-offset: 2px;
+}
+
+.audi-prefix {
+  display: flex;
+  align-items: center;
+  background: #f7f4ee;
+}
+
+.audi-prefix span {
+  padding: 0 0 0 14px;
+  color: #0a0a0a;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.audi-prefix input {
+  border: 0;
+  background: transparent;
+  flex: 1;
+}
+
+.audi-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 8px;
+  height: 56px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--audi-accent);
+  color: #fff;
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.audi-cta:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.audi-ghost {
+  width: 100%;
+  margin-top: 12px;
+  background: transparent;
+  border: 0;
+  color: rgba(247, 244, 238, 0.65);
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.audi-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: rgba(187, 10, 48, 0.2);
+  border: 1px solid rgba(187, 10, 48, 0.45);
+  color: #ffd4dc;
+  font-size: 0.9rem;
+}
+
+.audi-demo {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(247, 244, 238, 0.85);
+  font-size: 0.9rem;
+}
+
+.audi-legal {
+  margin-top: 18px;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: rgba(247, 244, 238, 0.45);
+}
+
+.audi-result {
+  text-align: left;
+}
+
+.audi-result h1 {
+  margin: 0 0 10px;
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-size: clamp(2.2rem, 8.5vw, 3rem);
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+
+.audi-prize {
+  margin: 18px 0;
+  padding: 18px 0;
+  border-top: 1px solid rgba(187, 10, 48, 0.35);
+  border-bottom: 1px solid rgba(187, 10, 48, 0.35);
+}
+
+.audi-prize span {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--audi-accent);
+  margin-bottom: 6px;
+}
+
+.audi-prize strong {
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.audi-prize-art {
+  display: block;
+  width: min(240px, 72%);
+  max-height: 220px;
+  margin: 10px auto 12px;
+  object-fit: contain;
+}
+
+.audi-prize--reveal {
+  background: rgba(187, 10, 48, 0.1);
+  border: 1px solid rgba(187, 10, 48, 0.4);
+  padding: 22px 18px;
+  animation: audiPrizeIn 0.55s ease-out;
+  text-align: center;
+}
+
+.audi-voucher-amount {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  margin: 4px 0 14px;
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+}
+
+.audi-voucher-amount__currency {
+  margin-top: 0.35em;
+  font-size: clamp(1.6rem, 6vw, 2rem);
+  color: var(--audi-accent);
+}
+
+.audi-voucher-amount__value {
+  font-size: clamp(3.4rem, 14vw, 4.6rem);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.audi-voucher-label {
+  display: block;
+  font-family: 'DM Sans', Inter, system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: rgba(247, 244, 238, 0.92);
+}
+
+.audi-sweepstakes {
+  margin: 18px 0 8px;
+  padding: 14px 16px;
+  border: 1px solid rgba(187, 10, 48, 0.28);
+  color: var(--audi-accent);
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.audi-result--win .audi-lede {
+  color: rgba(247, 244, 238, 0.88);
+}
+
+.audi-lede--win-notify {
+  margin-top: 18px;
+  margin-bottom: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.audi-ref {
+  margin-top: 16px;
+}
+
+.audi-ref__label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(247, 244, 238, 0.65);
+}
+
+.audi-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.35rem;
+  letter-spacing: 0.12em;
+  color: var(--audi-accent);
+}
+
+@keyframes audiSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes audiPrizeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
