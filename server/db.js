@@ -371,13 +371,13 @@ if (!existingPuk2) {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
     'device-puk2-001',
     'PR-PUK2-001',
-    'PUK2 Niterra Demo',
-    'Repco',
-    'Repco Waurn Ponds',
-    '247',
-    'niterra-ngk-2026',
+    'PUK2 Audi Demo',
+    'Audi',
+    'Audi Centre Zetland',
+    'zetland',
+    'audi-2026',
     'active',
-    'Store 247',
+    'Zetland NSW',
     now,
     now
   );
@@ -388,12 +388,12 @@ db.prepare(`UPDATE devices SET retailer = ?, storeName = ?, storeCode = ?, locat
 
 db.prepare(`UPDATE devices SET name = ?, retailer = ?, storeName = ?, storeCode = ?, campaignId = ?, locationLabel = ?, updatedAt = ? WHERE deviceCode = ?`)
   .run(
-    'PUK2 Niterra Demo',
-    'Repco',
-    'Repco Waurn Ponds',
-    '247',
-    'niterra-ngk-2026',
-    'Store 247',
+    'PUK2 Audi Demo',
+    'Audi',
+    'Audi Centre Zetland',
+    'zetland',
+    'audi-2026',
+    'Zetland NSW',
     Date.now(),
     'PR-PUK2-001',
   );
