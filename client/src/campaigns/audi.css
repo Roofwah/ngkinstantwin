@@ -18,7 +18,13 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 40;
+  z-index: 1;
+  transition: opacity 0.7s ease-out;
+}
+
+.audi-page--reveal .audi-body {
+  position: relative;
+  z-index: 2;
 }
 
 .audi-page--loading {
@@ -269,7 +275,7 @@
   border-bottom: 1px solid rgba(187, 10, 48, 0.35);
 }
 
-.audi-prize span {
+.audi-prize:not(.audi-prize--reveal) span {
   display: block;
   font-size: 0.72rem;
   letter-spacing: 0.14em;
@@ -278,7 +284,7 @@
   margin-bottom: 6px;
 }
 
-.audi-prize strong {
+.audi-prize:not(.audi-prize--reveal) strong {
   font-family: 'Barlow Condensed', Rajdhani, sans-serif;
   font-size: 1.8rem;
   font-weight: 700;
@@ -293,11 +299,65 @@
 }
 
 .audi-prize--reveal {
-  background: rgba(187, 10, 48, 0.1);
-  border: 1px solid rgba(187, 10, 48, 0.4);
-  padding: 28px 12px 24px;
+  position: relative;
+  z-index: 3;
+  background: rgba(10, 10, 10, 0.92);
+  border: 1px solid rgba(187, 10, 48, 0.5);
+  padding: 32px 14px 26px;
   animation: audiPrizeIn 0.55s ease-out;
   text-align: center;
+}
+
+.audi-prize--reveal .audi-voucher-amount {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  margin: 0 0 14px;
+  min-height: clamp(5.5rem, 30vw, 9rem);
+  font-family: 'Barlow Condensed', Rajdhani, sans-serif;
+  font-weight: 700;
+  line-height: 0.85;
+}
+
+.audi-prize--reveal .audi-voucher-amount__currency {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(2.8rem, 14vw, 4.5rem);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--audi-accent);
+}
+
+.audi-prize--reveal .audi-voucher-amount__value {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(6rem, 34vw, 10.5rem);
+  letter-spacing: -0.03em;
+  text-transform: none;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.12s ease-out;
+}
+
+.audi-prize--reveal .audi-voucher-amount--pulse .audi-voucher-amount__value {
+  transform: scale(1.05);
+}
+
+.audi-prize--reveal .audi-voucher-label {
+  margin: 0;
+  font-family: 'DM Sans', Inter, system-ui, sans-serif;
+  font-size: clamp(0.88rem, 3.6vw, 1rem);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: rgba(247, 244, 238, 0.78);
+  max-width: 16em;
+  margin-inline: auto;
 }
 
 .audi-voucher-amount {
@@ -351,6 +411,11 @@
   font-size: 0.82rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.audi-result--win {
+  position: relative;
+  z-index: 2;
 }
 
 .audi-result--win .audi-lede {

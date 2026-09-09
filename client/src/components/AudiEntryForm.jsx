@@ -252,9 +252,9 @@ export default function AudiEntryForm({
                 key={reveal?.claimId || 'voucher'}
                 value={reveal?.prizeValue}
               />
-              <strong className="audi-voucher-label">
+              <p className="audi-voucher-label">
                 {reveal?.prizeName || AUDI_VOUCHER_NAME}
-              </strong>
+              </p>
             </div>
             <p className="audi-lede audi-lede--win-notify">
               Redemption instructions have been sent to your mobile.

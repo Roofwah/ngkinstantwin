@@ -29,6 +29,7 @@ export function audiModels(campaign) {
 }
 
 export const AUDI_VOUCHER_NAME = 'Audi service or accessories voucher';
+export const AUDI_PRIZE_IMAGE = '/campaigns/audi/gift.png';
 export const AUDI_VOUCHER_MIN = 500;
 export const AUDI_VOUCHER_MAX = 800;
 export const AUDI_VOUCHER_STEP = 50;
@@ -43,7 +44,7 @@ export function isAudiWin(result) {
 
 export function audiPrizeImage(prizeName) {
   if (!prizeName) return null;
-  return '/campaigns/audi/prize.png';
+  return AUDI_PRIZE_IMAGE;
 }
 
 export function isValidAudiContractNumber(value) {

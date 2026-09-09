@@ -22,6 +22,7 @@ function audiModelOptions(campaign) {
 }
 
 const AUDI_VOUCHER_NAME = 'Audi service or accessories voucher';
+const AUDI_PRIZE_IMAGE = '/campaigns/audi/gift.png';
 const AUDI_VOUCHER_MIN = 500;
 const AUDI_VOUCHER_MAX = 800;
 const AUDI_VOUCHER_STEP = 50;
@@ -55,7 +56,7 @@ function audiManifestPrizes() {
 
 function audiPrizeImagePath(prizeName) {
   if (!prizeName) return null;
-  return '/campaigns/audi/prize.png';
+  return AUDI_PRIZE_IMAGE;
 }
 
 const AUDI_VERIFICATION_METHOD = 'audi_instant_win';
@@ -106,6 +107,7 @@ module.exports = {
   AUDI_CAMPAIGN_ID,
   AUDI_STORE_NAME,
   AUDI_VOUCHER_NAME,
+  AUDI_PRIZE_IMAGE,
   AUDI_VOUCHER_MIN,
   AUDI_VOUCHER_MAX,
   AUDI_VERIFICATION_METHOD,

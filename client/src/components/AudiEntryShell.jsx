@@ -11,7 +11,7 @@ export default function AudiEntryShell({
 
   return (
     <div
-      className={`audi-page${showArt ? ' audi-page--enter' : ''}${phase === 'verify' ? ' audi-page--verify' : ''}`}
+      className={`audi-page${showArt ? ' audi-page--enter' : ''}${phase === 'verify' ? ' audi-page--verify' : ''}${phase === 'result' ? ' audi-page--reveal' : ''}`}
       style={showArt ? { backgroundImage: `url(${artSrc})` } : undefined}
     >
       <div className="audi-body">
