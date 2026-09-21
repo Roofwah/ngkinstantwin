@@ -168,10 +168,23 @@ const DEMO_CAMPAIGNS = [
     brand: 'HOKA',
     tagline: 'Win your HOKA purchase back instantly',
     mechanic: 'Spend $50 or more on qualifying HOKA products at Cotswold Outdoor in one transaction',
-    startDate: '2026-08-01',
-    endDate: '2026-08-31',
+    startDate: '2026-09-01',
+    endDate: '2026-09-30',
     config: {
       themeColor: '#dfff00',
+      labCampaignStats: {
+        winningMoments: 280,
+        claimed: 175,
+        remaining: 94,
+        unawarded: 11,
+        unawardedNote: 'online draw',
+      },
+      schedule: {
+        timezone: 'Europe/London',
+        locale: 'en-GB',
+        activationHours: { start: '08:00', end: '22:00' },
+        days: [0, 1, 2, 3, 4, 5, 6],
+      },
       entryVariant: 'hoka-cotswold',
       minSpend: 50,
       currency: 'AUD',
@@ -179,6 +192,7 @@ const DEMO_CAMPAIGNS = [
       heroImageUrl: '/campaigns/hoka/slide1.jpg',
       formArtUrl: '/campaigns/hoka/iwbg.jpg',
       retailer: 'Cotswold Outdoor',
+      defaultStoreName: 'Cotswold Outdoor Birmingham',
       prizeByResult: {
         TIER_1_INSTANT_WIN: 'HOKA Crew Socks',
         TIER_2_PROVISIONAL_WIN: 'HOKA Run Cap',
@@ -186,7 +200,7 @@ const DEMO_CAMPAIGNS = [
       },
       demoControl: {
         enabled: true,
-        winEvery: 2,
+        winEvery: 1,
         sweepstakesOnLose: true,
         sweepstakesMessage: "You're not an instant winner this time. You've been automatically entered into the sweepstakes prize draw.",
         claimOffset: 0,
@@ -239,6 +253,27 @@ const DEMO_CAMPAIGNS = [
     startDate: '2026-06-01',
     endDate: '2026-12-31',
     config: { themeColor: '#003087', eligibleBrands: ['Red Bull', 'Red Bull Sugarfree', 'Red Bull Zero'] },
+  },
+  {
+    id: 'ford-2026',
+    name: 'Ford Display Lab',
+    brand: 'Ford',
+    tagline: 'Go Further — Instant Win',
+    mechanic: 'Display lab — scan QR to enter the Ford instant win form',
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    config: {
+      themeColor: '#003478',
+      entryVariant: 'ford-instant-win',
+      entryPath: '/enter/ford',
+      eligibleBrands: ['Ranger', 'Everest', 'Mustang', 'Bronco', 'Territory', 'F-150'],
+      defaultStoreName: 'Ford Display Lab',
+      formArtUrl: '/campaigns/ford/scan.jpg',
+      landingHeroUrl: '/campaigns/ford/landing.jpg',
+      kineticLab: true,
+      qrBgUrl: '/campaigns/ford/scan.jpg',
+      qrPadBg: '#ffffff',
+    },
   },
   {
     id: 'audi-2026',
@@ -309,8 +344,8 @@ for (const c of DEMO_CAMPAIGNS) {
       c.id, c.name, c.brand, c.tagline, c.mechanic, c.startDate, c.endDate, configJson
     );
   } else {
-    db.prepare(`UPDATE campaigns SET name = ?, brand = ?, tagline = ?, mechanic = ?, config = ? WHERE id = ?`).run(
-      c.name, c.brand, c.tagline, c.mechanic, configJson, c.id
+    db.prepare(`UPDATE campaigns SET name = ?, brand = ?, tagline = ?, mechanic = ?, startDate = ?, endDate = ?, config = ? WHERE id = ?`).run(
+      c.name, c.brand, c.tagline, c.mechanic, c.startDate, c.endDate, configJson, c.id
     );
   }
 }
@@ -371,13 +406,13 @@ if (!existingPuk2) {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
     'device-puk2-001',
     'PR-PUK2-001',
-    'PUK2 Audi Demo',
-    'Audi',
-    'Audi Centre Zetland',
-    'zetland',
-    'audi-2026',
+    'PUK2 Cotswold Demo',
+    'Cotswold Outdoor',
+    'Cotswold Outdoor Birmingham',
+    'cotswold-birmingham',
+    'hoka-2026',
     'active',
-    'Zetland NSW',
+    'Birmingham UK',
     now,
     now
   );
@@ -388,12 +423,12 @@ db.prepare(`UPDATE devices SET retailer = ?, storeName = ?, storeCode = ?, locat
 
 db.prepare(`UPDATE devices SET name = ?, retailer = ?, storeName = ?, storeCode = ?, campaignId = ?, locationLabel = ?, updatedAt = ? WHERE deviceCode = ?`)
   .run(
-    'PUK2 Audi Demo',
-    'Audi',
-    'Audi Centre Zetland',
-    'zetland',
-    'audi-2026',
-    'Zetland NSW',
+    'PUK2 Cotswold Demo',
+    'Cotswold Outdoor',
+    'Cotswold Outdoor Birmingham',
+    'cotswold-birmingham',
+    'hoka-2026',
+    'Birmingham UK',
     Date.now(),
     'PR-PUK2-001',
   );

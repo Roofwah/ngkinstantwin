@@ -1,0 +1,337 @@
+/* Ford brand theme — instant win entry (not login page clone) */
+.ford-page {
+  --ford-navy: #102b4e;
+  --ford-navy-deep: #00095b;
+  --ford-bg: #f4f4f4;
+  --ford-text: #4d4d4d;
+  --ford-input-border: #6e6e6e;
+  min-height: 100dvh;
+  background: var(--ford-bg);
+  color: var(--ford-text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.ford-page * {
+  box-sizing: border-box;
+}
+
+.ford-landing {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.ford-landing__art {
+  width: 100%;
+  height: min(40svh, 280px);
+  display: block;
+  object-fit: cover;
+  object-position: center 40%;
+}
+
+.ford-landing__fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 50%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(244, 244, 244, 0.65) 55%,
+    var(--ford-bg) 100%
+  );
+  pointer-events: none;
+}
+
+.ford-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+.ford-page--landing .ford-container {
+  margin-top: -1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.ford-card {
+  width: 100%;
+  padding: 28px 24px 36px;
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 10px 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 600px) {
+  .ford-card {
+    padding: 32px 48px 40px;
+  }
+}
+
+.ford-page--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+}
+
+.ford-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(16, 43, 78, 0.15);
+  border-top-color: var(--ford-navy);
+  border-radius: 50%;
+  animation: fordSpin 0.8s linear infinite;
+}
+
+.ford-unavailable {
+  text-align: center;
+  padding: 24px;
+}
+
+.ford-unavailable h2 {
+  margin: 0 0 8px;
+  font-size: 1.125rem;
+  letter-spacing: 0.125rem;
+  text-transform: uppercase;
+  color: var(--ford-navy);
+}
+
+.ford-unavailable p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Typography ── */
+.ford-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ford-text);
+}
+
+.ford-title {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: var(--ford-navy);
+}
+
+.ford-lede {
+  margin: 0 0 24px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ford-text);
+}
+
+/* ── Form ── */
+.ford-form {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.ford-field {
+  margin-bottom: 16px;
+}
+
+.ford-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ford-navy);
+}
+
+.ford-field input,
+.ford-field select {
+  width: 100%;
+  height: 50px;
+  padding: 8px 12px;
+  border: 1px solid var(--ford-input-border);
+  border-radius: 4px;
+  background: rgba(255, 255, 254, 0.7);
+  color: var(--ford-navy);
+  font-family: inherit;
+  font-size: 16px;
+}
+
+.ford-field input::placeholder {
+  color: #767676;
+}
+
+.ford-field input:focus,
+.ford-field select:focus {
+  outline: 2px solid var(--ford-navy);
+  outline-offset: 1px;
+}
+
+.ford-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23102b4e' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.ford-dealer {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  padding: 0 12px;
+  border: 1px solid var(--ford-input-border);
+  border-radius: 4px;
+  background: #f8f9fa;
+  font-size: 15px;
+  color: var(--ford-navy);
+}
+
+/* ── Buttons ── */
+.ford-cta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 44px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 100px;
+  background: transparent;
+  color: #fff;
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.ford-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--ford-navy-deep);
+  border-radius: 100px;
+  z-index: 0;
+}
+
+.ford-cta span {
+  position: relative;
+  z-index: 1;
+}
+
+.ford-cta:hover::before {
+  background: var(--ford-navy);
+}
+
+.ford-cta:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.ford-ghost {
+  width: 100%;
+  margin-top: 16px;
+  background: transparent;
+  border: 0;
+  color: var(--ford-navy);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ── Alerts ── */
+.ford-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b00;
+  font-size: 14px;
+}
+
+.ford-demo {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #f0f4f8;
+  border: 1px solid #d0d9e4;
+  font-size: 14px;
+}
+
+.ford-legal {
+  margin-top: 20px;
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  color: var(--ford-text);
+}
+
+/* ── Result ── */
+.ford-result h1 {
+  margin: 0 0 12px;
+  font-size: 1.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ford-navy);
+}
+
+.ford-prize {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid rgba(16, 43, 78, 0.2);
+  border-radius: 4px;
+  text-align: center;
+  background: #fafbfc;
+}
+
+.ford-prize span {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ford-text);
+  margin-bottom: 8px;
+}
+
+.ford-prize strong {
+  font-size: 1.4rem;
+  color: var(--ford-navy);
+}
+
+.ford-sweepstakes {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(16, 43, 78, 0.2);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ford-navy);
+}
+
+.ford-staff-msg {
+  margin: 16px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.ford-code {
+  margin-top: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.2rem;
+  letter-spacing: 0.12em;
+  color: var(--ford-navy);
+}
+
+@keyframes fordSpin {
+  to { transform: rotate(360deg); }
+}

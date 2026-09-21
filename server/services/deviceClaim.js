@@ -15,9 +15,10 @@ const {
 } = require('../lib/hokaCampaign');
 const { validateNiterraCrosswordPayload } = require('../lib/niterraCampaign');
 const { validateAudiEntryPayload, isAudiVerificationMethod, audiVoucherDisplayName } = require('../lib/audiCampaign');
+const { validateFordEntryPayload, isFordVerificationMethod } = require('../lib/fordCampaign');
 
 function isCrosswordEntry(method) {
-  return method === 'niterra_crossword' || isAudiVerificationMethod(method);
+  return method === 'niterra_crossword' || isAudiVerificationMethod(method) || isFordVerificationMethod(method);
 }
 
 function labAllowsDuplicateReceipts(labSessionId) {
@@ -211,6 +212,8 @@ function createClaimWithReceipt({
     validated = validateNiterraCrosswordPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else if (isAudiVerificationMethod(body.verificationMethod)) {
     validated = validateAudiEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
+  } else if (isFordVerificationMethod(body.verificationMethod)) {
+    validated = validateFordEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else {
     validated = validateReceiptPayload(body, file);
   }

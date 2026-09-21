@@ -8,7 +8,9 @@ const PROD_BASE = 'https://pure-random-instant-win-production.up.railway.app';
 
 const CAMPAIGN_ENTER_PATH = {
   'niterra-ngk-2026': '/enter/repco',
+  'hoka-2026': '/enter/hoka',
   'audi-2026': '/enter/audi-instant-win',
+  'ford-2026': '/enter/ford',
 };
 
 function campaignEnterPath(campaignId) {
@@ -54,6 +56,21 @@ const CAMPAIGN_UI = {
       { q: 'Prizes', a: 'Instant win: NGK Racing Cap or KYB Workshop Cap. All other valid entries receive a weekly draw entry.' },
     ],
   },
+  'ford-2026': {
+    sub: 'Ford Display Lab',
+    color: '#003478',
+    kineticLab: true,
+    slides: [
+      { headline: 'FORD', sub: 'White field · 48pt clarity', bg: '#ffffff', fg: '#000000' },
+      { headline: 'FORD', sub: 'Black field · 48pt clarity', bg: '#000000', fg: '#ffffff' },
+      { headline: 'Go Further', sub: 'Ford blue #003478', bg: '#003478', fg: '#ffffff' },
+      { headline: 'CLARITY', sub: 'Font ladder 14–48', bg: '#000000', fg: '#ffffff' },
+    ],
+    faq: [
+      { q: 'Purpose', a: 'PUK display lab — test LVGL kinetic text, contrast, and brightness on physical hardware.' },
+      { q: 'On device', a: 'Eight scenes auto-cycle every 8s. Single tap = next scene. Double tap = QR.' },
+    ],
+  },
   'audi-2026': {
     sub: 'Audi Instant Win',
     color: '#bb0a30',
@@ -65,7 +82,7 @@ const CAMPAIGN_UI = {
     qrPadRadius: 10,
     faq: [
       { q: 'Campaign', a: 'Audi Instant Win — enter after a qualifying purchase at participating Audi dealers.' },
-      { q: 'How to enter', a: 'Scan the QR code on this device, enter your model and the last 4 digits of your contract number, and verify your mobile. No receipt upload required.' },
+      { q: 'How to enter', a: 'Scan the QR code on this device, enter your purchased vehicle, 10-digit invoice number, and verify your mobile. No receipt upload required.' },
       { q: 'Prizes', a: 'Every entry wins an Audi service or accessories voucher — values from $500 up to $800.' },
     ],
   },
@@ -130,6 +147,7 @@ const CAMPAIGN_UI = {
     sub: 'Cotswold Outdoor × HOKA',
     color: '#dfff00',
     idleVideo: '/campaigns/hoka/hoka.mp4',
+    qrBg: '/campaigns/hoka/scan.jpg',
     slides: [
       { headline: 'WIN YOUR PURCHASE BACK', sub: 'HOKA Instant Win', src: '/campaigns/hoka/slide1.jpg' },
       { headline: 'SCAN TO PLAY', sub: 'Spend $50 on HOKA', src: '/campaigns/hoka/slide2.jpg' },

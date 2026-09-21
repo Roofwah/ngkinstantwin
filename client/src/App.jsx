@@ -8,6 +8,7 @@ import TokenLanding from './pages/TokenLanding';
 import InstantWinDirect from './pages/InstantWinDirect';
 import NiterraCrosswordEnter from './pages/NiterraCrosswordEnter';
 import AudiInstantWinEnter from './pages/AudiInstantWinEnter';
+import FordInstantWinEnter from './pages/FordInstantWinEnter';
 import DeviceSimulator from './pages/DeviceSimulator';
 import Lab from './pages/Lab';
 import LabDisplay from './pages/LabDisplay';
@@ -44,6 +45,8 @@ export default function App() {
         <Route path="/enter/repco"         element={<NiterraCrosswordEnter />} />
         <Route path="/enter/audi-instant-win" element={<AudiInstantWinEnter />} />
         <Route path="/enter/audi"          element={<Navigate to="/enter/audi-instant-win" replace />} />
+        <Route path="/enter/ford"           element={<FordInstantWinEnter />} />
+        <Route path="/enter/hoka"           element={<Navigate to="/enter?campaign=hoka-2026" replace />} />
         <Route path="/demo/device"         element={<DeviceSimulator />} />
         <Route path="/demo/device/:hwId"   element={<DeviceSimulator />} />
         <Route path="/lab"                 element={<Lab />} />
