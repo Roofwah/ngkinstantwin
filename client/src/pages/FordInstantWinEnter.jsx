@@ -19,25 +19,34 @@ export default function FordInstantWinEnter() {
   const [config, setConfig] = useState(null);
 
   useEffect(() => {
-    setDemoCampaign(FORD_CAMPAIGN_ID).catch(() => {});
-  }, []);
-
-  useEffect(() => {
     if (!labSession || entryNotified.current) return;
     entryNotified.current = true;
     postLabEvent(labSession, 'entry_opened').catch(() => {});
   }, [labSession]);
 
   useEffect(() => {
-    getDeviceConfig(deviceCode)
-      .then((data) => {
+    let cancelled = false;
+
+    async function loadFordConfig() {
+      try {
+        await setDemoCampaign(FORD_CAMPAIGN_ID);
+        const data = await getDeviceConfig(deviceCode);
+        if (cancelled) return;
+        if (data?.campaign?.id !== FORD_CAMPAIGN_ID) {
+          throw new Error('Ford campaign is not active on this device');
+        }
         setConfig(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message || 'Could not load campaign');
-        setLoading(false);
-      });
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message || 'Could not load campaign');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadFordConfig();
+    return () => { cancelled = true; };
   }, [deviceCode]);
 
   async function handleComplete(payload) {
