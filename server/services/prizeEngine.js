@@ -3,6 +3,8 @@ const { usesNthWinDemo, isWinSlot } = require('./demoControl');
 
 const DEFAULT_CAMPAIGN_ID = 'niterra-ngk-2026';
 const { AUDI_CAMPAIGN_ID, AUDI_VOUCHER_MIN } = require('../lib/audiCampaign');
+const { FORD_CAMPAIGN_ID, FORD_VOUCHER_MIN } = require('../lib/fordCampaign');
+const { HOKA_CAMPAIGN_ID } = require('../lib/hokaCampaign');
 
 function getTotalClaimCount(campaignId) {
   if (!campaignId || campaignId === DEFAULT_CAMPAIGN_ID) {
@@ -14,9 +16,24 @@ function getTotalClaimCount(campaignId) {
   return db.prepare('SELECT COUNT(*) as count FROM claims WHERE campaignId = ?').get(campaignId).count;
 }
 
+function assignNextAvailablePrize(claimId, campaignId) {
+  const prize = db.prepare(`
+    SELECT * FROM manifest
+    WHERE status = 'AVAILABLE' AND campaignId = ?
+    ORDER BY createdAt ASC, prizeId ASC
+    LIMIT 1
+  `).get(campaignId);
+  if (!prize) return { result: 'NOT_WINNER', prize: null };
+  return assignAndReturn(claimId, prize);
+}
+
 function assignPrize(claimId, claimTime, campaignId = DEFAULT_CAMPAIGN_ID) {
   const resolvedCampaignId = campaignId || DEFAULT_CAMPAIGN_ID;
   const demoMode = process.env.DEMO_MODE === 'true';
+
+  if (resolvedCampaignId === HOKA_CAMPAIGN_ID) {
+    return assignNextAvailablePrize(claimId, resolvedCampaignId);
+  }
 
   if (demoMode) {
     return assignDemoMode(claimId, resolvedCampaignId);
@@ -29,6 +46,17 @@ function assignPrize(claimId, claimTime, campaignId = DEFAULT_CAMPAIGN_ID) {
       ORDER BY RANDOM()
       LIMIT 1
     `).get(resolvedCampaignId, AUDI_VOUCHER_MIN);
+    if (prize) return assignAndReturn(claimId, prize);
+    return { result: 'NOT_WINNER', prize: null };
+  }
+
+  if (resolvedCampaignId === FORD_CAMPAIGN_ID) {
+    const prize = db.prepare(`
+      SELECT * FROM manifest
+      WHERE status = 'AVAILABLE' AND campaignId = ? AND value >= ?
+      ORDER BY RANDOM()
+      LIMIT 1
+    `).get(resolvedCampaignId, FORD_VOUCHER_MIN);
     if (prize) return assignAndReturn(claimId, prize);
     return { result: 'NOT_WINNER', prize: null };
   }
@@ -67,6 +95,16 @@ function assignDemoMode(claimId, campaignId) {
       ORDER BY RANDOM()
       LIMIT 1
     `).get(campaignId, AUDI_VOUCHER_MIN);
+    if (prize) return assignAndReturn(claimId, prize);
+  }
+
+  if (campaignId === FORD_CAMPAIGN_ID) {
+    const prize = db.prepare(`
+      SELECT * FROM manifest
+      WHERE status = 'AVAILABLE' AND campaignId = ? AND value >= ?
+      ORDER BY RANDOM()
+      LIMIT 1
+    `).get(campaignId, FORD_VOUCHER_MIN);
     if (prize) return assignAndReturn(claimId, prize);
   }
 

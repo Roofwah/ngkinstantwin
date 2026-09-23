@@ -285,6 +285,12 @@
   color: var(--ford-navy);
 }
 
+.ford-lede--emphasis {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ford-navy);
+}
+
 .ford-prize {
   margin: 20px 0;
   padding: 20px;
@@ -294,18 +300,85 @@
   background: #fafbfc;
 }
 
-.ford-prize span {
+.ford-prize--reveal {
+  padding: 28px 14px 22px;
+  background: var(--ford-navy);
+  border-color: rgba(255, 255, 255, 0.12);
+  animation: fordPrizeIn 0.55s ease-out;
+}
+
+@keyframes fordPrizeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ford-prize--reveal .ford-voucher-amount {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  margin: 0 0 14px;
+  min-height: clamp(5.5rem, 30vw, 9rem);
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 700;
+  line-height: 0.85;
+}
+
+.ford-prize--reveal .ford-voucher-amount__currency {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(2.8rem, 14vw, 4.5rem);
+  letter-spacing: 0;
+  color: #fff;
+  opacity: 0.85;
+}
+
+.ford-prize--reveal .ford-voucher-amount__value {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(6rem, 34vw, 10.5rem);
+  letter-spacing: -0.03em;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.12s ease-out;
+}
+
+.ford-prize--reveal .ford-voucher-amount--pulse .ford-voucher-amount__value {
+  transform: scale(1.05);
+}
+
+.ford-voucher-label {
+  margin: 0;
+  font-size: clamp(0.88rem, 3.6vw, 1rem);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 16em;
+  margin-inline: auto;
+}
+
+.ford-ref {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.ford-ref__label {
   display: block;
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ford-text);
   margin-bottom: 8px;
-}
-
-.ford-prize strong {
-  font-size: 1.4rem;
-  color: var(--ford-navy);
 }
 
 .ford-sweepstakes {

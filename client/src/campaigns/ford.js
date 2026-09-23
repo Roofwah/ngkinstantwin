@@ -27,6 +27,11 @@ export const FORD_VEHICLES = [
 
 export const FORD_DEFAULT_DEALER = 'Ford Display Lab';
 
+export const FORD_VOUCHER_NAME = 'Ford service or accessories voucher';
+export const FORD_VOUCHER_MIN = 500;
+export const FORD_VOUCHER_MAX = 800;
+export const FORD_VOUCHER_STEP = 50;
+
 export function fordDealerName(campaign) {
   return campaign?.config?.defaultStoreName || FORD_DEFAULT_DEALER;
 }

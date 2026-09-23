@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const db = require('../db');
 const { loadCampaign } = require('./demoCampaign');
 const { audiDemoPrizes } = require('../lib/audiCampaign');
+const { fordDemoPrizes } = require('../lib/fordCampaign');
 
 const DEFAULT_SWEEPSTAKES =
   "You're not an instant winner this time. You've been automatically entered into the sweepstakes prize draw.";
@@ -39,7 +40,7 @@ function defaultControl(campaignId) {
   if (campaignId === 'hoka-2026') {
     return {
       enabled: true,
-      winEvery: 2,
+      winEvery: 1,
       sweepstakesOnLose: true,
       sweepstakesMessage: DEFAULT_SWEEPSTAKES,
       claimOffset: 0,
@@ -54,6 +55,16 @@ function defaultControl(campaignId) {
       sweepstakesMessage: DEFAULT_SWEEPSTAKES,
       claimOffset: 0,
       prizes: audiDemoPrizes(),
+    };
+  }
+  if (campaignId === 'ford-2026') {
+    return {
+      enabled: true,
+      winEvery: 1,
+      sweepstakesOnLose: false,
+      sweepstakesMessage: DEFAULT_SWEEPSTAKES,
+      claimOffset: 0,
+      prizes: fordDemoPrizes(),
     };
   }
   return {

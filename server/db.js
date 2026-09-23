@@ -150,6 +150,7 @@ try { db.exec('CREATE INDEX idx_tokens_status ON issued_tokens(status)'); } catc
 try { db.exec('ALTER TABLE campaigns ADD COLUMN config TEXT'); } catch {}
 
 const { audiDemoPrizes } = require('./lib/audiCampaign');
+const { fordDemoPrizes } = require('./lib/fordCampaign');
 
 const DEMO_CAMPAIGNS = [
   {
@@ -273,6 +274,12 @@ const DEMO_CAMPAIGNS = [
       kineticLab: true,
       qrBgUrl: '/campaigns/ford/scan.jpg',
       qrPadBg: '#ffffff',
+      demoControl: {
+        enabled: true,
+        winEvery: 1,
+        sweepstakesOnLose: false,
+        prizes: fordDemoPrizes(),
+      },
     },
   },
   {
@@ -336,7 +343,14 @@ for (const c of DEMO_CAMPAIGNS) {
               claimOffset: prev.demoControl?.claimOffset || 0,
             },
           }
-        : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
+        : c.id === 'ford-2026' && c.config.demoControl
+          ? {
+              demoControl: {
+                ...c.config.demoControl,
+                claimOffset: prev.demoControl?.claimOffset || 0,
+              },
+            }
+          : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
   });
   if (!existing) {
     db.prepare(`INSERT INTO campaigns (id, name, brand, tagline, mechanic, startDate, endDate, status, config)

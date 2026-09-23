@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { sendOtp, verifyOtp } from '../api';
 import FordEntryShell from './FordEntryShell';
+import FordVoucherCounter from './FordVoucherCounter';
 import {
   FORD_VERIFICATION_METHOD,
-  FORD_SWEEPSTAKES_MSG,
+  FORD_VOUCHER_NAME,
   fordDealerName,
   fordLandingArt,
   fordVehicles,
@@ -247,36 +248,39 @@ export default function FordEntryForm({
 
       {step === STEPS.SUBMITTING && (
         <div className="ford-form">
-          <h1 className="ford-title">Checking your result</h1>
+          <h1 className="ford-title">Revealing your voucher</h1>
           <p className="ford-lede">This only takes a moment.</p>
         </div>
       )}
 
-      {step === STEPS.REVEAL && (
+      {step === STEPS.REVEAL && win && (
         <div className="ford-form">
-          {win ? (
-            <div className="ford-result">
-              <p className="ford-kicker">Ford Instant Win</p>
-              <h1>Congratulations{first ? ` ${first}` : ''}!</h1>
-              <p className="ford-lede">You&apos;re an instant winner.</p>
-              <div className="ford-prize">
-                <span>You&apos;ve won</span>
-                <strong>{reveal?.prizeName || 'an instant prize'}</strong>
-              </div>
-              <p className="ford-staff-msg">
-                Show this message to a staff member to redeem your prize.
+          <div className="ford-result ford-result--win">
+            <p className="ford-kicker">Ford Instant Win</p>
+            <h1>Congratulations{first ? ` ${first}` : ''}!</h1>
+            <p className="ford-lede ford-lede--emphasis">You&apos;ve won</p>
+            <div className="ford-prize ford-prize--reveal">
+              <FordVoucherCounter
+                key={reveal?.claimId || 'voucher'}
+                value={reveal?.prizeValue}
+              />
+              <p className="ford-voucher-label">
+                {reveal?.prizeName || FORD_VOUCHER_NAME}
               </p>
-              {reveal?.redemptionCode && (
+            </div>
+            <p className="ford-staff-msg">
+              Redemption instructions have been sent to your mobile.
+              Show that message and your reference to Ford staff.
+            </p>
+            {reveal?.redemptionCode ? (
+              <div className="ford-ref">
+                <span className="ford-ref__label">Reference number</span>
                 <div className="ford-code">{reveal.redemptionCode}</div>
-              )}
-            </div>
-          ) : (
-            <div className="ford-result">
-              <h1>Not this time</h1>
-              <p className="ford-lede">{FORD_SWEEPSTAKES_MSG}</p>
-              <div className="ford-sweepstakes">Sweepstakes entry confirmed</div>
-            </div>
-          )}
+              </div>
+            ) : (
+              <p className="ford-lede">Your reference is being generated — check your SMS shortly.</p>
+            )}
+          </div>
         </div>
       )}
     </FordEntryShell>

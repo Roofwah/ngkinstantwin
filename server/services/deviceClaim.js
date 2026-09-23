@@ -15,7 +15,11 @@ const {
 } = require('../lib/hokaCampaign');
 const { validateNiterraCrosswordPayload } = require('../lib/niterraCampaign');
 const { validateAudiEntryPayload, isAudiVerificationMethod, audiVoucherDisplayName } = require('../lib/audiCampaign');
-const { validateFordEntryPayload, isFordVerificationMethod } = require('../lib/fordCampaign');
+const {
+  validateFordEntryPayload,
+  isFordVerificationMethod,
+  fordVoucherDisplayName,
+} = require('../lib/fordCampaign');
 
 function isCrosswordEntry(method) {
   return method === 'niterra_crossword' || isAudiVerificationMethod(method) || isFordVerificationMethod(method);
@@ -268,6 +272,7 @@ function createClaimWithReceipt({
   );
 
   const isAudi = isAudiVerificationMethod(validated.verificationMethod);
+  const isFord = isFordVerificationMethod(validated.verificationMethod);
   const { result, prize } = assignPrize(claimId, now, resolvedCampaignId);
   const claimStatus = resolveClaimStatus(result, validated.verificationMethod);
   let prizeName = prize?.prizeName || null;
@@ -275,6 +280,8 @@ function createClaimWithReceipt({
     prizeName = hokaPrizeName(campaign, result, validated.spendAmount, prize);
   } else if (isAudi && prize) {
     prizeName = audiVoucherDisplayName();
+  } else if (isFord && prize) {
+    prizeName = fordVoucherDisplayName();
   }
 
   db.prepare(`

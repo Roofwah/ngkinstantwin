@@ -1,6 +1,38 @@
 const FORD_CAMPAIGN_ID = 'ford-2026';
 const FORD_VERIFICATION_METHOD = 'ford_display_lab';
 
+const FORD_VOUCHER_NAME = 'Ford service or accessories voucher';
+const FORD_VOUCHER_MIN = 500;
+const FORD_VOUCHER_MAX = 800;
+const FORD_VOUCHER_STEP = 50;
+const FORD_VOUCHER_VALUES = Array.from(
+  { length: (FORD_VOUCHER_MAX - FORD_VOUCHER_MIN) / FORD_VOUCHER_STEP + 1 },
+  (_, i) => FORD_VOUCHER_MIN + i * FORD_VOUCHER_STEP,
+);
+
+function fordDemoPrizes() {
+  return FORD_VOUCHER_VALUES.map((value) => ({
+    name: FORD_VOUCHER_NAME,
+    value,
+    qty: 2,
+  }));
+}
+
+function fordVoucherDisplayName() {
+  return FORD_VOUCHER_NAME;
+}
+
+function fordManifestPrizes() {
+  return {
+    tier1: FORD_VOUCHER_VALUES.flatMap((value) => ([
+      { prizeName: FORD_VOUCHER_NAME, value },
+      { prizeName: FORD_VOUCHER_NAME, value },
+    ])),
+    tier2: [],
+    tier3: [],
+  };
+}
+
 function isFordVerificationMethod(method) {
   return method === FORD_VERIFICATION_METHOD;
 }
@@ -45,6 +77,13 @@ function validateFordEntryPayload(body, campaign, deviceRow, allowedVehicles) {
 module.exports = {
   FORD_CAMPAIGN_ID,
   FORD_VERIFICATION_METHOD,
+  FORD_VOUCHER_NAME,
+  FORD_VOUCHER_MIN,
+  FORD_VOUCHER_MAX,
+  FORD_VOUCHER_STEP,
   isFordVerificationMethod,
+  fordDemoPrizes,
+  fordVoucherDisplayName,
+  fordManifestPrizes,
   validateFordEntryPayload,
 };

@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const db = require('../db');
 const { audiManifestPrizes } = require('../lib/audiCampaign');
+const { fordManifestPrizes } = require('../lib/fordCampaign');
 
 const DEFAULT_CAMPAIGN_ID = 'niterra-ngk-2026';
 
@@ -20,6 +21,7 @@ const NITERRA_PRIZES = {
 };
 
 const AUDI_PRIZES = audiManifestPrizes();
+const FORD_PRIZES = fordManifestPrizes();
 
 const HOKA_PRIZES = {
   tier1: [
@@ -60,6 +62,7 @@ function prizesForCampaign(campaignId) {
   if (campaignId === 'hoka-2026') return HOKA_PRIZES;
   if (campaignId === 'niterra-ngk-2026') return NITERRA_PRIZES;
   if (campaignId === 'audi-2026') return AUDI_PRIZES;
+  if (campaignId === 'ford-2026') return FORD_PRIZES;
   const row = db.prepare('SELECT name FROM campaigns WHERE id = ?').get(campaignId);
   return genericPrizes(row?.name || 'Campaign');
 }
