@@ -1,8 +1,10 @@
 import niterraRepco from './niterra-repco';
+import fordDisplayLab from './ford-display-lab';
 
 /** Registry of lab presenter configs — add one file per promotional program. */
 const LAB_CAMPAIGNS = {
   'niterra-repco': niterraRepco,
+  'ford-display-lab': fordDisplayLab,
 };
 
 const DEFAULT_CONFIG_ID = 'niterra-repco';

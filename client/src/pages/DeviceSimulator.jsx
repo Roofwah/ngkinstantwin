@@ -60,6 +60,8 @@ const CAMPAIGN_UI = {
     sub: 'Ford Display Lab',
     color: '#003478',
     kineticLab: true,
+    qrBg: '/campaigns/ford/scan.jpg',
+    qrPadBg: '#ffffff',
     slides: [
       { headline: 'FORD', sub: 'White field · 48pt clarity', bg: '#ffffff', fg: '#000000' },
       { headline: 'FORD', sub: 'Black field · 48pt clarity', bg: '#000000', fg: '#ffffff' },
@@ -67,8 +69,10 @@ const CAMPAIGN_UI = {
       { headline: 'CLARITY', sub: 'Font ladder 14–48', bg: '#000000', fg: '#ffffff' },
     ],
     faq: [
-      { q: 'Purpose', a: 'PUK display lab — test LVGL kinetic text, contrast, and brightness on physical hardware.' },
-      { q: 'On device', a: 'Eight scenes auto-cycle every 8s. Single tap = next scene. Double tap = QR.' },
+      { q: 'Campaign', a: 'Ford Display Lab instant win — enter after a qualifying vehicle purchase.' },
+      { q: 'How to enter', a: 'Scan the QR code, select your purchased vehicle, enter your 10-digit invoice number, and verify your mobile.' },
+      { q: 'Prizes', a: 'Every entry wins a Ford service or accessories voucher — values from $500 up to $800.' },
+      { q: 'On device', a: 'Kinetic scenes auto-cycle. Single tap = next scene. Double tap = QR to /enter/ford.' },
     ],
   },
   'audi-2026': {
