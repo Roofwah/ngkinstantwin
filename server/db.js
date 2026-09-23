@@ -271,6 +271,8 @@ const DEMO_CAMPAIGNS = [
       defaultStoreName: 'Ford Display Lab',
       formArtUrl: '/campaigns/ford/scan.jpg',
       landingHeroUrl: '/campaigns/ford/landing.jpg',
+      idleVideoUrl: '/campaigns/ford/ford.mp4',
+      idleFallbackUrl: '/campaigns/ford/landing.jpg',
       kineticLab: true,
       qrBgUrl: '/campaigns/ford/scan.jpg',
       qrPadBg: '#ffffff',

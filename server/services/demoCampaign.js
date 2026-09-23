@@ -10,6 +10,7 @@ const DEMO_CAMPAIGN_IDS = [
   'vb-2026',
   'redbull-2026',
   'audi-2026',
+  'ford-2026',
 ];
 
 function isDemoDevice(deviceCode) {

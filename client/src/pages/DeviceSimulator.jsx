@@ -59,20 +59,16 @@ const CAMPAIGN_UI = {
   'ford-2026': {
     sub: 'Ford Display Lab',
     color: '#003478',
-    kineticLab: true,
+    idleVideo: '/campaigns/ford/ford.mp4',
+    idleFallback: '/campaigns/ford/landing.jpg',
+    slides: [],
     qrBg: '/campaigns/ford/scan.jpg',
     qrPadBg: '#ffffff',
-    slides: [
-      { headline: 'FORD', sub: 'White field · 48pt clarity', bg: '#ffffff', fg: '#000000' },
-      { headline: 'FORD', sub: 'Black field · 48pt clarity', bg: '#000000', fg: '#ffffff' },
-      { headline: 'Go Further', sub: 'Ford blue #003478', bg: '#003478', fg: '#ffffff' },
-      { headline: 'CLARITY', sub: 'Font ladder 14–48', bg: '#000000', fg: '#ffffff' },
-    ],
     faq: [
       { q: 'Campaign', a: 'Ford Display Lab instant win — enter after a qualifying vehicle purchase.' },
       { q: 'How to enter', a: 'Scan the QR code, select your purchased vehicle, enter the last 4 digits of your sales contract, and verify your mobile.' },
       { q: 'Prizes', a: 'Every entry wins a Ford service or accessories voucher — values from $500 up to $800.' },
-      { q: 'On device', a: 'Kinetic scenes auto-cycle. Single tap = next scene. Double tap = QR to /enter/ford.' },
+      { q: 'On device', a: 'Idle video loops on the panel. Double tap to issue QR to /enter/ford.' },
     ],
   },
   'audi-2026': {
