@@ -1,3 +1,6 @@
-# node:sqlite requires Node 22.5+
+# node:sqlite requires Node 22.5+ (native module stable from 22.13+)
 [variables]
 NIXPACKS_NODE_VERSION = "22"
+
+[phases.setup]
+nixpkgsArchive = "51ad838b03a05b1de6f9f2a0fffecee64a9788ee"

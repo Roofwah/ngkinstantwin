@@ -12,17 +12,36 @@ const { getActiveDemoCampaignId, DEMO_CAMPAIGN_IDS } = require('./services/demoC
 const { usesNthWinDemo, getDemoControl, loadNominatedIntoPool } = require('./services/demoControl');
 
 const seed = process.env.MOCK_SEED || '00000000000000000001f4a9c8b7e6d9mockseed';
-console.log(`[startup] Demo campaigns: ${DEMO_CAMPAIGN_IDS.join(', ')}`);
-for (const campaignId of DEMO_CAMPAIGN_IDS) {
+const forceManifestReload = process.env.FORCE_MANIFEST_RELOAD === 'true';
+
+function initCampaignManifest(campaignId) {
   if (usesNthWinDemo(campaignId)) {
+    const available = db.prepare(
+      "SELECT COUNT(*) as c FROM manifest WHERE campaignId = ? AND status = 'AVAILABLE'",
+    ).get(campaignId).c;
+    if (available > 0 && !forceManifestReload) {
+      console.log(`[startup] Nominated demo pool for ${campaignId} (${available} available, skip reload)`);
+      return;
+    }
     const n = loadNominatedIntoPool(campaignId, getDemoControl(campaignId).prizes);
     console.log(`[startup] Nominated demo pool for ${campaignId} (${n} available)`);
-    continue;
+    return;
   }
   const count = db.prepare('SELECT COUNT(*) as c FROM manifest WHERE campaignId = ?').get(campaignId).c;
   if (count === 0) {
     const prizes = generateManifest(seed, 168, campaignId);
     console.log(`[startup] Prize manifest for ${campaignId} (${prizes.length} prizes)`);
+  }
+}
+
+function bootManifests() {
+  console.log(`[startup] Demo campaigns: ${DEMO_CAMPAIGN_IDS.join(', ')}`);
+  for (const campaignId of DEMO_CAMPAIGN_IDS) {
+    try {
+      initCampaignManifest(campaignId);
+    } catch (err) {
+      console.error(`[startup] Manifest init failed for ${campaignId}:`, err.message);
+    }
   }
 }
 
@@ -96,6 +115,8 @@ if (fs.existsSync(path.join(distPath, 'index.html'))) {
 app.listen(PORT, () => {
   const baseUrl = getBaseUrl();
   const warning = getPublicBaseUrlWarning();
+
+  setImmediate(bootManifests);
 
   console.log(`\n🎰 PureRandom Instant Win — Server running on port ${PORT}`);
   console.log(`   Public URL: ${baseUrl}`);
