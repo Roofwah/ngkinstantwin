@@ -12,6 +12,7 @@ const { getActiveDemoCampaignId, DEMO_CAMPAIGN_IDS } = require('./services/demoC
 const { usesNthWinDemo, getDemoControl, loadNominatedIntoPool } = require('./services/demoControl');
 
 const seed = process.env.MOCK_SEED || '00000000000000000001f4a9c8b7e6d9mockseed';
+console.log(`[startup] Demo campaigns: ${DEMO_CAMPAIGN_IDS.join(', ')}`);
 for (const campaignId of DEMO_CAMPAIGN_IDS) {
   if (usesNthWinDemo(campaignId)) {
     const n = loadNominatedIntoPool(campaignId, getDemoControl(campaignId).prizes);
@@ -98,7 +99,7 @@ app.listen(PORT, () => {
 
   console.log(`\n🎰 PureRandom Instant Win — Server running on port ${PORT}`);
   console.log(`   Public URL: ${baseUrl}`);
-  console.log(`   Demo mode : ${process.env.DEMO_MODE === 'true' ? 'ON  ⚡ (HOKA: every 2nd nominated prize · others: 2nd/5th/12th/10th)' : 'OFF (timestamp windows)'}`);
+  console.log(`   Demo mode : ${process.env.DEMO_MODE === 'true' ? 'ON  ⚡ (HOKA: every entry wins · others: 2nd/5th/12th/10th)' : 'OFF (timestamp windows · HOKA still wins every entry)'}`);
   console.log(`   OTP mode  : ${getOtpMode() === 'bird' ? 'Bird SMS' : 'DEMO (123456) — set BIRD_* env vars for real SMS'}`);
   console.log(`   Seed      : ${process.env.MOCK_SEED || '(default)'}`);
   console.log(`   Admin     : ${baseUrl}/admin`);
