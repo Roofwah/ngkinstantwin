@@ -70,7 +70,7 @@ const CAMPAIGN_UI = {
     ],
     faq: [
       { q: 'Campaign', a: 'Ford Display Lab instant win — enter after a qualifying vehicle purchase.' },
-      { q: 'How to enter', a: 'Scan the QR code, select your purchased vehicle, enter your 10-digit invoice number, and verify your mobile.' },
+      { q: 'How to enter', a: 'Scan the QR code, select your purchased vehicle, enter the last 4 digits of your sales contract, and verify your mobile.' },
       { q: 'Prizes', a: 'Every entry wins a Ford service or accessories voucher — values from $500 up to $800.' },
       { q: 'On device', a: 'Kinetic scenes auto-cycle. Single tap = next scene. Double tap = QR to /enter/ford.' },
     ],

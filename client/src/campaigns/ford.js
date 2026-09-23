@@ -46,8 +46,8 @@ export function isFordWin(result) {
   return Boolean(result) && result !== 'NOT_WINNER';
 }
 
-export function isValidFordInvoiceNumber(value) {
-  return /^\d{10}$/.test(String(value || '').replace(/\D/g, ''));
+export function isValidFordContractNumber(value) {
+  return /^\d{4}$/.test(String(value || '').trim());
 }
 
 export const FORD_SWEEPSTAKES_MSG =

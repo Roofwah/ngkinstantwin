@@ -9,7 +9,7 @@ import {
   fordLandingArt,
   fordVehicles,
   isFordWin,
-  isValidFordInvoiceNumber,
+  isValidFordContractNumber,
 } from '../campaigns/ford';
 
 function normaliseMobile(raw) {
@@ -41,7 +41,7 @@ export default function FordEntryForm({
   const [fullName, setFullName] = useState('');
   const [mobile, setMobile] = useState('');
   const [vehicle, setVehicle] = useState('');
-  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [contractNumber, setContractNumber] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpSending, setOtpSending] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
@@ -64,8 +64,8 @@ export default function FordEntryForm({
       setError('Select your purchased vehicle');
       return;
     }
-    if (!isValidFordInvoiceNumber(invoiceNumber)) {
-      setError('Invoice number must be exactly 10 digits');
+    if (!isValidFordContractNumber(contractNumber)) {
+      setError('Enter the last 4 digits of your sales contract number');
       return;
     }
 
@@ -95,7 +95,8 @@ export default function FordEntryForm({
       const outcome = await onComplete({
         customerName: normaliseName(fullName),
         mobile: norm,
-        invoiceNumber: invoiceNumber.replace(/\D/g, ''),
+        invoiceNumber: contractNumber.trim(),
+        contractNumber: contractNumber.trim(),
         selectedBrand: vehicle,
         spendAmount: 0,
         productDescription: vehicle,
@@ -170,16 +171,16 @@ export default function FordEntryForm({
             </select>
           </div>
           <div className="ford-field">
-            <label htmlFor="ford-invoice">Invoice number</label>
+            <label htmlFor="ford-contract">Last 4 digits of sales contract</label>
             <input
-              id="ford-invoice"
+              id="ford-contract"
               type="text"
               inputMode="numeric"
-              maxLength={10}
-              placeholder="10-digit invoice number"
-              value={invoiceNumber}
+              maxLength={4}
+              placeholder="0000"
+              value={contractNumber}
               onChange={(e) => {
-                setInvoiceNumber(e.target.value.replace(/\D/g, '').slice(0, 10));
+                setContractNumber(e.target.value.replace(/\D/g, '').slice(0, 4));
                 setError('');
               }}
             />

@@ -39,7 +39,7 @@ export default {
   customerMessages: {
     ...DEFAULT_CUSTOMER_MESSAGES,
     welcome: 'Scan the PUK to enter Ford Instant Win',
-    receipt: 'Enter your vehicle and invoice on phone',
+    receipt: 'Enter your vehicle and sales contract digits on phone',
     outcomeWin: 'Congratulations — you won a Ford service voucher!',
     outcomeNoWin: 'Thanks for playing — check your sweepstakes entry',
   },
