@@ -3,8 +3,8 @@
 import {
   DEFAULT_CUSTOMER_MESSAGES,
   DEFAULT_QUALIFYING_RULES,
-  HOKA_JOURNEY_STAGES,
-  HOKA_TURNSTYLE_COMPONENTS,
+  PHONE_ENTRY_JOURNEY_STAGES,
+  PHONE_ENTRY_TURNSTYLE_COMPONENTS,
 } from './defaults';
 
 export default {
@@ -49,6 +49,6 @@ export default {
     tier3: 'Ford service or accessories voucher',
     noWin: 'Sweepstakes prize draw entry',
   },
-  journeyStages: HOKA_JOURNEY_STAGES,
-  turnstyleComponents: HOKA_TURNSTYLE_COMPONENTS,
+  journeyStages: PHONE_ENTRY_JOURNEY_STAGES,
+  turnstyleComponents: PHONE_ENTRY_TURNSTYLE_COMPONENTS,
 };

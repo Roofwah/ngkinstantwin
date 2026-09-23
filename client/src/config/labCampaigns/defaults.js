@@ -28,6 +28,31 @@ export const STANDARD_TURNSTYLE_COMPONENTS = [
   { id: 'reporting', label: 'Reporting', description: 'Campaign data capture' },
 ];
 
+/** Phone entry — self-declared purchase on phone, no receipt upload (Ford, Audi, HOKA). */
+export const PHONE_ENTRY_JOURNEY_STAGES = [
+  { id: 'qualifying_purchase', label: 'Qualifying purchase', hint: 'Customer completes a qualifying purchase' },
+  { id: 'access_point', label: 'Access point', hint: 'Customer scans PUK or Lab phone QR' },
+  { id: 'entry_opened', label: 'Customer joined', hint: 'Branded entry form opens on phone' },
+  { id: 'otp_sent', label: 'OTP sent', hint: 'SMS verification code' },
+  { id: 'customer_verified', label: 'Customer verified', hint: 'Identity confirmed' },
+  { id: 'purchase_validated', label: 'Purchase details', hint: 'Vehicle and contract entered on phone' },
+  { id: 'submitting', label: 'Submit', hint: 'Claim sent to Turnstyle' },
+  { id: 'checking_instant_win', label: 'Pure Random', hint: 'Checking instant win' },
+  { id: 'instant_win_outcome', label: 'Instant win outcome', hint: 'Winner or sweepstakes entry' },
+  { id: 'prize_allocated', label: 'Result revealed', hint: 'Voucher count-up shown on phone' },
+  { id: 'store_email_sent', label: 'Email notification sent to store', hint: 'Store inbox notified of instant win' },
+  { id: 'prize_fulfilled', label: 'Journey complete', hint: 'Prize fulfilled in store' },
+];
+
+export const PHONE_ENTRY_TURNSTYLE_COMPONENTS = [
+  { id: 'access_point', label: 'Access Point', description: 'PUK QR in store' },
+  { id: 'identity', label: 'Identity', description: 'Mobile OTP verification' },
+  { id: 'purchase', label: 'Purchase', description: 'Self-declared vehicle & contract' },
+  { id: 'pure_random', label: 'Pure Random', description: 'Instant win engine' },
+  { id: 'prize', label: 'Prize', description: 'Instant reveal on device' },
+  { id: 'store_notify', label: 'Store notification', description: 'Email sent to store inbox' },
+];
+
 export const DEFAULT_QUALIFYING_RULES = {
   minSpendOptions: [15, 25, 50, 75, 100],
   defaultMinSpend: 15,
