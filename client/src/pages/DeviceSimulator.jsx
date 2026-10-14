@@ -11,6 +11,7 @@ const CAMPAIGN_ENTER_PATH = {
   'hoka-2026': '/enter/hoka',
   'audi-2026': '/enter/audi-instant-win',
   'ford-2026': '/enter/ford',
+  'castrol-2026': '/enter/castrol',
 };
 
 function campaignEnterPath(campaignId) {
@@ -104,15 +105,13 @@ const CAMPAIGN_UI = {
   'castrol-2026': {
     sub: 'Power Up & Win',
     color: '#00a84a',
-    slides: [
-      { headline: 'POWER UP', sub: 'Castrol Motor Oil',   src: '/campaigns/castrol/1.jpg' },
-      { headline: 'WIN INSTANTLY', sub: 'On every purchase', src: '/campaigns/castrol/2.jpg' },
-      { headline: 'PROTECT & WIN', sub: 'Premium engine care', src: '/campaigns/castrol/3.jpg' },
-      { headline: 'SCAN TO PLAY', sub: 'Your prize awaits',  src: '/campaigns/castrol/4.jpg' },
-    ],
+    qrBg: '/campaigns/castrol/bg.jpg',
+    slides: [],
     faq: [
-      { q: 'Campaign', a: 'Castrol Power Up & Win — participating auto parts and service stores.' },
-      { q: 'How to enter', a: 'Buy any participating Castrol product and ask for your instant win scan.' },
+      { q: 'Campaign', a: 'Castrol Instant Win — every valid entry wins a prize.' },
+      { q: 'How to enter', a: 'Scan the QR code, select your Castrol product, enter the last 4 digits of your receipt, and verify your mobile.' },
+      { q: 'Prizes', a: 'Castrol EDGE 5L pack, workshop cap, or fuel voucher (demo pool).' },
+      { q: 'On device', a: 'Video idle on the panel. Double tap for QR to /enter/castrol.' },
     ],
   },
   'vb-2026': {

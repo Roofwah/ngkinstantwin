@@ -1,0 +1,292 @@
+/* Castrol brand theme — instant win entry */
+.castrol-page {
+  --castrol-green: #009639;
+  --castrol-green-dark: #007a2f;
+  --castrol-red: #ee3124;
+  --castrol-bg: #f4f6f4;
+  --castrol-text: #333;
+  --castrol-input-border: #6e6e6e;
+  min-height: 100dvh;
+  background: var(--castrol-bg);
+  color: var(--castrol-text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.castrol-page * {
+  box-sizing: border-box;
+}
+
+.castrol-landing {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.castrol-landing__art {
+  width: 100%;
+  height: min(40svh, 280px);
+  display: block;
+  object-fit: cover;
+  object-position: center;
+}
+
+.castrol-landing__fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 50%;
+  background: linear-gradient(180deg, transparent 0%, rgba(244, 246, 244, 0.65) 55%, var(--castrol-bg) 100%);
+  pointer-events: none;
+}
+
+.castrol-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+.castrol-page--landing .castrol-container {
+  margin-top: -1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.castrol-card {
+  width: 100%;
+  padding: 28px 24px 36px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  border-top: 4px solid var(--castrol-green);
+}
+
+.castrol-page--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+}
+
+.castrol-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(0, 150, 57, 0.2);
+  border-top-color: var(--castrol-green);
+  border-radius: 50%;
+  animation: castrolSpin 0.8s linear infinite;
+}
+
+@keyframes castrolSpin {
+  to { transform: rotate(360deg); }
+}
+
+.castrol-unavailable {
+  text-align: center;
+  padding: 24px;
+}
+
+.castrol-unavailable h2 {
+  margin: 0 0 8px;
+  font-size: 1.125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--castrol-green-dark);
+}
+
+.castrol-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--castrol-text);
+}
+
+.castrol-title {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--castrol-green-dark);
+}
+
+.castrol-lede {
+  margin: 0 0 24px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.castrol-form {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.castrol-field {
+  margin-bottom: 16px;
+}
+
+.castrol-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--castrol-green-dark);
+}
+
+.castrol-field input,
+.castrol-field select {
+  width: 100%;
+  height: 50px;
+  padding: 8px 12px;
+  border: 1px solid var(--castrol-input-border);
+  border-radius: 4px;
+  background: rgba(255, 255, 254, 0.9);
+  font-size: 16px;
+}
+
+.castrol-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23007a2f' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.castrol-store {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  padding: 0 12px;
+  border: 1px solid var(--castrol-input-border);
+  border-radius: 4px;
+  background: #f8faf8;
+  font-size: 15px;
+}
+
+.castrol-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 48px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--castrol-green);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.castrol-cta:hover {
+  background: var(--castrol-green-dark);
+}
+
+.castrol-cta:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.castrol-ghost {
+  width: 100%;
+  margin-top: 16px;
+  background: transparent;
+  border: 0;
+  color: var(--castrol-green-dark);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.castrol-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b00;
+  font-size: 14px;
+}
+
+.castrol-demo {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #eef8f0;
+  border: 1px solid #b8e0c4;
+  font-size: 14px;
+}
+
+.castrol-legal {
+  margin-top: 20px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--castrol-text);
+}
+
+.castrol-result h1 {
+  margin: 0 0 12px;
+  font-size: 1.5rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--castrol-green-dark);
+}
+
+.castrol-lede--emphasis {
+  font-weight: 600;
+  color: var(--castrol-green-dark);
+}
+
+.castrol-prize {
+  margin: 20px 0;
+  padding: 24px 16px;
+  border-radius: 4px;
+  text-align: center;
+  background: var(--castrol-green-dark);
+  color: #fff;
+}
+
+.castrol-prize-name {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.castrol-prize-value {
+  margin: 8px 0 0;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.castrol-staff-msg {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.castrol-ref {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.castrol-ref__label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.castrol-code {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--castrol-green-dark);
+}

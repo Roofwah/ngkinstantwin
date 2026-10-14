@@ -1,4 +1,4 @@
-const DEMO_DEVICE_CODES = new Set(['PR-DEMO-001', 'PR-UNIT-001', 'PR-PUK2-001']);
+const DEMO_DEVICE_CODES = new Set(['PR-DEMO-001', 'PR-UNIT-001', 'PR-PUK2-001', 'PR-PUK2-004']);
 const SETTINGS_KEY = 'activeCampaignId';
 const DEFAULT_CAMPAIGN_ID = 'niterra-ngk-2026';
 

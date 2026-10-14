@@ -7,6 +7,11 @@ const { fordDemoPrizes } = require('../lib/fordCampaign');
 const DEFAULT_SWEEPSTAKES =
   "You're not an instant winner this time. You've been automatically entered into the sweepstakes prize draw.";
 
+const NITERRA_DEFAULT_PRIZES = [
+  { name: 'NGK Racing Cap', value: 35, qty: 24, image: '/campaigns/niterra/cap.png' },
+  { name: 'KYB Workshop Cap', value: 35, qty: 24, image: '/campaigns/niterra/cap.png' },
+];
+
 const HOKA_DEFAULT_PRIZES = [
   { name: 'HOKA Crew Socks', value: 25, qty: 4, image: '/campaigns/hoka/socks.png' },
   { name: 'HOKA Run Cap', value: 35, qty: 4, image: '/campaigns/hoka/cap.png' },
@@ -37,6 +42,16 @@ function normalisePrize(row) {
 }
 
 function defaultControl(campaignId) {
+  if (campaignId === 'niterra-ngk-2026') {
+    return {
+      enabled: true,
+      winEvery: 1,
+      sweepstakesOnLose: false,
+      sweepstakesMessage: DEFAULT_SWEEPSTAKES,
+      claimOffset: 0,
+      prizes: NITERRA_DEFAULT_PRIZES,
+    };
+  }
   if (campaignId === 'hoka-2026') {
     return {
       enabled: true,
@@ -65,6 +80,17 @@ function defaultControl(campaignId) {
       sweepstakesMessage: DEFAULT_SWEEPSTAKES,
       claimOffset: 0,
       prizes: fordDemoPrizes(),
+    };
+  }
+  if (campaignId === 'castrol-2026') {
+    const { castrolDemoPrizes } = require('../lib/castrolCampaign');
+    return {
+      enabled: true,
+      winEvery: 1,
+      sweepstakesOnLose: false,
+      sweepstakesMessage: DEFAULT_SWEEPSTAKES,
+      claimOffset: 0,
+      prizes: castrolDemoPrizes(),
     };
   }
   return {

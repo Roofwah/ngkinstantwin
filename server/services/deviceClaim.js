@@ -20,9 +20,16 @@ const {
   isFordVerificationMethod,
   fordVoucherDisplayName,
 } = require('../lib/fordCampaign');
+const {
+  validateCastrolEntryPayload,
+  isCastrolVerificationMethod,
+} = require('../lib/castrolCampaign');
 
 function isCrosswordEntry(method) {
-  return method === 'niterra_crossword' || isAudiVerificationMethod(method) || isFordVerificationMethod(method);
+  return method === 'niterra_crossword'
+    || isAudiVerificationMethod(method)
+    || isFordVerificationMethod(method)
+    || isCastrolVerificationMethod(method);
 }
 
 function labAllowsDuplicateReceipts(labSessionId) {
@@ -218,6 +225,8 @@ function createClaimWithReceipt({
     validated = validateAudiEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else if (isFordVerificationMethod(body.verificationMethod)) {
     validated = validateFordEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
+  } else if (isCastrolVerificationMethod(body.verificationMethod)) {
+    validated = validateCastrolEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else {
     validated = validateReceiptPayload(body, file);
   }

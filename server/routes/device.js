@@ -128,7 +128,7 @@ router.put('/demo-campaign', (req, res) => {
 
 function resolveIssueCampaignId(device, requestedCampaignId) {
   let campaignId = resolveCampaignId(db, device);
-  if (device.deviceCode === 'PR-PUK2-001') {
+  if (device.deviceCode === 'PR-PUK2-001' || device.deviceCode === 'PR-PUK2-004') {
     return campaignId;
   }
   if (!isDemoDevice(device.deviceCode) || !requestedCampaignId) {

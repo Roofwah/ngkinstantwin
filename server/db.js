@@ -151,6 +151,7 @@ try { db.exec('ALTER TABLE campaigns ADD COLUMN config TEXT'); } catch {}
 
 const { audiDemoPrizes } = require('./lib/audiCampaign');
 const { fordDemoPrizes } = require('./lib/fordCampaign');
+const { castrolDemoPrizes } = require('./lib/castrolCampaign');
 
 const DEMO_CAMPAIGNS = [
   {
@@ -161,7 +162,25 @@ const DEMO_CAMPAIGNS = [
     mechanic: 'Spend $50+ on eligible NGK, NTK or KYB products',
     startDate: '2026-06-01',
     endDate: '2026-12-31',
-    config: { themeColor: '#e86600', eligibleBrands: ['NGK', 'NTK', 'KYB'], landingHeroUrl: '/instant-win/hero.png', idleVideoUrl: '/campaigns/niterra/ngk.mp4', qrBgUrl: '/campaigns/niterra/scan.jpg' },
+    config: {
+      themeColor: '#e86600',
+      eligibleBrands: ['NGK', 'NTK', 'KYB'],
+      formArtUrl: '/campaigns/niterra/iwbg.png',
+      landingHeroUrl: '/campaigns/niterra/iwbg.png',
+      idleVideoUrl: '/campaigns/niterra/ngk.mp4',
+      qrBgUrl: '/campaigns/niterra/scan.jpg',
+      demoControl: {
+        enabled: true,
+        winEvery: 1,
+        sweepstakesOnLose: false,
+        sweepstakesMessage: "You're not an instant winner this time. You've been automatically entered into the weekly prize draw.",
+        claimOffset: 0,
+        prizes: [
+          { name: 'NGK Racing Cap', value: 35, qty: 24, image: '/campaigns/niterra/cap.png' },
+          { name: 'KYB Workshop Cap', value: 35, qty: 24, image: '/campaigns/niterra/cap.png' },
+        ],
+      },
+    },
   },
   {
     id: 'hoka-2026',
@@ -217,13 +236,32 @@ const DEMO_CAMPAIGNS = [
   },
   {
     id: 'castrol-2026',
-    name: 'Castrol',
+    name: 'Castrol Instant Win',
     brand: 'Castrol',
-    tagline: 'Power Up & Win on Castrol motor oil',
-    mechanic: 'Buy participating Castrol products',
+    tagline: 'Buy Castrol — every entry wins an instant prize',
+    mechanic: 'Purchase participating Castrol motor oil and enter online',
     startDate: '2026-07-15',
-    endDate: '2026-10-15',
-    config: { themeColor: '#00a84a', eligibleBrands: ['Castrol Edge', 'Castrol GTX', 'Castrol Magnatec'] },
+    endDate: '2026-12-31',
+    config: {
+      themeColor: '#00a84a',
+      entryVariant: 'castrol-instant-win',
+      entryPath: '/enter/castrol',
+      eligibleBrands: ['Castrol EDGE', 'Castrol GTX', 'Castrol Magnatec'],
+      defaultStoreName: 'Castrol Instant Win',
+      defaultStoreCode: 'castrol-demo',
+      retailer: 'Castrol',
+      formArtUrl: '/campaigns/castrol/bg.jpg',
+      landingHeroUrl: '/campaigns/castrol/bg.jpg',
+      qrBgUrl: '/campaigns/castrol/bg.jpg',
+      demoControl: {
+        enabled: true,
+        winEvery: 1,
+        sweepstakesOnLose: false,
+        sweepstakesMessage: '',
+        claimOffset: 0,
+        prizes: castrolDemoPrizes(),
+      },
+    },
   },
   {
     id: 'cocacola-2026',
@@ -331,7 +369,14 @@ for (const c of DEMO_CAMPAIGNS) {
   const prev = parseCampaignConfig(existing?.config);
   const configJson = JSON.stringify({
     ...c.config,
-    ...(c.id === 'hoka-2026' && c.config.demoControl
+    ...(c.id === 'niterra-ngk-2026' && c.config.demoControl
+      ? {
+          demoControl: {
+            ...c.config.demoControl,
+            claimOffset: prev.demoControl?.claimOffset || 0,
+          },
+        }
+      : c.id === 'hoka-2026' && c.config.demoControl
       ? {
           demoControl: {
             ...c.config.demoControl,
@@ -352,7 +397,14 @@ for (const c of DEMO_CAMPAIGNS) {
                 claimOffset: prev.demoControl?.claimOffset || 0,
               },
             }
-          : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
+          : c.id === 'castrol-2026' && c.config.demoControl
+            ? {
+                demoControl: {
+                  ...c.config.demoControl,
+                  claimOffset: prev.demoControl?.claimOffset || 0,
+                },
+              }
+            : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
   });
   if (!existing) {
     db.prepare(`INSERT INTO campaigns (id, name, brand, tagline, mechanic, startDate, endDate, status, config)
@@ -448,5 +500,24 @@ db.prepare(`UPDATE devices SET name = ?, retailer = ?, storeName = ?, storeCode 
     Date.now(),
     'PR-PUK2-001',
   );
+
+const existingPuk2Dev4 = db.prepare('SELECT id FROM devices WHERE deviceCode = ?').get('PR-PUK2-004');
+if (!existingPuk2Dev4) {
+  const now = Date.now();
+  db.prepare(`INSERT INTO devices (id, deviceCode, name, retailer, storeName, storeCode, campaignId, status, locationLabel, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+    'device-puk2-004',
+    'PR-PUK2-004',
+    'PUK2 Dev 4 (Castrol)',
+    'Castrol',
+    'Castrol Demo',
+    'castrol-demo',
+    'castrol-2026',
+    'active',
+    'Dev unit 4',
+    now,
+    now
+  );
+}
 
 module.exports = db;

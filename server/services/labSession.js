@@ -1,6 +1,8 @@
 const { randomBytes } = require('crypto');
 const { resolveClientBaseUrl } = require('../lib/baseUrl');
 const db = require('../db');
+const { getStoreEmailPreview } = require('./winnerNotify');
+const { redemptionStatusLabel } = require('./redemption');
 
 const SESSION_TTL_MS = 4 * 60 * 60 * 1000;
 
@@ -21,13 +23,32 @@ const STAGE_META = {
   customer_verified: { label: 'Customer verified', component: 'identity' },
   receipt_received: { label: 'Receipt received', component: 'rri' },
   reading_receipt: { label: 'Reading receipt', component: 'rri' },
-  purchase_validated: { label: 'Purchase validated', component: 'rri' },
+  purchase_validated: { label: 'Purchase details', component: 'purchase' },
   submitting: { label: 'Submitting claim', component: 'pure_random' },
   checking_instant_win: { label: 'Checking instant win', component: 'pure_random' },
   instant_win_outcome: { label: 'Instant win outcome', component: 'pure_random' },
   prize_allocated: { label: 'Prize allocated', component: 'prize' },
+  store_email_sent: { label: 'Email notification sent to store', component: 'store_notify' },
   reporting: { label: 'Campaign reporting', component: 'reporting' },
+  prize_fulfilled: { label: 'Journey complete', component: 'prize' },
+  campaign_brief: { label: 'Campaign brief', component: 'catalog' },
+  prize_catalog: { label: 'Prize catalog', component: 'catalog' },
+  seed_published: { label: 'Seed published', component: 'seed' },
+  generating_manifest: { label: 'Generating manifest', component: 'manifest' },
+  manifest_ready: { label: 'Manifest ready', component: 'manifest' },
+  audit_verified: { label: 'Audit verified', component: 'audit' },
+  campaign_live: { label: 'Campaign live', component: null },
 };
+
+const MANIFEST_STAGE_ORDER = [
+  'campaign_brief',
+  'prize_catalog',
+  'seed_published',
+  'generating_manifest',
+  'manifest_ready',
+  'audit_verified',
+  'campaign_live',
+];
 
 const STAGE_ORDER = [
   'qualifying_purchase',
@@ -42,7 +63,9 @@ const STAGE_ORDER = [
   'checking_instant_win',
   'instant_win_outcome',
   'prize_allocated',
+  'store_email_sent',
   'reporting',
+  'prize_fulfilled',
 ];
 
 const insertStmt = db.prepare(`
@@ -111,9 +134,30 @@ function buildPhoneBaseUrl(session) {
   return base;
 }
 
+const CAMPAIGN_PHONE_ENTRY_PATH = {
+  'niterra-ngk-2026': '/enter/repco',
+  'ford-2026': '/enter/ford',
+  'audi-2026': '/enter/audi-instant-win',
+  'hoka-2026': '/enter/hoka',
+  'castrol-2026': '/enter/castrol',
+};
+
+function phoneEntryPathForSession(session) {
+  if (session.entryPath) return session.entryPath;
+  return CAMPAIGN_PHONE_ENTRY_PATH[session.campaignId] || '/enter';
+}
+
 function buildEntryUrl(session) {
   const base = buildPhoneBaseUrl(session);
-  return `${base}/enter?labSession=${session.id}&campaign=${encodeURIComponent(session.campaignId)}`;
+  const path = phoneEntryPathForSession(session);
+  const params = new URLSearchParams({ labSession: session.id });
+  if (path === '/enter') {
+    params.set('campaign', session.campaignId);
+  }
+  if (session.deviceCode) {
+    params.set('device', session.deviceCode);
+  }
+  return `${base}${path}?${params.toString()}`;
 }
 
 function normalizePresentationStage(session) {
@@ -142,6 +186,13 @@ function serializeJourneyEvents(events = []) {
     customerName: event.customerName || undefined,
     mobileMasked: event.mobile ? maskMobile(event.mobile) : undefined,
     receiptSource: event.receiptSource || undefined,
+    selectedBrand: event.selectedBrand || undefined,
+    spendAmount: event.spendAmount ?? undefined,
+    fulfilledBy: event.fulfilledBy || undefined,
+    fulfilledAt: event.fulfilledAt ?? undefined,
+    redemptionStatus: event.redemptionStatus || undefined,
+    redemptionStatusLabel: event.redemptionStatusLabel || undefined,
+    emailStatus: event.emailStatus || undefined,
     result: event.result || undefined,
     prizeName: event.prizeName || undefined,
   }));
@@ -156,12 +207,27 @@ function formatAccessPointLabel(session) {
   return session.accessPointId || null;
 }
 
+function claimFulfilmentFields(claimId) {
+  if (!claimId) return {};
+  const claim = db.prepare('SELECT redemptionStatus FROM claims WHERE claimId = ?').get(claimId);
+  if (!claim?.redemptionStatus) return {};
+  return {
+    redemptionStatus: claim.redemptionStatus,
+    redemptionStatusLabel: redemptionStatusLabel(claim.redemptionStatus),
+  };
+}
+
 function serializeSession(session) {
   const stage = normalizePresentationStage(session);
   const meta = STAGE_META[stage] || STAGE_META[session.stage] || { label: stage, component: null };
   const joinedAt = session.journeyStartedAt
     || session.events?.find((e) => e.stage === 'entry_opened')?.at
     || null;
+  const fulfilment = claimFulfilmentFields(session.claimId);
+  let stageLabel = meta.label;
+  if (session.result && session.isWinner === false && stage === 'prize_allocated') {
+    stageLabel = 'Journey complete';
+  }
   return {
     sessionId: session.id,
     labConfigId: session.labConfigId || null,
@@ -175,7 +241,7 @@ function serializeSession(session) {
     storeLocation: session.storeLocation || null,
     accessPointLabel: formatAccessPointLabel(session),
     stage,
-    stageLabel: meta.label,
+    stageLabel,
     activeComponent: session.activeComponent || meta.component,
     entryUrl: buildEntryUrl(session),
     clientBaseUrl: session.clientBaseUrl || null,
@@ -193,6 +259,9 @@ function serializeSession(session) {
     updatedAt: session.updatedAt,
     journeyStartedAt: joinedAt,
     journeyEvents: serializeJourneyEvents(session.events),
+    labMode: session.labMode || 'customer',
+    manifestInfo: session.manifestInfo || null,
+    ...fulfilment,
   };
 }
 
@@ -205,8 +274,11 @@ function createSession({
   accessPointId = 'QR-REPCO-247',
   storeId = null,
   storeLocation = null,
+  deviceCode = null,
+  entryPath = null,
   clientOrigin = null,
   labConfigId = null,
+  labMode = 'customer',
   rules = null,
 }) {
   pruneExpired();
@@ -218,6 +290,7 @@ function createSession({
     id,
     clientBaseUrl,
     labConfigId: labConfigId || null,
+    labMode: labMode === 'manifest' ? 'manifest' : 'customer',
     campaignId,
     campaignName: campaignName || campaignId,
     retailer: retailer || null,
@@ -226,15 +299,18 @@ function createSession({
     accessPointId,
     storeId: storeId || null,
     storeLocation: storeLocation || null,
-    stage: 'qualifying_purchase',
-    activeComponent: 'access_point',
+    deviceCode: deviceCode || null,
+    entryPath: entryPath || CAMPAIGN_PHONE_ENTRY_PATH[campaignId] || null,
+    stage: labMode === 'manifest' ? 'campaign_brief' : 'qualifying_purchase',
+    activeComponent: labMode === 'manifest' ? 'catalog' : 'access_point',
     mobileMasked: null,
     customerName: null,
     claimId: null,
     result: null,
     isWinner: null,
     prizeName: null,
-    journeyStartedAt: null,
+    journeyStartedAt: labMode === 'manifest' ? now : null,
+    manifestInfo: null,
     rules: {
       minSpend: rules?.minSpend ?? 15,
       allowDuplicateReceipts: rules?.allowDuplicateReceipts !== undefined
@@ -243,7 +319,10 @@ function createSession({
     },
     createdAt: now,
     updatedAt: now,
-    events: [{ stage: 'qualifying_purchase', at: now }],
+    events: [{
+      stage: labMode === 'manifest' ? 'campaign_brief' : 'qualifying_purchase',
+      at: now,
+    }],
   };
 
   insertStmt.run(id, JSON.stringify(session), now, now);
@@ -257,8 +336,12 @@ function getSession(sessionId) {
   return serializeSession(session);
 }
 
-function stageRank(stage) {
-  const idx = STAGE_ORDER.indexOf(stage);
+function stageOrderFor(session) {
+  return session?.labMode === 'manifest' ? MANIFEST_STAGE_ORDER : STAGE_ORDER;
+}
+
+function stageRank(stage, session) {
+  const idx = stageOrderFor(session).indexOf(stage);
   return idx === -1 ? -1 : idx;
 }
 
@@ -270,8 +353,8 @@ function advanceSession(sessionId, stage, meta = {}) {
   const stageMeta = STAGE_META[stage];
   if (!stageMeta) return null;
 
-  const nextRank = stageRank(stage);
-  const currentRank = stageRank(session.stage);
+  const nextRank = stageRank(stage, session);
+  const currentRank = stageRank(session.stage, session);
   if (nextRank >= 0 && currentRank >= 0 && nextRank < currentRank) {
     return serializeSession(session);
   }
@@ -310,6 +393,17 @@ function advanceSession(sessionId, stage, meta = {}) {
   }
   if (meta.prizeName) session.prizeName = meta.prizeName;
 
+  if (session.labMode === 'manifest' && (meta.prizeCount != null || meta.seedHash || meta.sampleAuditHash)) {
+    session.manifestInfo = {
+      ...(session.manifestInfo || {}),
+      prizeCount: meta.prizeCount ?? session.manifestInfo?.prizeCount,
+      windowHours: meta.windowHours ?? session.manifestInfo?.windowHours,
+      seedHash: meta.seedHash ?? session.manifestInfo?.seedHash,
+      sampleAuditHash: meta.sampleAuditHash ?? session.manifestInfo?.sampleAuditHash,
+      generatedAt: stage === 'manifest_ready' ? now : session.manifestInfo?.generatedAt,
+    };
+  }
+
   session.events.push({ stage, at: now, ...meta });
   saveSession(session);
   return serializeSession(session);
@@ -340,7 +434,7 @@ function updateSessionRules(sessionId, patch = {}) {
   const session = loadSession(sessionId);
   if (!session) return null;
 
-  const allowedSpend = [15, 25, 50, 75, 100];
+  const allowedSpend = [15, 25, 50, 75, 100, 150, 200];
   const nextRules = { ...session.rules };
 
   if (patch.minSpend !== undefined) {
@@ -418,8 +512,75 @@ function getSessionReport(sessionId) {
       submittedAt: claim.createdAt,
       journeyStartedAt: session.journeyStartedAt,
       minSpend: session.rules?.minSpend ?? null,
+      storeEmail: getStoreEmailPreview(claim),
+      redemptionStatus: claim.redemptionStatus || null,
+      redemptionStatusLabel: redemptionStatusLabel(claim.redemptionStatus),
+      fulfilledBy: claim.fulfilledBy || null,
+      fulfilledAt: claim.fulfilledAt || null,
     },
   };
+}
+
+function findSessionIdByClaimId(claimId) {
+  if (!claimId) return null;
+  pruneExpired();
+  const cutoff = Date.now() - SESSION_TTL_MS;
+  const rows = db.prepare('SELECT payload FROM lab_sessions WHERE createdAt >= ?').all(cutoff);
+  for (const row of rows) {
+    try {
+      const session = JSON.parse(row.payload);
+      if (session.claimId === claimId) return session.id;
+    } catch {
+      /* ignore corrupt session */
+    }
+  }
+  return null;
+}
+
+function notifyClaimFulfilment(claimId, meta = {}) {
+  const sessionId = findSessionIdByClaimId(claimId);
+  if (!sessionId) return null;
+  const status = meta.redemptionStatus || 'FULFILLED';
+  return advanceSession(sessionId, 'prize_fulfilled', {
+    fulfilledBy: meta.fulfilledBy || null,
+    fulfilledAt: meta.fulfilledAt ?? null,
+    redemptionStatus: status,
+    redemptionStatusLabel: redemptionStatusLabel(status),
+  });
+}
+
+function notifyStoreEmailSent(claimId, meta = {}) {
+  const sessionId = findSessionIdByClaimId(claimId);
+  if (!sessionId) return null;
+  const session = loadSession(sessionId);
+  if (!session) return null;
+  const claim = db.prepare('SELECT redemptionStatus FROM claims WHERE claimId = ?').get(claimId);
+  const status = claim?.redemptionStatus || 'AWAITING_FULFILMENT';
+  return advanceSession(sessionId, 'store_email_sent', {
+    emailStatus: meta.emailStatus || null,
+    redemptionStatus: status,
+    redemptionStatusLabel: redemptionStatusLabel(status),
+  });
+}
+
+function generateSessionManifest(sessionId, windowHours = 24) {
+  const session = loadSession(sessionId);
+  if (!session || session.labMode !== 'manifest') return null;
+
+  const { generateManifest } = require('./manifestGenerator');
+  const seed = process.env.MOCK_SEED || '00000000000000000001f4a9c8b7e6d9mockseed';
+  const hours = Math.max(1, Math.min(168, Number(windowHours) || 24));
+
+  advanceSession(sessionId, 'generating_manifest');
+  const prizes = generateManifest(seed, hours, session.campaignId);
+  const sample = prizes[0] || {};
+
+  return advanceSession(sessionId, 'manifest_ready', {
+    prizeCount: prizes.length,
+    windowHours: hours,
+    seedHash: sample.seedHash || null,
+    sampleAuditHash: sample.auditHash || null,
+  });
 }
 
 module.exports = {
@@ -431,4 +592,7 @@ module.exports = {
   updateSessionRules,
   updateSessionAccessPoint,
   attachClaimToSession,
+  notifyClaimFulfilment,
+  notifyStoreEmailSent,
+  generateSessionManifest,
 };

@@ -6,6 +6,7 @@ import InstantWinForm from '../components/InstantWinForm';
 import { isHokaCampaign } from '../campaigns/hokaCotswold';
 import { NITERRA_CAMPAIGN_ID } from '../campaigns/niterraRepco';
 import { FORD_CAMPAIGN_ID } from '../campaigns/ford';
+import { CASTROL_CAMPAIGN_ID } from '../campaigns/castrol';
 
 const DEFAULT_DEVICE = 'PR-DEMO-001';
 
@@ -23,10 +24,10 @@ export default function InstantWinDirect() {
   const [config, setConfig] = useState(null);
 
   useEffect(() => {
-    if (campaignParam && deviceCode !== 'PR-PUK2-001') {
+    if (campaignParam) {
       setDemoCampaign(campaignParam).catch(() => {});
     }
-  }, [campaignParam, deviceCode]);
+  }, [campaignParam]);
 
   useEffect(() => {
     if (!labSession || entryNotified.current) return;
@@ -35,7 +36,8 @@ export default function InstantWinDirect() {
   }, [labSession]);
 
   useEffect(() => {
-    if (campaignParam === NITERRA_CAMPAIGN_ID || campaignParam === FORD_CAMPAIGN_ID) return;
+    if (campaignParam === NITERRA_CAMPAIGN_ID || campaignParam === FORD_CAMPAIGN_ID
+      || campaignParam === CASTROL_CAMPAIGN_ID) return;
     getDeviceConfig(deviceCode)
       .then(data => {
         setConfig(data);
@@ -61,6 +63,14 @@ export default function InstantWinDirect() {
     if (labSession) qs.set('labSession', labSession);
     const suffix = qs.toString() ? `?${qs.toString()}` : '';
     return <Navigate to={`/enter/ford${suffix}`} replace />;
+  }
+
+  if (campaignParam === CASTROL_CAMPAIGN_ID) {
+    const qs = new URLSearchParams();
+    if (deviceCode !== DEFAULT_DEVICE) qs.set('device', deviceCode);
+    if (labSession) qs.set('labSession', labSession);
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return <Navigate to={`/enter/castrol${suffix}`} replace />;
   }
 
   async function handleComplete(receiptPayload) {
