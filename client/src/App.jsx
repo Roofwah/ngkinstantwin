@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Landing from './pages/Landing';
+import PukqrHome from './pages/PukqrHome';
+import PukqrPrivacy from './pages/PukqrPrivacy';
 import Claim from './pages/Claim';
 import Scratch from './pages/Scratch';
 import Result from './pages/Result';
@@ -33,7 +34,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         {/* Public */}
-        <Route path="/"                    element={<Landing />} />
+        <Route path="/"                    element={<PukqrHome />} />
+        <Route path="/privacy"             element={<PukqrPrivacy />} />
         <Route path="/claim"               element={<Claim />} />
         <Route path="/scratch/:claimId"    element={<Scratch />} />
         <Route path="/result/:claimId"     element={<Result />} />
