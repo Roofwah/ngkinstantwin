@@ -126,6 +126,8 @@ try { db.exec('ALTER TABLE claims ADD COLUMN fulfilmentToken TEXT'); } catch {}
 try { db.exec('ALTER TABLE claims ADD COLUMN winnerSmsStatus TEXT'); } catch {}
 try { db.exec('ALTER TABLE claims ADD COLUMN winnerEmailStatus TEXT'); } catch {}
 try { db.exec('ALTER TABLE claims ADD COLUMN fulfilledBy TEXT'); } catch {}
+try { db.exec('ALTER TABLE claims ADD COLUMN redemptionExpiresAt INTEGER'); } catch {}
+try { db.exec('ALTER TABLE claims ADD COLUMN redeemedAfterExpiry INTEGER'); } catch {}
 try { db.exec('ALTER TABLE manifest ADD COLUMN campaignId TEXT'); } catch {}
 try { db.exec('CREATE INDEX idx_manifest_campaign ON manifest(campaignId)'); } catch {}
 try { db.exec('CREATE INDEX idx_claims_campaign ON claims(campaignId)'); } catch {}
@@ -152,6 +154,7 @@ try { db.exec('ALTER TABLE campaigns ADD COLUMN config TEXT'); } catch {}
 const { audiDemoPrizes } = require('./lib/audiCampaign');
 const { fordDemoPrizes } = require('./lib/fordCampaign');
 const { castrolDemoPrizes } = require('./lib/castrolCampaign');
+const { smirnoffDemoPrizes } = require('./lib/smirnoffCampaign');
 
 const DEMO_CAMPAIGNS = [
   {
@@ -353,6 +356,63 @@ const DEMO_CAMPAIGNS = [
       },
     },
   },
+  {
+    id: 'smirnoff-2026',
+    name: 'Smirnoff Instant Win',
+    brand: 'Smirnoff',
+    tagline: 'Buy Smirnoff and win instantly',
+    mechanic: 'Qualifying Smirnoff purchase at Thirsty Camel Coolum',
+    startDate: '2026-10-01',
+    endDate: '2026-12-31',
+    config: {
+      themeColor: '#E10600',
+      entryVariant: 'smirnoff-instant-win',
+      entryPath: '/enter/smirnoff',
+      eligibleBrands: ['Smirnoff'],
+      defaultStoreName: 'Thirsty Camel Coolum',
+      defaultStoreCode: 'thirsty-camel-coolum',
+      retailer: 'Thirsty Camel',
+      customerQrRedemption: true,
+      redemptionWindowMinutes: 30,
+      customerWinTheme: {
+        background: '#000000',
+        accent: '#E10600',
+        text: '#ffffff',
+      },
+      demoControl: {
+        enabled: true,
+        winEvery: 1,
+        sweepstakesOnLose: false,
+        sweepstakesMessage: '',
+        claimOffset: 0,
+        prizes: smirnoffDemoPrizes(),
+      },
+    },
+  },
+  {
+    id: 'hankook-2026',
+    name: 'Hankook Instant Win',
+    brand: 'Hankook',
+    tagline: 'Buy Hankook and win instantly',
+    mechanic: 'Qualifying Hankook purchase at a participating store',
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    config: {
+      themeColor: '#f36f21',
+      eligibleBrands: ['Hankook'],
+      defaultStoreName: 'Hankook Demo',
+      demoControl: {
+        enabled: true,
+        winEvery: 1,
+        sweepstakesOnLose: false,
+        claimOffset: 0,
+        prizes: [
+          { name: 'Hankook Cap', value: 25, qty: 20 },
+          { name: 'Hankook $50 voucher', value: 50, qty: 10 },
+        ],
+      },
+    },
+  },
 ];
 
 function parseCampaignConfig(raw) {
@@ -367,7 +427,7 @@ function parseCampaignConfig(raw) {
 for (const c of DEMO_CAMPAIGNS) {
   const existing = db.prepare('SELECT id, config FROM campaigns WHERE id = ?').get(c.id);
   const prev = parseCampaignConfig(existing?.config);
-  const configJson = JSON.stringify({
+  const configObj = {
     ...c.config,
     ...(c.id === 'niterra-ngk-2026' && c.config.demoControl
       ? {
@@ -404,8 +464,33 @@ for (const c of DEMO_CAMPAIGNS) {
                   claimOffset: prev.demoControl?.claimOffset || 0,
                 },
               }
-            : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
-  });
+            : c.id === 'smirnoff-2026' && c.config.demoControl
+              ? {
+                  demoControl: {
+                    ...c.config.demoControl,
+                    claimOffset: prev.demoControl?.claimOffset || 0,
+                  },
+                }
+              : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
+  };
+  if ([
+    'niterra-ngk-2026',
+    'hoka-2026',
+    'castrol-2026',
+    'ford-2026',
+    'audi-2026',
+    'hankook-2026',
+    'smirnoff-2026',
+  ].includes(c.id)) {
+    configObj.customerQrRedemption = true;
+    configObj.redemptionWindowMinutes = configObj.redemptionWindowMinutes || 30;
+    configObj.customerWinTheme = configObj.customerWinTheme || {
+      background: '#000000',
+      accent: configObj.themeColor || '#ffffff',
+      text: '#ffffff',
+    };
+  }
+  const configJson = JSON.stringify(configObj);
   if (!existing) {
     db.prepare(`INSERT INTO campaigns (id, name, brand, tagline, mechanic, startDate, endDate, status, config)
       VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?)`).run(
@@ -515,6 +600,25 @@ if (!existingPuk2Dev4) {
     'castrol-2026',
     'active',
     'Dev unit 4',
+    now,
+    now
+  );
+}
+
+const existingPuk2Dev2 = db.prepare('SELECT id FROM devices WHERE deviceCode = ?').get('PR-PUK2-002');
+if (!existingPuk2Dev2) {
+  const now = Date.now();
+  db.prepare(`INSERT INTO devices (id, deviceCode, name, retailer, storeName, storeCode, campaignId, status, locationLabel, createdAt, updatedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+    'device-puk2-002',
+    'PR-PUK2-002',
+    'PUK2 backup',
+    'Pure Random',
+    'Demo backup',
+    'puk2-002',
+    'castrol-2026',
+    'active',
+    'Backup unit',
     now,
     now
   );

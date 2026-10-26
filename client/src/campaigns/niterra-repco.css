@@ -1,24 +1,220 @@
-/* Niterra / Repco crossword entry — layout matches HOKA iwbg form */
+/* Niterra / Repco instant win — Lab phone uses Ford-style landing + card (.ngk-page--lab) */
 .ngk-page {
   --ngk-accent: #e31837;
+  --ngk-navy: #000000;
+  --ngk-layout-max: 600px;
   min-height: 100dvh;
-  background: #071428;
+  background: #000000;
   color: #f7f4ee;
   font-family: 'DM Sans', Inter, system-ui, sans-serif;
+}
+
+/* ── Lab / Ford-parity shell (hero + white card) ── */
+.ngk-page--lab {
+  background: #f4f4f4;
+  color: #4d4d4d;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.ngk-landing {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.ngk-landing__art {
+  width: 100%;
+  height: min(40svh, 280px);
+  display: block;
+  object-fit: cover;
+  object-position: center 35%;
+}
+
+.ngk-landing__fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 50%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(244, 244, 244, 0.65) 55%,
+    #f4f4f4 100%
+  );
+  pointer-events: none;
+}
+
+.ngk-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+.ngk-page--landing .ngk-container {
+  margin-top: -1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.ngk-card {
+  width: 100%;
+  padding: 28px 24px 36px;
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 10px 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 600px) {
+  .ngk-card {
+    padding: 32px 48px 40px;
+  }
+}
+
+.ngk-page--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  background: #f4f4f4;
+}
+
+.ngk-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.12);
+  border-top-color: var(--ngk-accent);
+  border-radius: 50%;
+  animation: ngkSpin 0.8s linear infinite;
+}
+
+@keyframes ngkSpin {
+  to { transform: rotate(360deg); }
+}
+
+.ngk-unavailable {
+  text-align: center;
+  padding: 24px;
+}
+
+.ngk-unavailable h2 {
+  margin: 0 0 8px;
+  font-size: 1.125rem;
+  letter-spacing: 0.125rem;
+  text-transform: uppercase;
+  color: var(--ngk-navy);
+}
+
+.ngk-page--lab .ngk-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #4d4d4d;
+}
+
+.ngk-page--lab .ngk-title {
+  margin: 0 0 10px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-transform: none;
+  color: var(--ngk-navy);
+}
+
+.ngk-page--lab .ngk-lede {
+  margin: 0 0 20px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #4d4d4d;
+}
+
+.ngk-page--lab .ngk-lede--emphasis {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ngk-navy);
+}
+
+.ngk-page--lab .ngk-field label {
+  color: #4d4d4d;
+  font-size: 0.72rem;
+}
+
+.ngk-page--lab .ngk-store--field {
+  height: 48px;
+  padding: 0 14px;
+  background: #f4f4f4;
+  border: 1px solid #6e6e6e;
+  color: var(--ngk-navy);
+  font-size: 0.95rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.ngk-page--lab .ngk-ghost {
+  color: #6e6e6e;
+}
+
+.ngk-page--lab .ngk-legal {
+  color: #888;
+}
+
+.ngk-page--lab .ngk-error {
+  background: #fde8e8;
+  color: #8b1a1a;
+}
+
+.ngk-page--lab .ngk-demo {
+  background: rgba(232, 102, 0, 0.1);
+  color: #b35a00;
+}
+
+.ngk-page--lab .ngk-result h1 {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.75rem;
+  text-transform: none;
+  color: var(--ngk-navy);
+}
+
+.ngk-page--lab .ngk-ref__label {
+  color: #6e6e6e;
+}
+
+.ngk-page--lab .ngk-cta {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  border-radius: 2px;
 }
 
 .ngk-page * {
   box-sizing: border-box;
 }
 
+.ngk-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(247, 244, 238, 0.15);
+  border-top-color: var(--ngk-accent);
+  border-radius: 50%;
+  animation: ngkSpin 0.8s linear infinite;
+}
+
 .ngk-page--enter {
   position: relative;
   width: 100%;
-  max-width: none;
-  margin: 0;
-  background-color: #071428;
+  max-width: var(--ngk-layout-max);
+  margin: 0 auto;
+  background-color: #000000;
   background-repeat: no-repeat;
-  background-position: center -50px;
+  background-position: center 0;
   background-size: 100% auto;
 }
 
@@ -37,7 +233,7 @@
 /* Top logo bar — removed; logos are in iwbg.png artwork */
 
 .ngk-form-panel {
-  background: rgba(7, 20, 40, 0.92);
+  background: rgba(0, 0, 0, 0.92);
   padding: 18px 16px 16px;
 }
 
@@ -45,7 +241,7 @@
   padding: 8px 10px 10px;
   margin-left: -10px;
   margin-right: -10px;
-  background: rgba(5, 14, 28, 0.55);
+  background: rgba(0, 0, 0, 0.55);
 }
 
 .ngk-form-panel .ngk-title {
@@ -116,7 +312,7 @@
   height: 52px;
   margin-bottom: 0;
   padding: 0 14px;
-  background: rgba(7, 20, 40, 0.55);
+  background: rgba(0, 0, 0, 0.55);
   font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -146,14 +342,14 @@
   border: 0;
   border-radius: 2px;
   background: #f7f4ee;
-  color: #071428;
+  color: #000000;
   font-family: inherit;
   font-size: 1.05rem;
 }
 
 .ngk-field input:focus,
 .ngk-field select:focus {
-  outline: 2px solid #e86600;
+  outline: 2px solid #e31837;
   outline-offset: 2px;
 }
 
@@ -165,7 +361,7 @@
 
 .ngk-prefix span {
   padding: 0 0 0 14px;
-  color: #071428;
+  color: #000000;
   font-weight: 700;
   font-size: 1.1rem;
 }
@@ -327,4 +523,56 @@
 @keyframes ngkPrizeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Fulfil page — same iwbg background as phone entry */
+.ngk-page--fulfil.ngk-page--enter .ngk-body {
+  padding: calc(26svh + 130px) 16px 28px;
+}
+
+.ngk-page--fulfil .ngk-form-panel {
+  border: 1px solid rgba(227, 24, 55, 0.28);
+  border-radius: 10px;
+}
+
+.ngk-status {
+  margin: 12px 0 4px;
+  font-size: 1rem;
+  line-height: 1.35;
+  letter-spacing: 0.06em;
+  color: rgba(247, 244, 238, 0.92);
+}
+
+.ngk-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 16px;
+}
+
+.ngk-rows div {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ngk-rows span {
+  flex-shrink: 0;
+  min-width: 8rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(247, 244, 238, 0.65);
+}
+
+.ngk-rows strong {
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+  color: #f7f4ee;
 }

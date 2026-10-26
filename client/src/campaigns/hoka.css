@@ -309,8 +309,19 @@
   object-fit: contain;
 }
 
+.hoka-staff-msg {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(223, 255, 0, 0.35);
+  background: rgba(223, 255, 0, 0.06);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: #f4f7fb;
+  text-align: center;
+}
+
 .hoka-code {
-  margin-top: 18px;
+  margin-top: 14px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 1.35rem;
   letter-spacing: 0.12em;
@@ -378,4 +389,85 @@
 
 .hoka-rows span {
   color: rgba(247, 244, 238, 0.55);
+}
+
+/* Staff fulfilment — iwbg artwork as page background, centred content card */
+.hoka-page--fulfil {
+  --hoka-fulfil-width: min(720px, calc(100vw - 48px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100dvh;
+  padding: 40px 24px 48px;
+  background-color: #071428;
+  background-repeat: no-repeat;
+  background-position: center -8px;
+  background-size: min(900px, calc(100vw - 24px)) auto;
+}
+
+.hoka-page--fulfil::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(7, 20, 40, 0.15) 0%,
+    rgba(7, 20, 40, 0.55) 45%,
+    rgba(7, 20, 40, 0.92) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hoka-page--fulfil .hoka-body {
+  position: relative;
+  z-index: 1;
+  width: var(--hoka-fulfil-width);
+  max-width: none;
+  margin: 460px 0 0;
+  padding: 0;
+}
+
+.hoka-page--fulfil .hoka-form-panel {
+  border: 1px solid rgba(223, 255, 0, 0.22);
+  border-radius: 10px;
+  padding: 28px 32px 32px;
+  background: rgba(7, 20, 40, 0.88);
+  backdrop-filter: blur(6px);
+}
+
+.hoka-page--fulfil .hoka-title {
+  font-size: clamp(1.75rem, 5vw, 2.2rem);
+}
+
+.hoka-page--fulfil .hoka-status {
+  margin: 12px 0 4px;
+  font-size: 1rem;
+  line-height: 1.35;
+  letter-spacing: 0.06em;
+}
+
+.hoka-page--fulfil .hoka-rows {
+  margin-top: 16px;
+}
+
+.hoka-page--fulfil .hoka-rows div {
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 12px;
+}
+
+.hoka-page--fulfil .hoka-rows span {
+  flex-shrink: 0;
+  min-width: 8rem;
+}
+
+.hoka-page--fulfil .hoka-rows strong {
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
 }

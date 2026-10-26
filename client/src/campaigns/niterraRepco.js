@@ -4,6 +4,12 @@ export const NITERRA_BRANDS = ['NGK', 'NTK', 'KYB'];
 
 export const NITERRA_DEFAULT_STORE = 'Repco Waurn Ponds';
 
+export const NITERRA_FORM_ART = '/campaigns/niterra/iwbg.png';
+
+export function niterraFormArt(campaign) {
+  return campaign?.config?.formArtUrl || NITERRA_FORM_ART;
+}
+
 export const NITERRA_PRIZE_IMAGES = {
   'NGK Racing Cap': '/campaigns/niterra/cap.png',
   'KYB Workshop Cap': '/campaigns/niterra/cap.png',

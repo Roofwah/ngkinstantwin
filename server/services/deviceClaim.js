@@ -6,6 +6,7 @@ const { campaignBrandOptions } = require('./demoCampaign');
 const { getSession } = require('./labSession');
 const { attachRedemption } = require('./redemption');
 const { notifyHokaWinnerSafe } = require('./winnerNotify');
+const { customerQrSettings, armRedemptionWindow } = require('../lib/customerQr');
 const {
   isHokaCampaign,
   isInstantWin,
@@ -24,12 +25,17 @@ const {
   validateCastrolEntryPayload,
   isCastrolVerificationMethod,
 } = require('../lib/castrolCampaign');
+const {
+  validateSmirnoffEntryPayload,
+  isSmirnoffVerificationMethod,
+} = require('../lib/smirnoffCampaign');
 
 function isCrosswordEntry(method) {
   return method === 'niterra_crossword'
     || isAudiVerificationMethod(method)
     || isFordVerificationMethod(method)
-    || isCastrolVerificationMethod(method);
+    || isCastrolVerificationMethod(method)
+    || isSmirnoffVerificationMethod(method);
 }
 
 function labAllowsDuplicateReceipts(labSessionId) {
@@ -227,11 +233,24 @@ function createClaimWithReceipt({
     validated = validateFordEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else if (isCastrolVerificationMethod(body.verificationMethod)) {
     validated = validateCastrolEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
+  } else if (isSmirnoffVerificationMethod(body.verificationMethod)) {
+    validated = validateSmirnoffEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else {
     validated = validateReceiptPayload(body, file);
   }
   if (validated.errors.length) {
     return { error: validated.errors[0], errors: validated.errors, status: 400 };
+  }
+
+  if (tokenRecord?.metadata) {
+    try {
+      const meta = JSON.parse(tokenRecord.metadata);
+      if (typeof meta.location === 'string' && meta.location.trim()) {
+        validated.storeName = meta.location.trim();
+      }
+    } catch {
+      /* keep the store the form sent */
+    }
   }
 
   const bypassDuplicate = hoka || crosswordEntry || shouldBypassDuplicateInvoice(body);
@@ -297,10 +316,15 @@ function createClaimWithReceipt({
     UPDATE claims SET result = ?, claimStatus = ?, prizeId = ?, prizeName = ? WHERE claimId = ?
   `).run(result, claimStatus, prize?.prizeId || null, prizeName, claimId);
 
-  if (isInstantWin(result) && (hoka || crosswordEntry)) {
+  const qrSettings = customerQrSettings({ campaignId: resolvedCampaignId });
+  if (isInstantWin(result) && (hoka || crosswordEntry || qrSettings)) {
     try {
       attachRedemption(claimId);
-      notifyHokaWinnerSafe(claimId);
+      if (qrSettings) {
+        const row = db.prepare('SELECT * FROM claims WHERE claimId = ?').get(claimId);
+        armRedemptionWindow(row);
+      }
+      if (hoka || crosswordEntry) notifyHokaWinnerSafe(claimId);
     } catch (err) {
       console.error(`[instant-win] redemption persist failed for ${claimId}:`, err.message);
       log('instant_win_redemption_failed', { claimId, details: { error: err.message, result } });

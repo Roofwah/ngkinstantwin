@@ -1,0 +1,197 @@
+.smirnoff-page {
+  --sm-red: #E10600;
+  --sm-bg: #000000;
+  --sm-text: #ffffff;
+  min-height: 100dvh;
+  background: var(--sm-bg);
+  color: var(--sm-text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.smirnoff-page * { box-sizing: border-box; }
+
+.smirnoff-wrap {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+}
+
+.smirnoff-kicker {
+  margin: 0 0 8px;
+  letter-spacing: 0.16em;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sm-red);
+}
+
+.smirnoff-title {
+  margin: 0 0 12px;
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.smirnoff-lede {
+  margin: 0 0 20px;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.45;
+}
+
+.smirnoff-field { margin-bottom: 14px; }
+
+.smirnoff-field label,
+.smirnoff-code-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.smirnoff-field input,
+.smirnoff-field select {
+  width: 100%;
+  padding: 14px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  background: #111;
+  color: #fff;
+  font-size: 16px;
+}
+
+.smirnoff-store {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--sm-red);
+  background: #141414;
+  font-weight: 700;
+}
+
+.smirnoff-cta,
+.smirnoff-ghost {
+  width: 100%;
+  margin-top: 8px;
+  padding: 16px 18px;
+  border: 0;
+  border-radius: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.smirnoff-cta {
+  background: var(--sm-red);
+  color: #fff;
+}
+
+.smirnoff-cta:disabled { opacity: 0.55; }
+
+.smirnoff-ghost {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.smirnoff-error {
+  margin-bottom: 14px;
+  padding: 12px;
+  background: #3a0000;
+  color: #ffd0d0;
+}
+
+.smirnoff-demo {
+  margin-bottom: 14px;
+  padding: 12px;
+  background: #1a1a1a;
+  border: 1px solid var(--sm-red);
+}
+
+.smirnoff-prize {
+  margin: 8px 0 18px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.smirnoff-code {
+  margin-top: 6px;
+  padding: 12px;
+  background: #111;
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-align: center;
+}
+
+.smirnoff-win {
+  text-align: center;
+}
+
+.smirnoff-qr {
+  display: flex;
+  justify-content: center;
+  margin: 18px 0;
+  padding: 16px;
+  background: #fff;
+}
+
+.smirnoff-timer {
+  margin: 8px 0 4px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.smirnoff-clock {
+  margin: 0 0 16px;
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  color: var(--sm-red);
+}
+
+.smirnoff-banner {
+  margin: 0 0 16px;
+  padding: 14px;
+  background: var(--sm-red);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.smirnoff-banner--ok { background: #145c32; }
+
+.smirnoff-note {
+  margin-top: 16px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.smirnoff-staff .smirnoff-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 15px;
+}
+
+.smirnoff-staff .smirnoff-row span {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.smirnoff-staff .smirnoff-row strong { text-align: right; }
+
+.smirnoff-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}

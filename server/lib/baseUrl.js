@@ -2,8 +2,14 @@ const os = require('os');
 
 /**
  * Public base URL for QR links (/t/{token}).
- * Priority: BASE_URL → RAILWAY_STATIC_URL → RAILWAY_PUBLIC_DOMAIN → RENDER_EXTERNAL_URL → localhost
+ * Customer-facing links use https://pukqr.com. A Railway hostname is never encoded.
+ * Local dev with no public host stays on localhost.
  */
+const PUBLIC_QR_ORIGIN = 'https://pukqr.com';
+
+function isRailwayHost(url) {
+  return /railway\.app/i.test(url || '');
+}
 function normalizeBaseUrl(url) {
   const trimmed = (url || '').replace(/\/$/, '');
   if (!trimmed) return trimmed;
@@ -79,17 +85,16 @@ function getLabNetworkHint() {
 }
 
 function getBaseUrl() {
-  if (process.env.BASE_URL) {
+  if (process.env.BASE_URL && !isRailwayHost(process.env.BASE_URL)) {
     return normalizeBaseUrl(process.env.BASE_URL);
   }
-  if (process.env.RAILWAY_STATIC_URL) {
-    return normalizeBaseUrl(process.env.RAILWAY_STATIC_URL);
-  }
-  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-    return normalizeBaseUrl(process.env.RAILWAY_PUBLIC_DOMAIN);
-  }
-  if (process.env.RENDER_EXTERNAL_URL) {
-    return normalizeBaseUrl(process.env.RENDER_EXTERNAL_URL);
+  if (
+    process.env.NODE_ENV === 'production' ||
+    process.env.RAILWAY_PUBLIC_DOMAIN ||
+    process.env.RAILWAY_STATIC_URL ||
+    process.env.RENDER_EXTERNAL_URL
+  ) {
+    return PUBLIC_QR_ORIGIN;
   }
   const port = process.env.PORT || 3000;
   return `http://localhost:${port}`;

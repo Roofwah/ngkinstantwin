@@ -5,15 +5,18 @@ export default function HokaCampaignShell({
   heroClassName = '',
   children,
 }) {
-  const isEnter = heroClassName.includes('hoka-hero--enter');
+  const isFulfil = heroClassName.includes('hoka-hero--fulfil');
+  const isEnter = heroClassName.includes('hoka-hero--enter') && !isFulfil;
   const isVerify = heroClassName.includes('hoka-hero--verify');
+
+  const bgStyle = (isEnter || isFulfil) ? { backgroundImage: `url(${artSrc})` } : undefined;
 
   return (
     <div
-      className={`hoka-page${isEnter ? ' hoka-page--enter' : ''}${isVerify ? ' hoka-page--verify' : ''}`}
-      style={isEnter ? { backgroundImage: `url(${artSrc})` } : undefined}
+      className={`hoka-page${isEnter ? ' hoka-page--enter' : ''}${isVerify ? ' hoka-page--verify' : ''}${isFulfil ? ' hoka-page--fulfil' : ''}`}
+      style={bgStyle}
     >
-      {!isEnter && (
+      {!isEnter && !isFulfil && (
         <div className="hoka-hero">
           <img src={artSrc} alt="HOKA and Cotswold Outdoor" />
           <div className="hoka-hero__fade" />

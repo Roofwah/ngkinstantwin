@@ -1,4 +1,4 @@
-const DEMO_DEVICE_CODES = new Set(['PR-DEMO-001', 'PR-UNIT-001', 'PR-PUK2-001', 'PR-PUK2-004']);
+const DEMO_DEVICE_CODES = new Set(['PR-DEMO-001', 'PR-UNIT-001', 'PR-PUK2-001', 'PR-PUK2-002', 'PR-PUK2-004']);
 const SETTINGS_KEY = 'activeCampaignId';
 const DEFAULT_CAMPAIGN_ID = 'niterra-ngk-2026';
 
@@ -11,6 +11,8 @@ const DEMO_CAMPAIGN_IDS = [
   'redbull-2026',
   'audi-2026',
   'ford-2026',
+  'smirnoff-2026',
+  'hankook-2026',
 ];
 
 function isDemoDevice(deviceCode) {

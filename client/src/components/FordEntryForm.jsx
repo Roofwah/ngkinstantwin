@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { sendOtp, verifyOtp } from '../api';
 import FordEntryShell from './FordEntryShell';
 import FordVoucherCounter from './FordVoucherCounter';
+import StaffWinCode from './StaffWinCode';
 import {
   FORD_VERIFICATION_METHOD,
   FORD_VOUCHER_NAME,
@@ -273,6 +274,7 @@ export default function FordEntryForm({
               Redemption instructions have been sent to your mobile.
               Show that message and your reference to Ford staff.
             </p>
+            <StaffWinCode url={reveal?.staffScanUrl} store={reveal?.storeName} />
             {reveal?.redemptionCode ? (
               <div className="ford-ref">
                 <span className="ford-ref__label">Reference number</span>

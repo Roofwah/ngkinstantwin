@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { sendOtp, verifyOtp } from '../api';
+import { sendOtp, verifyOtp, postLabEvent } from '../api';
 import NiterraCrosswordShell from './NiterraCrosswordShell';
 import HokaConfetti from './HokaConfetti';
 import {
   NITERRA_BRANDS,
   NITERRA_DEFAULT_STORE,
   isNiterraWin,
+  niterraFormArt,
   niterraPrizeImage,
 } from '../campaigns/niterraRepco';
+import StaffWinCode from './StaffWinCode';
 
 function normaliseMobile(raw) {
   const s = raw.replace(/[\s\-()]/g, '');
@@ -33,10 +35,11 @@ export default function NiterraCrosswordEntryForm({
   device,
   brands,
   onComplete,
+  labSessionId = null,
 }) {
   const items = brands?.length ? brands : NITERRA_BRANDS;
   const storeName = device?.storeName || NITERRA_DEFAULT_STORE;
-  const artSrc = campaign?.config?.formArtUrl || '/campaigns/niterra/iwbg.png';
+  const artSrc = niterraFormArt(campaign);
   const minSpend = Number(campaign?.config?.minSpend) || 50;
   const sweepstakes = campaign?.config?.demoControl?.sweepstakesMessage || DEFAULT_SWEEPSTAKES;
 
@@ -78,6 +81,9 @@ export default function NiterraCrosswordEntryForm({
     try {
       const res = await sendOtp(norm);
       setOtpDemo(!!res.demo);
+      if (labSessionId) {
+        postLabEvent(labSessionId, 'otp_sent', { mobile: norm, customerName: name }).catch(() => {});
+      }
       setStep(STEPS.OTP);
     } catch (err) {
       setError(err.message);
@@ -96,17 +102,34 @@ export default function NiterraCrosswordEntryForm({
     setOtpVerifying(true);
     try {
       await verifyOtp(norm, otpCode);
+      const name = normaliseName(fullName);
+      const spendAmount = parseFloat(spend);
+      if (labSessionId) {
+        postLabEvent(labSessionId, 'customer_verified', { mobile: norm, customerName: name }).catch(() => {});
+        postLabEvent(labSessionId, 'purchase_validated', {
+          selectedBrand: item,
+          spendAmount,
+        }).catch(() => {});
+        postLabEvent(labSessionId, 'submitting').catch(() => {});
+      }
       setStep(STEPS.SUBMITTING);
       const outcome = await onComplete({
-        customerName: normaliseName(fullName),
+        customerName: name,
         mobile: norm,
         selectedBrand: item,
-        spendAmount: parseFloat(spend),
+        spendAmount,
         productDescription: item,
+        storeName,
         receiptSource: 'manual',
         verificationMethod: 'niterra_crossword',
       });
       if (outcome?.claimId) {
+        if (labSessionId) {
+          postLabEvent(labSessionId, 'prize_allocated', {
+            result: outcome.result,
+            prizeName: outcome.prizeName,
+          }).catch(() => {});
+        }
         setReveal(outcome);
         setStep(STEPS.REVEAL);
       }
@@ -120,24 +143,24 @@ export default function NiterraCrosswordEntryForm({
 
   const win = isNiterraWin(reveal?.result);
   const first = normaliseName(fullName).split(/\s+/)[0];
-  const isForm = step === STEPS.FORM;
+  const heroClass = step === STEPS.FORM
+    ? 'ngk-hero--enter'
+    : step === STEPS.OTP
+      ? 'ngk-hero--enter ngk-hero--verify'
+      : '';
 
   return (
-    <NiterraCrosswordShell
-      artSrc={artSrc}
-      heroClassName={isForm ? 'ngk-hero--enter' : 'ngk-hero--enter ngk-hero--verify'}
-    >
+    <NiterraCrosswordShell artSrc={artSrc} heroClassName={heroClass}>
       <HokaConfetti active={step === STEPS.REVEAL && win} />
       {step === STEPS.FORM && (
         <div className="ngk-form-panel">
           <h1 className="ngk-title">Enter your details</h1>
-          <p className="ngk-lede">
-            Complete the form below to see if you win.
-          </p>
+          <p className="ngk-lede">Complete the form below to see if you win.</p>
           {error && <div className="ngk-error">{error}</div>}
           <div className="ngk-field">
-            <label>Full Name</label>
+            <label htmlFor="ngk-name">Full name</label>
             <input
+              id="ngk-name"
               type="text"
               autoComplete="name"
               value={fullName}
@@ -145,8 +168,9 @@ export default function NiterraCrosswordEntryForm({
             />
           </div>
           <div className="ngk-field">
-            <label>Mobile Number</label>
+            <label htmlFor="ngk-mobile">Mobile number</label>
             <input
+              id="ngk-mobile"
               type="tel"
               autoComplete="tel"
               placeholder="0412 345 678"
@@ -159,8 +183,12 @@ export default function NiterraCrosswordEntryForm({
             <div className="ngk-store ngk-store--field">{storeName}</div>
           </div>
           <div className="ngk-field">
-            <label>Item Purchased</label>
-            <select value={item} onChange={(e) => { setItem(e.target.value); setError(''); }}>
+            <label htmlFor="ngk-item">Item purchased</label>
+            <select
+              id="ngk-item"
+              value={item}
+              onChange={(e) => { setItem(e.target.value); setError(''); }}
+            >
               <option value="">Select</option>
               {items.map((opt) => (
                 <option key={opt} value={opt}>{opt}</option>
@@ -168,10 +196,11 @@ export default function NiterraCrosswordEntryForm({
             </select>
           </div>
           <div className="ngk-field">
-            <label>Purchase Value ($)</label>
+            <label htmlFor="ngk-spend">Purchase value ($)</label>
             <div className="ngk-prefix">
               <span>$</span>
               <input
+                id="ngk-spend"
                 type="number"
                 min={minSpend}
                 step="0.01"
@@ -201,8 +230,9 @@ export default function NiterraCrosswordEntryForm({
             <div className="ngk-demo">Demo mode — enter <strong>123456</strong></div>
           )}
           <div className="ngk-field">
-            <label>6-digit code</label>
+            <label htmlFor="ngk-otp">6-digit code</label>
             <input
+              id="ngk-otp"
               type="text"
               inputMode="numeric"
               maxLength={6}
@@ -244,10 +274,10 @@ export default function NiterraCrosswordEntryForm({
             <div className="ngk-result ngk-result--win">
               <h1>Congratulations{first ? ` ${first}` : ''}!</h1>
               <p className="ngk-lede" style={{ fontSize: '1.15rem' }}>
-                You’re an instant winner
+                You&apos;re an instant winner
               </p>
               <div className="ngk-prize ngk-prize--reveal">
-                <span>You’ve won</span>
+                <span>You&apos;ve won</span>
                 {niterraPrizeImage(reveal?.prizeName) && (
                   <img
                     className="ngk-prize-art"
@@ -258,9 +288,10 @@ export default function NiterraCrosswordEntryForm({
                 <strong>{reveal?.prizeName || 'an instant prize'}</strong>
               </div>
               <p className="ngk-lede ngk-lede--win-notify">
-                We’ve sent your redemption instructions to your mobile.
+                We&apos;ve sent your redemption instructions to your mobile.
                 Show that message — and this reference — to a staff member.
               </p>
+              <StaffWinCode url={reveal?.staffScanUrl} store={reveal?.storeName || storeName} />
               {reveal?.redemptionCode ? (
                 <div className="ngk-ref">
                   <span className="ngk-ref__label">Reference number</span>

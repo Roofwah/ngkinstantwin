@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { sendOtp, verifyOtp } from '../api';
+import { sendOtp, verifyOtp, postLabEvent } from '../api';
 import HokaCampaignShell from './HokaCampaignShell';
 import HokaConfetti from './HokaConfetti';
 import { HOKA_ITEMS, isHokaWin, hokaPrizeImage } from '../campaigns/hokaCotswold';
+import StaffWinCode from './StaffWinCode';
 
 function normaliseMobile(raw) {
   const s = raw.replace(/[\s\-()]/g, '');
@@ -31,7 +32,9 @@ export default function HokaEntryForm({
   onComplete,
 }) {
   const items = brands?.length ? brands : HOKA_ITEMS;
-  const storeName = device?.storeName || 'Cotswold Outdoor Birmingham';
+  const storeName = device?.storeName
+    || campaign?.config?.defaultStoreName
+    || 'Cotswold Outdoor Birmingham';
   const artSrc = campaign?.config?.formArtUrl || '/campaigns/hoka/iwbg.jpg';
   const minSpend = Number(campaign?.config?.minSpend) || 50;
   const sweepstakes = campaign?.config?.demoControl?.sweepstakesMessage || DEFAULT_SWEEPSTAKES;
@@ -79,6 +82,9 @@ export default function HokaEntryForm({
     try {
       const res = await sendOtp(norm);
       setOtpDemo(!!res.demo);
+      if (labSessionId) {
+        postLabEvent(labSessionId, 'otp_sent', { mobile: norm, customerName: name }).catch(() => {});
+      }
       setStep(STEPS.OTP);
     } catch (err) {
       setError(err.message);
@@ -97,9 +103,18 @@ export default function HokaEntryForm({
     setOtpVerifying(true);
     try {
       await verifyOtp(norm, otpCode);
+      const name = normaliseName(fullName);
+      if (labSessionId) {
+        postLabEvent(labSessionId, 'customer_verified', { mobile: norm, customerName: name }).catch(() => {});
+        postLabEvent(labSessionId, 'purchase_validated', {
+          selectedBrand: item,
+          spendAmount: parseFloat(spend),
+        }).catch(() => {});
+        postLabEvent(labSessionId, 'submitting').catch(() => {});
+      }
       setStep(STEPS.SUBMITTING);
       const outcome = await onComplete({
-        customerName: normaliseName(fullName),
+        customerName: name,
         mobile: norm,
         postcode: postcode.trim(),
         selectedBrand: item,
@@ -109,6 +124,12 @@ export default function HokaEntryForm({
         verificationMethod: 'hoka_entry',
       });
       if (outcome?.claimId) {
+        if (labSessionId) {
+          postLabEvent(labSessionId, 'prize_allocated', {
+            result: outcome.result,
+            prizeName: outcome.prizeName,
+          }).catch(() => {});
+        }
         setReveal(outcome);
         setStep(STEPS.REVEAL);
       }
@@ -272,6 +293,10 @@ export default function HokaEntryForm({
                 )}
                 <strong>{reveal?.prizeName || 'an instant prize'}</strong>
               </div>
+              <p className="hoka-staff-msg">
+                Show this message to a staff member to redeem your prize.
+              </p>
+              <StaffWinCode url={reveal?.staffScanUrl} store={reveal?.storeName || storeName} />
               {reveal?.redemptionCode && (
                 <div className="hoka-code">{reveal.redemptionCode}</div>
               )}

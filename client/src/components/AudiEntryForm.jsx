@@ -3,6 +3,7 @@ import { sendOtp, verifyOtp } from '../api';
 import AudiEntryShell from './AudiEntryShell';
 import AudiConfetti from './AudiConfetti';
 import AudiVoucherCounter from './AudiVoucherCounter';
+import StaffWinCode from './StaffWinCode';
 import {
   AUDI_FORM_ART,
   AUDI_VERIFICATION_METHOD,
@@ -260,6 +261,7 @@ export default function AudiEntryForm({
               Redemption instructions have been sent to your mobile.
               Show that message and your reference to Audi staff.
             </p>
+            <StaffWinCode url={reveal?.staffScanUrl} store={reveal?.storeName} />
             {reveal?.redemptionCode ? (
               <div className="audi-ref">
                 <span className="audi-ref__label">Reference number</span>

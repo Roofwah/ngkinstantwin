@@ -15,6 +15,8 @@ const {
 const { receiptUpload } = require('../lib/receiptUpload');
 const { createClaimWithReceipt } = require('../services/deviceClaim');
 const { advanceSession, attachClaimToSession } = require('../services/labSession');
+const { verifyOfflineCode, PUK_DEMO_ISSUED_OFFSET_MS } = require('../lib/pukOfflineCode');
+const { publicCustomerWin } = require('../lib/customerQr');
 
 const TOKEN_TTL_MS = 10 * 60 * 1000; // 10 minutes — token stays claimable after device returns home
 
@@ -178,10 +180,122 @@ router.post('/issue-token', (req, res) => {
   });
 });
 
+function tokenLocation(record) {
+  if (!record?.metadata) return '';
+  try {
+    const meta = JSON.parse(record.metadata);
+    return typeof meta.location === 'string' ? meta.location.trim() : '';
+  } catch {
+    return '';
+  }
+}
+
+function presentToken(record) {
+  const campaign = loadCampaign(db, record.campaignId);
+  const device = db.prepare('SELECT * FROM devices WHERE id = ?').get(record.deviceId);
+  const location = tokenLocation(record);
+  const presentedCampaign = campaign && location
+    ? { ...campaign, config: { ...campaign.config, defaultStoreName: location } }
+    : campaign;
+  return {
+    tokenId: record.id,
+    token: record.token,
+    status: record.status === 'issued' ? 'scanned' : record.status,
+    expiresAt: new Date(record.expiresAt).toISOString(),
+    campaign: presentedCampaign,
+    device: {
+      deviceCode: device?.deviceCode,
+      storeName: location || device?.storeName,
+      retailer: device?.retailer,
+    },
+  };
+}
+
+function claimPayload(claimId) {
+  const claim = db.prepare(`
+    SELECT c.*, m.value AS prizeValue
+    FROM claims c
+    LEFT JOIN manifest m ON m.prizeId = c.prizeId
+    WHERE c.claimId = ?
+  `).get(claimId);
+  const win = claim ? publicCustomerWin(claim, getBaseUrl()) : null;
+  return {
+    claimId,
+    success: true,
+    result: claim?.result || null,
+    prizeName: claim?.prizeName || null,
+    prizeValue: claim?.prizeValue ?? null,
+    redemptionCode: claim?.redemptionCode || null,
+    fulfilmentToken: claim?.fulfilmentToken || null,
+    staffScanUrl: win?.staffScanUrl || null,
+    storeName: claim?.storeName || null,
+  };
+}
+
+/** First phone open of a puck-minted code writes the play, 22 seconds before the hit. */
+function materializeOfflineToken(token) {
+  const parsed = verifyOfflineCode(token);
+  if (!parsed) return null;
+
+  const existing = db.prepare('SELECT * FROM issued_tokens WHERE token = ?').get(token);
+  if (existing) return existing;
+
+  const device = getDevice(parsed.deviceCode);
+  if (!device) return { error: 'Device not found or inactive', status: 404 };
+
+  const campaign = loadCampaign(db, parsed.campaignId);
+  if (!campaign || campaign.status !== 'active') {
+    return { error: 'No active campaign for this code', status: 404 };
+  }
+
+  const issuedAt = Date.now() - PUK_DEMO_ISSUED_OFFSET_MS;
+  const expiresAt = issuedAt + TOKEN_TTL_MS;
+  const id = uuidv4();
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  db.prepare(`
+    INSERT INTO issued_tokens (id, token, tokenHash, campaignId, deviceId, storeCode, issuedAt, expiresAt, status, metadata)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'issued', ?)
+  `).run(
+    id,
+    token,
+    tokenHash,
+    campaign.id,
+    device.id,
+    device.storeCode,
+    issuedAt,
+    expiresAt,
+    JSON.stringify({
+      offline: true,
+      counter: parsed.counter,
+      location: parsed.location || '',
+      offsetMs: PUK_DEMO_ISSUED_OFFSET_MS,
+    }),
+  );
+
+  log('device_token_issued', {
+    details: {
+      token,
+      deviceCode: device.deviceCode,
+      campaignId: campaign.id,
+      storeCode: device.storeCode,
+      location: parsed.location || '',
+      offline: true,
+      issuedAt,
+    },
+  });
+
+  return db.prepare('SELECT * FROM issued_tokens WHERE token = ?').get(token);
+}
+
 // GET /api/device/token/:token — validate and mark scanned
 router.get('/token/:token', (req, res) => {
   const { token } = req.params;
-  const record = db.prepare('SELECT * FROM issued_tokens WHERE token = ?').get(token);
+  let record = db.prepare('SELECT * FROM issued_tokens WHERE token = ?').get(token);
+  if (!record) {
+    const created = materializeOfflineToken(token);
+    if (created?.error) return res.status(created.status || 400).json({ error: created.error });
+    record = created;
+  }
 
   if (!record) return res.status(404).json({ error: 'Token not found' });
   if (record.status === 'void') return res.status(410).json({ error: 'Token has been voided' });
@@ -195,19 +309,10 @@ router.get('/token/:token', (req, res) => {
     db.prepare('UPDATE issued_tokens SET status = ?, scannedAt = ? WHERE token = ?')
       .run('scanned', Date.now(), token);
     log('device_token_scanned', { details: { token, deviceId: record.deviceId } });
+    record.status = 'scanned';
   }
 
-  const campaign = loadCampaign(db, record.campaignId);
-  const device = db.prepare('SELECT * FROM devices WHERE id = ?').get(record.deviceId);
-
-  res.json({
-    tokenId: record.id,
-    token: record.token,
-    status: record.status === 'issued' ? 'scanned' : record.status,
-    expiresAt: new Date(record.expiresAt).toISOString(),
-    campaign,
-    device: { deviceCode: device.deviceCode, storeName: device.storeName, retailer: device.retailer },
-  });
+  res.json(presentToken(record));
 });
 
 // GET /api/device/token-status/:token — poll for scanned/redeemed status (device polls this)
@@ -260,21 +365,7 @@ router.post('/direct-claim', receiptUpload.single('receipt'), (req, res) => {
       attachClaimToSession(labSessionId, outcome.claimId);
     }
 
-    const claim = db.prepare(`
-      SELECT c.result, c.prizeName, c.redemptionCode, m.value AS prizeValue
-      FROM claims c
-      LEFT JOIN manifest m ON m.prizeId = c.prizeId
-      WHERE c.claimId = ?
-    `).get(outcome.claimId);
-
-    res.json({
-      claimId: outcome.claimId,
-      success: true,
-      result: claim?.result || null,
-      prizeName: claim?.prizeName || null,
-      prizeValue: claim?.prizeValue ?? null,
-      redemptionCode: claim?.redemptionCode || null,
-    });
+    res.json(claimPayload(outcome.claimId));
   } catch (err) {
     console.error('Direct claim error:', err);
     if (err.message?.includes('UNIQUE')) {
@@ -320,21 +411,7 @@ router.post('/claim', receiptUpload.single('receipt'), (req, res) => {
       });
     }
 
-    const claim = db.prepare(`
-      SELECT c.result, c.prizeName, c.redemptionCode, m.value AS prizeValue
-      FROM claims c
-      LEFT JOIN manifest m ON m.prizeId = c.prizeId
-      WHERE c.claimId = ?
-    `).get(outcome.claimId);
-
-    res.json({
-      claimId: outcome.claimId,
-      success: true,
-      result: claim?.result || null,
-      prizeName: claim?.prizeName || null,
-      prizeValue: claim?.prizeValue ?? null,
-      redemptionCode: claim?.redemptionCode || null,
-    });
+    res.json(claimPayload(outcome.claimId));
   } catch (err) {
     console.error('Token claim error:', err);
     if (err.message?.includes('UNIQUE')) {

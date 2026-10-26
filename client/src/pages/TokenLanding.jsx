@@ -3,7 +3,20 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { validateToken, submitTokenClaim } from '../api';
 import { getInstantWinTheme } from '../config/instantWinThemes';
 import InstantWinForm from '../components/InstantWinForm';
-import { isHokaCampaign } from '../campaigns/hokaCotswold';
+import FordEntryForm from '../components/FordEntryForm';
+import AudiEntryForm from '../components/AudiEntryForm';
+import CastrolEntryForm from '../components/CastrolEntryForm';
+import HokaEntryForm from '../components/HokaEntryForm';
+import NiterraCrosswordEntryForm from '../components/NiterraCrosswordEntryForm';
+import { FORD_CAMPAIGN_ID } from '../campaigns/ford';
+import { AUDI_CAMPAIGN_ID } from '../campaigns/audi';
+import { CASTROL_CAMPAIGN_ID } from '../campaigns/castrol';
+import { HOKA_CAMPAIGN_ID } from '../campaigns/hokaCotswold';
+import { NITERRA_CAMPAIGN_ID } from '../campaigns/niterraRepco';
+import '../campaigns/ford.css';
+import '../campaigns/castrol.css';
+import '../campaigns/niterra-repco.css';
+import '../campaigns/hoka.css';
 
 const STEPS = { LOADING: 0, INVALID: 1 };
 
@@ -58,13 +71,25 @@ export default function TokenLanding() {
       productDescription: receiptPayload.productDescription,
       selectedBrand: receiptPayload.selectedBrand,
       spendAmount: receiptPayload.spendAmount,
+      contractNumber: receiptPayload.contractNumber,
       receiptSource: receiptPayload.receiptSource,
       verificationMethod: receiptPayload.verificationMethod,
       receiptFile: receiptPayload.receiptFile,
       postcode: receiptPayload.postcode,
     });
-    if (isHokaCampaign(tokenData.campaign)) return outcome;
-    navigate(`/scratch/${outcome.claimId}`);
+    const branded = [
+      FORD_CAMPAIGN_ID,
+      AUDI_CAMPAIGN_ID,
+      CASTROL_CAMPAIGN_ID,
+      HOKA_CAMPAIGN_ID,
+      NITERRA_CAMPAIGN_ID,
+    ].includes(tokenData.campaign?.id);
+    if (!branded && outcome?.fulfilmentToken) {
+      navigate(`/win/${outcome.fulfilmentToken}`);
+    } else if (!branded) {
+      navigate(`/scratch/${outcome.claimId}`);
+    }
+    return outcome;
   }
 
   if (step === STEPS.LOADING && !tokenData) {
@@ -98,6 +123,49 @@ export default function TokenLanding() {
   const brands = tokenData?.campaign?.config?.eligibleBrands?.length
     ? tokenData.campaign.config.eligibleBrands
     : ['NGK', 'NTK', 'KYB'];
+  const campaignId = tokenData.campaign?.id;
+
+  if (campaignId === FORD_CAMPAIGN_ID) {
+    return (
+      <FordEntryForm
+        campaign={tokenData.campaign}
+        vehicles={brands}
+        onComplete={handleComplete}
+      />
+    );
+  }
+  if (campaignId === AUDI_CAMPAIGN_ID) {
+    return (
+      <AudiEntryForm
+        campaign={tokenData.campaign}
+        models={brands}
+        onComplete={handleComplete}
+      />
+    );
+  }
+  if (campaignId === CASTROL_CAMPAIGN_ID) {
+    return <CastrolEntryForm campaign={tokenData.campaign} onComplete={handleComplete} />;
+  }
+  if (campaignId === HOKA_CAMPAIGN_ID) {
+    return (
+      <HokaEntryForm
+        campaign={tokenData.campaign}
+        device={tokenData.device}
+        brands={brands}
+        onComplete={handleComplete}
+      />
+    );
+  }
+  if (campaignId === NITERRA_CAMPAIGN_ID) {
+    return (
+      <NiterraCrosswordEntryForm
+        campaign={tokenData.campaign}
+        device={tokenData.device}
+        brands={brands}
+        onComplete={handleComplete}
+      />
+    );
+  }
 
   const theme = getInstantWinTheme('v1', tokenData.campaign);
 

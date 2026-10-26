@@ -9,6 +9,7 @@ import {
   isCastrolWin,
   isValidCastrolReceiptTail,
 } from '../campaigns/castrol';
+import StaffWinCode from './StaffWinCode';
 
 function normaliseMobile(raw) {
   const s = raw.replace(/[\s\-()]/g, '');
@@ -262,6 +263,7 @@ export default function CastrolEntryForm({ campaign, onComplete }) {
             <p className="castrol-staff-msg">
               Redemption instructions have been sent to your mobile.
             </p>
+            <StaffWinCode url={reveal?.staffScanUrl} store={reveal?.storeName} />
             {reveal?.redemptionCode ? (
               <div className="castrol-ref">
                 <span className="castrol-ref__label">Reference number</span>

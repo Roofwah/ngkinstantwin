@@ -9,11 +9,13 @@ export default function NiterraCrosswordShell({
 }) {
   const isEnter = heroClassName.includes('ngk-hero--enter');
   const isVerify = heroClassName.includes('ngk-hero--verify');
+  const isFulfil = heroClassName.includes('ngk-page--fulfil');
+  const useHeroBg = isEnter || isFulfil;
 
   return (
     <div
-      className={`ngk-page${isEnter ? ' ngk-page--enter' : ''}${isVerify ? ' ngk-page--verify' : ''}`}
-      style={isEnter ? { backgroundImage: `url(${artSrc})` } : undefined}
+      className={`ngk-page${useHeroBg ? ' ngk-page--enter' : ''}${isVerify ? ' ngk-page--verify' : ''}${isFulfil ? ' ngk-page--fulfil' : ''}`}
+      style={useHeroBg ? { backgroundImage: `url(${artSrc})` } : undefined}
     >
       <div className="ngk-body">
         {children}
