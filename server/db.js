@@ -413,6 +413,30 @@ const DEMO_CAMPAIGNS = [
       },
     },
   },
+  {
+    id: 'puk-demo',
+    name: 'PUK Demo',
+    brand: 'PUK',
+    tagline: 'Built-in demo when no campaign card is loaded',
+    mechanic: 'Demonstration entry on the PUK demo unit',
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    config: {
+      themeColor: '#111111',
+      eligibleBrands: ['PUK'],
+      defaultStoreName: 'Demo Store',
+      retailer: 'Pure Random',
+      demoControl: {
+        enabled: true,
+        winEvery: 1,
+        sweepstakesOnLose: false,
+        claimOffset: 0,
+        prizes: [
+          { name: 'Demo prize', value: 10, qty: 50 },
+        ],
+      },
+    },
+  },
 ];
 
 function parseCampaignConfig(raw) {
@@ -481,6 +505,7 @@ for (const c of DEMO_CAMPAIGNS) {
     'audi-2026',
     'hankook-2026',
     'smirnoff-2026',
+    'puk-demo',
   ].includes(c.id)) {
     configObj.customerQrRedemption = true;
     configObj.redemptionWindowMinutes = configObj.redemptionWindowMinutes || 30;
@@ -593,17 +618,28 @@ if (!existingPuk2Dev4) {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
     'device-puk2-004',
     'PR-PUK2-004',
-    'PUK2 Dev 4 (Castrol)',
-    'Castrol',
-    'Castrol Demo',
-    'castrol-demo',
-    'castrol-2026',
+    'PUK2 Demo',
+    'Pure Random',
+    'Demo Store',
+    'puk-demo',
+    'puk-demo',
     'active',
-    'Dev unit 4',
+    'Demo unit',
     now,
     now
   );
 }
+db.prepare(`UPDATE devices SET name = ?, retailer = ?, storeName = ?, storeCode = ?, campaignId = ?, locationLabel = ?, updatedAt = ? WHERE deviceCode = ?`)
+  .run(
+    'PUK2 Demo',
+    'Pure Random',
+    'Demo Store',
+    'puk-demo',
+    'puk-demo',
+    'Demo unit',
+    Date.now(),
+    'PR-PUK2-004',
+  );
 
 const existingPuk2Dev2 = db.prepare('SELECT id FROM devices WHERE deviceCode = ?').get('PR-PUK2-002');
 if (!existingPuk2Dev2) {

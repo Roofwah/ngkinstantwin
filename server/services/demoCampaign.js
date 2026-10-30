@@ -13,6 +13,7 @@ const DEMO_CAMPAIGN_IDS = [
   'ford-2026',
   'smirnoff-2026',
   'hankook-2026',
+  'puk-demo',
 ];
 
 function isDemoDevice(deviceCode) {
