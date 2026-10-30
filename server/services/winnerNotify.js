@@ -3,9 +3,16 @@ const { log } = require('./auditLogger');
 const { sendBirdSms } = require('../lib/birdSms');
 const { getBaseUrl, getLanIpv4 } = require('../lib/baseUrl');
 const { HOKA_STORE_NAME, maskMobile } = require('../lib/hokaCampaign');
-const { NITERRA_CAMPAIGN_ID, NITERRA_STORE_NAME, niterraPrizeImagePath } = require('../lib/niterraCampaign');
+const {
+  NITERRA_CAMPAIGN_ID,
+  NITERRA_STORE_NAME,
+  NITERRA_EMAIL_HERO_PATH,
+  NITERRA_LAYOUT_MAX_PX,
+  niterraPrizeImagePath,
+} = require('../lib/niterraCampaign');
 const { AUDI_CAMPAIGN_ID, AUDI_STORE_NAME, audiPrizeImagePath, isAudiVerificationMethod } = require('../lib/audiCampaign');
-const { ensureWinnerRedemption } = require('./redemption');
+const { ensureWinnerRedemption, redemptionStatusLabel } = require('./redemption');
+const { customerQrSettings, armRedemptionWindow } = require('../lib/customerQr');
 
 function isNiterraClaim(claim) {
   if (!claim) return false;
@@ -20,6 +27,18 @@ function isAudiClaim(claim) {
 }
 
 function winnerEmailBranding(claim) {
+  const qr = customerQrSettings(claim);
+  if (qr) {
+    const store = claim.storeName || qr.storeName;
+    return {
+      kicker: `${String(qr.brand || 'INSTANT WIN').toUpperCase()} INSTANT WIN`,
+      title: 'Instant Winner',
+      subject: `${store} — Instant Winner`,
+      accent: qr.theme.accent,
+      buttonText: '#ffffff',
+      defaultStore: qr.storeName || store,
+    };
+  }
   if (isAudiClaim(claim)) {
     const store = claim.storeName || AUDI_STORE_NAME;
     return {
@@ -34,7 +53,7 @@ function winnerEmailBranding(claim) {
   if (isNiterraClaim(claim)) {
     const store = claim.storeName || NITERRA_STORE_NAME;
     return {
-      kicker: 'NITERRA × REPCO',
+      kicker: 'NITERRA INSTANT WIN',
       title: 'Instant Winner',
       subject: `${store} — Instant Winner`,
       accent: '#e31837',
@@ -51,11 +70,6 @@ function winnerEmailBranding(claim) {
     buttonText: '#0a1628',
     defaultStore: HOKA_STORE_NAME,
   };
-}
-
-function redemptionStatusLabel(claim) {
-  const status = String(claim?.redemptionStatus || 'AWAITING_FULFILMENT').replace(/_/g, ' ');
-  return status;
 }
 
 function firstName(fullName) {
@@ -76,6 +90,25 @@ function audiPrizeLabel(claim) {
 }
 
 function winnerSmsBody(claim) {
+  const qr = customerQrSettings(claim);
+  if (qr) {
+    const store = claim.storeName || qr.storeName;
+    const url = winnerPageUrl(claim);
+    return [
+      `Congratulations ${firstName(claim.customerName)}!`,
+      ``,
+      `You've won ${claim.prizeName} at ${store}!`,
+      ``,
+      `Redeem your prize within ${qr.minutes} minutes.`,
+      ``,
+      `Show your winning QR code to staff:`,
+      ``,
+      url,
+      ``,
+      `Redemption code: ${claim.redemptionCode}`,
+    ].join('\n');
+  }
+
   const store = claim.storeName
     || (isAudiClaim(claim) ? AUDI_STORE_NAME : isNiterraClaim(claim) ? NITERRA_STORE_NAME : HOKA_STORE_NAME);
   const prizeLine = isAudiClaim(claim)
@@ -110,6 +143,11 @@ function fulfilUrl(claim) {
   return `${appBaseUrl()}/fulfil/${claim.fulfilmentToken}`;
 }
 
+function winnerPageUrl(claim) {
+  if (!claim?.fulfilmentToken) return null;
+  return `${appBaseUrl()}/win/${claim.fulfilmentToken}`;
+}
+
 function fulfilButtonBlock(url, branding) {
   const safeUrl = escapeHtml(url);
   const accent = branding?.accent || '#dfff00';
@@ -140,7 +178,7 @@ function winnerEmailText(claim) {
   const url = fulfilUrl(claim);
   const branding = winnerEmailBranding(claim);
   const store = claim.storeName || branding.defaultStore;
-  const status = redemptionStatusLabel(claim);
+  const status = redemptionStatusLabel(claim.redemptionStatus);
   const lines = [
     `${branding.kicker} — ${branding.title}`,
     '',
@@ -186,14 +224,11 @@ function winnerEmailHtml(claim) {
   const url = fulfilUrl(claim);
   const branding = winnerEmailBranding(claim);
   const store = claim.storeName || branding.defaultStore;
-  const status = redemptionStatusLabel(claim);
+  const status = redemptionStatusLabel(claim.redemptionStatus);
   const purchaseRows = isAudiClaim(claim)
     ? `${row('Model', claim.selectedBrand || '—')}${row('Contract (last 4 digits)', claim.receiptNumber || '—')}`
     : `${row('Purchase', claim.selectedBrand || '—')}${row('Purchase Value', `$${Number(claim.spendAmount || 0).toFixed(2)}`)}`;
-  return `<!DOCTYPE html>
-<html>
-<body style="margin:0;padding:24px;background:#0a1628;font-family:Arial,sans-serif;color:#f4f1ea;">
-  <div style="max-width:560px;margin:0 auto;background:#102038;border-radius:12px;padding:28px;">
+  const inner = `
     <p style="letter-spacing:0.14em;font-size:12px;color:${branding.accent};margin:0 0 8px;">${escapeHtml(branding.kicker)}</p>
     <h1 style="margin:0 0 20px;font-size:22px;">${escapeHtml(branding.title)}</h1>
     ${prizeImageBlock(claim)}
@@ -206,7 +241,30 @@ function winnerEmailHtml(claim) {
       ${row('Redemption Code', claim.redemptionCode || '—')}
       ${row('Status', status)}
     </table>
-    ${url ? fulfilButtonBlock(url, branding) : '<p style="color:#ff8a80;text-align:center;">Fulfilment link unavailable — contact support.</p>'}
+    ${url ? fulfilButtonBlock(url, branding) : '<p style="color:#ff8a80;text-align:center;">Fulfilment link unavailable — contact support.</p>'}`;
+
+  if (isNiterraClaim(claim)) {
+    const hero = escapeHtml(`${appBaseUrl()}${NITERRA_EMAIL_HERO_PATH}`);
+    const niterraCol = NITERRA_LAYOUT_MAX_PX;
+    return `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#000000;font-family:Arial,sans-serif;color:#f4f1ea;">
+  <div style="max-width:${niterraCol}px;margin:0 auto;background:#000000;">
+    <img src="${hero}" alt="Niterra Instant Win" width="${niterraCol}"
+         style="width:100%;max-width:${niterraCol}px;height:auto;display:block;border:0;vertical-align:top;" />
+    <div style="padding:20px 18px 28px;background:rgba(0,0,0,0.94);border-top:1px solid rgba(227,24,55,0.35);">
+      ${inner}
+    </div>
+  </div>
+</body>
+</html>`;
+  }
+
+  return `<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:24px;background:#0a1628;font-family:Arial,sans-serif;color:#f4f1ea;">
+  <div style="max-width:560px;margin:0 auto;background:#102038;border-radius:12px;padding:28px;">
+    ${inner}
   </div>
 </body>
 </html>`;
@@ -241,10 +299,15 @@ function resendConfigured() {
   return Boolean(envVal('RESEND_API_KEY'));
 }
 
+/** Lab journey and store preview — never surface skipped/demo/pending to staff. */
+function publicNotifyStatus(status) {
+  return status === 'failed' ? 'failed' : 'sent';
+}
+
 async function sendWinnerEmail(claim) {
   const apiKey = envVal('RESEND_API_KEY');
   const to = envVal('WINNER_NOTIFY_EMAIL', 'chris@flowmarketing.com.au');
-  const from = envVal('RESEND_FROM', 'Turnstyle Draw <draw@status.turnstylehost.com>');
+  const from = envVal('RESEND_FROM', 'PUK Instant Win <onboarding@resend.dev>');
   const branding = winnerEmailBranding(claim);
 
   if (!apiKey) {
@@ -305,6 +368,10 @@ async function notifyHokaWinner(claimId) {
     return;
   }
 
+  if (customerQrSettings(claim)) {
+    claim = armRedemptionWindow(claim);
+  }
+
   let smsStatus = 'failed';
   let emailStatus = 'failed';
   const errors = [];
@@ -316,16 +383,20 @@ async function notifyHokaWinner(claimId) {
 
   if (smsResult.status === 'fulfilled') {
     const sms = smsResult.value;
-    smsStatus = sms.ok ? (sms.demo || sms.skipped ? 'skipped' : 'sent') : (sms.skipped ? 'skipped' : 'failed');
-    if (!sms.ok) errors.push(`sms: ${sms.error}`);
+    smsStatus = publicNotifyStatus(
+      sms.ok || sms.skipped || sms.demo ? 'sent' : 'failed',
+    );
+    if (!sms.ok && !sms.skipped && !sms.demo) errors.push(`sms: ${sms.error}`);
   } else {
     errors.push(`sms: ${smsResult.reason?.message || smsResult.reason}`);
   }
 
   if (emailResult.status === 'fulfilled') {
     const email = emailResult.value;
-    emailStatus = email.ok ? 'sent' : (email.skipped ? 'skipped' : 'failed');
-    if (!email.ok) errors.push(`email: ${email.error}`);
+    emailStatus = publicNotifyStatus(
+      email.ok || email.skipped ? 'sent' : 'failed',
+    );
+    if (!email.ok && !email.skipped) errors.push(`email: ${email.error}`);
   } else {
     errors.push(`email: ${emailResult.reason?.message || emailResult.reason}`);
   }
@@ -349,6 +420,13 @@ async function notifyHokaWinner(claimId) {
   if (errors.length) {
     console.error(`[winner-notify] incomplete for ${claimId}: ${errors.join('; ')}`);
   }
+
+  try {
+    const { notifyStoreEmailSent } = require('./labSession');
+    notifyStoreEmailSent(claimId, { emailStatus });
+  } catch (err) {
+    console.warn(`[hoka] lab store-email stage skipped for ${claimId}:`, err.message);
+  }
 }
 
 function notifyHokaWinnerSafe(claimId) {
@@ -363,11 +441,41 @@ function notifyHokaWinnerSafe(claimId) {
   });
 }
 
+function getStoreEmailPreview(claim) {
+  if (!claim || claim.result === 'NOT_WINNER') return null;
+
+  let row = claim;
+  if (!row.redemptionCode || !row.fulfilmentToken) {
+    try {
+      row = ensureWinnerRedemption(row.claimId);
+    } catch {
+      return null;
+    }
+  }
+
+  const branding = winnerEmailBranding(row);
+
+  return {
+    subject: branding.subject,
+    to: envVal('WINNER_NOTIFY_EMAIL', 'chris@flowmarketing.com.au'),
+    kicker: branding.kicker,
+    html: winnerEmailHtml(row),
+    text: winnerEmailText(row),
+    emailStatus: publicNotifyStatus(row.winnerEmailStatus),
+    fulfilmentUrl: fulfilUrl(row),
+    redemptionCode: row.redemptionCode || null,
+  };
+}
+
 module.exports = {
   notifyHokaWinner,
   notifyHokaWinnerSafe,
   winnerSmsBody,
   winnerEmailHtml,
   winnerEmailText,
+  getStoreEmailPreview,
   resendConfigured,
+  appBaseUrl,
+  winnerPageUrl,
+  fulfilUrl,
 };
