@@ -2,10 +2,10 @@ const os = require('os');
 
 /**
  * Public base URL for QR links (/t/{token}).
- * Customer-facing links use https://pukqr.com. A Railway hostname is never encoded.
+ * Customer-facing links use https://www.pukqr.com. A Railway hostname is never encoded.
  * Local dev with no public host stays on localhost.
  */
-const PUBLIC_QR_ORIGIN = 'https://pukqr.com';
+const PUBLIC_QR_ORIGIN = 'https://www.pukqr.com';
 
 function isRailwayHost(url) {
   return /railway\.app/i.test(url || '');
