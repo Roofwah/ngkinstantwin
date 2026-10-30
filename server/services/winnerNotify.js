@@ -26,12 +26,19 @@ function isAudiClaim(claim) {
   return isAudiVerificationMethod(claim.verificationMethod);
 }
 
+function emailKicker(brand) {
+  const raw = String(brand || 'PUK').trim();
+  const upper = raw.toUpperCase();
+  if (upper.includes('INSTANT WIN')) return upper;
+  return `${upper} INSTANT WIN`;
+}
+
 function winnerEmailBranding(claim) {
   const qr = customerQrSettings(claim);
   if (qr) {
     const store = claim.storeName || qr.storeName;
     return {
-      kicker: `${String(qr.brand || 'INSTANT WIN').toUpperCase()} INSTANT WIN`,
+      kicker: emailKicker(qr.brand || 'PUK'),
       title: 'Instant Winner',
       subject: `${store} — Instant Winner`,
       accent: qr.theme.accent,
@@ -61,14 +68,25 @@ function winnerEmailBranding(claim) {
       defaultStore: NITERRA_STORE_NAME,
     };
   }
-  const store = claim?.storeName || HOKA_STORE_NAME;
+  if (claim?.campaignId === 'hoka-2026') {
+    const store = claim.storeName || HOKA_STORE_NAME;
+    return {
+      kicker: 'HOKA INSTANT WIN',
+      title: 'Instant Winner',
+      subject: `${store} — Instant Winner`,
+      accent: '#dfff00',
+      buttonText: '#0a1628',
+      defaultStore: HOKA_STORE_NAME,
+    };
+  }
+  const store = claim?.storeName || 'Demo Store';
   return {
-    kicker: 'COTSWOLD OUTDOOR × HOKA',
+    kicker: 'PUK INSTANT WIN',
     title: 'Instant Winner',
     subject: `${store} — Instant Winner`,
-    accent: '#dfff00',
-    buttonText: '#0a1628',
-    defaultStore: HOKA_STORE_NAME,
+    accent: '#d48c48',
+    buttonText: '#ffffff',
+    defaultStore: 'Demo Store',
   };
 }
 

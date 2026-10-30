@@ -324,7 +324,7 @@ function createClaimWithReceipt({
         const row = db.prepare('SELECT * FROM claims WHERE claimId = ?').get(claimId);
         armRedemptionWindow(row);
       }
-      if (hoka || crosswordEntry) notifyHokaWinnerSafe(claimId);
+      if (hoka || crosswordEntry || qrSettings) notifyHokaWinnerSafe(claimId);
     } catch (err) {
       console.error(`[instant-win] redemption persist failed for ${claimId}:`, err.message);
       log('instant_win_redemption_failed', { claimId, details: { error: err.message, result } });
