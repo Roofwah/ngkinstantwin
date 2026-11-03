@@ -1,10 +1,12 @@
 import niterraRepco from './niterra-repco';
 import fordDisplayLab from './ford-display-lab';
+import hankook from './hankook';
 
 /** Registry of lab presenter configs — add one file per promotional program. */
 const LAB_CAMPAIGNS = {
   'niterra-repco': niterraRepco,
   'ford-display-lab': fordDisplayLab,
+  hankook,
 };
 
 const DEFAULT_CONFIG_ID = 'niterra-repco';
@@ -38,4 +40,4 @@ export function resolveLabCampaign({ configId, campaignId } = {}) {
   return getDefaultLabCampaign();
 }
 
-export { niterraRepco };
+export { niterraRepco, hankook };

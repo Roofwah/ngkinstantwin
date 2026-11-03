@@ -393,22 +393,29 @@ const DEMO_CAMPAIGNS = [
     id: 'hankook-2026',
     name: 'Hankook Instant Win',
     brand: 'Hankook',
-    tagline: 'Buy Hankook and win instantly',
-    mechanic: 'Qualifying Hankook purchase at a participating store',
-    startDate: '2026-01-01',
+    tagline: 'Driving Emotion',
+    mechanic: 'Buy 4 Hankook tyres to qualify',
+    startDate: '2026-11-03',
     endDate: '2026-12-31',
     config: {
-      themeColor: '#f36f21',
-      eligibleBrands: ['Hankook'],
+      themeColor: '#db5200',
+      eligibleBrands: ['iON', 'Ventus', 'Dynapro', 'Weatherflex', 'Kinergy'],
       defaultStoreName: 'Hankook Demo',
+      defaultStoreCode: 'hankook-demo',
+      retailer: 'Hankook',
+      entryPath: '/enter/hankook',
+      entryVariant: 'hankook-instant-win',
+      heroImageUrl: '/campaigns/hankook/bg.jpg',
+      formArtUrl: '/campaigns/hankook/bg.jpg',
+      landingHeroUrl: '/campaigns/hankook/bg.jpg',
+      qrBgUrl: '/campaigns/hankook/bg.jpg',
       demoControl: {
         enabled: true,
         winEvery: 1,
         sweepstakesOnLose: false,
         claimOffset: 0,
         prizes: [
-          { name: 'Hankook Cap', value: 25, qty: 20 },
-          { name: 'Hankook $50 voucher', value: 50, qty: 10 },
+          { name: '$200 Cashback', value: 200, qty: 500 },
         ],
       },
     },
@@ -501,7 +508,14 @@ for (const c of DEMO_CAMPAIGNS) {
                     claimOffset: prev.demoControl?.claimOffset || 0,
                   },
                 }
-              : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
+              : c.id === 'hankook-2026' && c.config.demoControl
+                ? {
+                    demoControl: {
+                      ...c.config.demoControl,
+                      claimOffset: prev.demoControl?.claimOffset || 0,
+                    },
+                  }
+                : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
   };
   if ([
     'niterra-ngk-2026',

@@ -1,0 +1,286 @@
+/* Hankook Instant Win — form over full-bleed bg.jpg */
+.hankook-page {
+  --hankook-orange: #db5200;
+  --hankook-orange-dark: #a83e00;
+  --hankook-text: #1a1a1a;
+  --hankook-muted: #4d4d4d;
+  --hankook-input-border: #6e6e6e;
+  --hankook-bg-image: url('/campaigns/hankook/bg.jpg');
+  min-height: 100dvh;
+  background-color: #1a120c;
+  background-image: var(--hankook-bg-image);
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  color: var(--hankook-text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.hankook-page * {
+  box-sizing: border-box;
+}
+
+.hankook-page__scrim {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(12, 8, 6, 0.35) 0%,
+    rgba(12, 8, 6, 0.55) 45%,
+    rgba(12, 8, 6, 0.72) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hankook-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 28px 16px 48px;
+  min-height: 100dvh;
+}
+
+.hankook-card {
+  width: 100%;
+  padding: 28px 24px 36px;
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 4px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  border-top: 4px solid var(--hankook-orange);
+}
+
+.hankook-page--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+}
+
+.hankook-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(219, 82, 0, 0.25);
+  border-top-color: var(--hankook-orange);
+  border-radius: 50%;
+  animation: hankookSpin 0.8s linear infinite;
+}
+
+@keyframes hankookSpin {
+  to { transform: rotate(360deg); }
+}
+
+.hankook-unavailable {
+  text-align: center;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 4px;
+  max-width: 360px;
+}
+
+.hankook-unavailable h2 {
+  margin: 0 0 8px;
+  font-size: 1.125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hankook-orange-dark);
+}
+
+.hankook-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--hankook-muted);
+}
+
+.hankook-title {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--hankook-orange-dark);
+}
+
+.hankook-lede {
+  margin: 0 0 24px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--hankook-muted);
+}
+
+.hankook-form {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.hankook-field {
+  margin-bottom: 16px;
+}
+
+.hankook-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hankook-orange-dark);
+}
+
+.hankook-field input,
+.hankook-field select {
+  width: 100%;
+  height: 50px;
+  padding: 8px 12px;
+  border: 1px solid var(--hankook-input-border);
+  border-radius: 4px;
+  background: rgba(255, 255, 254, 0.95);
+  font-size: 16px;
+}
+
+.hankook-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a83e00' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.hankook-store {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  padding: 0 12px;
+  border: 1px solid var(--hankook-input-border);
+  border-radius: 4px;
+  background: #f7f3ef;
+  font-size: 15px;
+}
+
+.hankook-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 48px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--hankook-orange);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.hankook-cta:hover {
+  background: var(--hankook-orange-dark);
+}
+
+.hankook-cta:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.hankook-ghost {
+  width: 100%;
+  margin-top: 16px;
+  background: transparent;
+  border: 0;
+  color: var(--hankook-orange-dark);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.hankook-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b00;
+  font-size: 14px;
+}
+
+.hankook-demo {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #fff4ec;
+  border: 1px solid #f5c19a;
+  font-size: 14px;
+}
+
+.hankook-legal {
+  margin-top: 20px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--hankook-muted);
+}
+
+.hankook-result h1 {
+  margin: 0 0 12px;
+  font-size: 1.5rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hankook-orange-dark);
+}
+
+.hankook-lede--emphasis {
+  font-weight: 600;
+  color: var(--hankook-orange-dark);
+}
+
+.hankook-prize {
+  margin: 20px 0;
+  padding: 24px 16px;
+  border-radius: 4px;
+  text-align: center;
+  background: var(--hankook-orange-dark);
+  color: #fff;
+}
+
+.hankook-prize-name {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.hankook-prize-value {
+  margin: 8px 0 0;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.hankook-staff-msg {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.hankook-ref {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.hankook-ref__label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.hankook-code {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--hankook-orange-dark);
+}

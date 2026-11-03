@@ -12,6 +12,7 @@ const CAMPAIGN_ENTER_PATH = {
   'audi-2026': '/enter/audi-instant-win',
   'ford-2026': '/enter/ford',
   'castrol-2026': '/enter/castrol',
+  'hankook-2026': '/enter/hankook',
 };
 
 function campaignEnterPath(campaignId) {
@@ -140,6 +141,25 @@ const CAMPAIGN_UI = {
     faq: [
       { q: 'Campaign', a: 'Red Bull Instant Win — participating convenience and grocery stores.' },
       { q: 'How to enter', a: 'Purchase participating Red Bull products and ask staff for your QR code.' },
+    ],
+  },
+  'hankook-2026': {
+    sub: 'Driving Emotion',
+    color: '#db5200',
+    qrBg: '/campaigns/hankook/bg.jpg',
+    idleFallback: '/campaigns/hankook/bg.jpg',
+    slides: [
+      { headline: 'DRIVING EMOTION', sub: 'Hankook Instant Win', src: '/campaigns/hankook/bg.jpg' },
+      { headline: 'BUY 4 TYRES', sub: 'iON · Ventus · Dynapro · Weatherflex · Kinergy', src: '/campaigns/hankook/bg.jpg' },
+      { headline: '$200 CASHBACK', sub: 'Every valid entry wins', src: '/campaigns/hankook/bg.jpg' },
+    ],
+    faq: [
+      { q: 'Campaign', a: 'Hankook Instant Win — Driving Emotion. Buy 4 qualifying Hankook tyres.' },
+      { q: 'Start date', a: '3 November 2026' },
+      { q: 'End date', a: '31 December 2026' },
+      { q: 'How to enter', a: 'Ask staff to issue a QR on this PUK, scan with your phone, select your tyre line, and verify your mobile.' },
+      { q: 'Prizes', a: 'Every valid entry wins $200 cashback.' },
+      { q: 'On device', a: 'Idle shows Hankook art. Double tap for QR to /enter/hankook.' },
     ],
   },
   'hoka-2026': {

@@ -7,6 +7,7 @@ import { isHokaCampaign } from '../campaigns/hokaCotswold';
 import { NITERRA_CAMPAIGN_ID } from '../campaigns/niterraRepco';
 import { FORD_CAMPAIGN_ID } from '../campaigns/ford';
 import { CASTROL_CAMPAIGN_ID } from '../campaigns/castrol';
+import { HANKOOK_CAMPAIGN_ID } from '../campaigns/hankook';
 
 const DEFAULT_DEVICE = 'PR-DEMO-001';
 
@@ -37,7 +38,7 @@ export default function InstantWinDirect() {
 
   useEffect(() => {
     if (campaignParam === NITERRA_CAMPAIGN_ID || campaignParam === FORD_CAMPAIGN_ID
-      || campaignParam === CASTROL_CAMPAIGN_ID) return;
+      || campaignParam === CASTROL_CAMPAIGN_ID || campaignParam === HANKOOK_CAMPAIGN_ID) return;
     getDeviceConfig(deviceCode)
       .then(data => {
         setConfig(data);
@@ -71,6 +72,14 @@ export default function InstantWinDirect() {
     if (labSession) qs.set('labSession', labSession);
     const suffix = qs.toString() ? `?${qs.toString()}` : '';
     return <Navigate to={`/enter/castrol${suffix}`} replace />;
+  }
+
+  if (campaignParam === HANKOOK_CAMPAIGN_ID) {
+    const qs = new URLSearchParams();
+    if (deviceCode !== DEFAULT_DEVICE) qs.set('device', deviceCode);
+    if (labSession) qs.set('labSession', labSession);
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return <Navigate to={`/enter/hankook${suffix}`} replace />;
   }
 
   async function handleComplete(receiptPayload) {

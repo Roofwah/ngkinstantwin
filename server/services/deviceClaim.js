@@ -29,13 +29,18 @@ const {
   validateSmirnoffEntryPayload,
   isSmirnoffVerificationMethod,
 } = require('../lib/smirnoffCampaign');
+const {
+  validateHankookEntryPayload,
+  isHankookVerificationMethod,
+} = require('../lib/hankookCampaign');
 
 function isCrosswordEntry(method) {
   return method === 'niterra_crossword'
     || isAudiVerificationMethod(method)
     || isFordVerificationMethod(method)
     || isCastrolVerificationMethod(method)
-    || isSmirnoffVerificationMethod(method);
+    || isSmirnoffVerificationMethod(method)
+    || isHankookVerificationMethod(method);
 }
 
 function labAllowsDuplicateReceipts(labSessionId) {
@@ -235,6 +240,8 @@ function createClaimWithReceipt({
     validated = validateCastrolEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else if (isSmirnoffVerificationMethod(body.verificationMethod)) {
     validated = validateSmirnoffEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
+  } else if (isHankookVerificationMethod(body.verificationMethod)) {
+    validated = validateHankookEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else {
     validated = validateReceiptPayload(body, file);
   }
