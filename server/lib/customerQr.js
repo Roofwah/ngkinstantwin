@@ -1,8 +1,28 @@
 const db = require('../db');
+const { isFordClaim, fordPrizeLabel } = require('./fordCampaign');
 
 /** Shown only when a real PUK entry-token issue time exists. Matches the 10-minute entry token TTL. */
 const ELIGIBLE_LOOKBACK_MS = 10 * 60 * 1000;
 const DEFAULT_WINDOW_MINUTES = 30;
+
+function claimPrizeValue(claim) {
+  if (claim?.prizeValue != null) {
+    const n = Number(claim.prizeValue);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
+  if (!claim?.prizeId) return null;
+  const row = db.prepare('SELECT value FROM manifest WHERE prizeId = ?').get(claim.prizeId);
+  const value = Number(row?.value);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function publicPrizeLabel(claim) {
+  const value = claimPrizeValue(claim);
+  if (isFordClaim(claim)) return fordPrizeLabel(claim.prizeName, value);
+  const name = claim?.prizeName || 'Prize';
+  if (value && !/^\$\d/.test(String(name))) return `$${value} ${name}`;
+  return name;
+}
 
 function parseConfig(raw) {
   if (!raw) return {};
@@ -81,11 +101,13 @@ function publicCustomerWin(claim, baseUrl) {
   const now = Date.now();
   const flags = redemptionFlags(claim, now);
   const root = String(baseUrl || '').replace(/\/$/, '');
+  const prizeValue = claimPrizeValue(claim);
   return {
     campaignId: claim.campaignId,
     brand: settings.brand,
     storeName: claim.storeName || settings.storeName,
-    prize: claim.prizeName || 'Prize',
+    prize: publicPrizeLabel(claim),
+    prizeValue,
     redemptionCode: claim.redemptionCode || null,
     expiresAt: flags.expiresAt,
     serverNow: now,
@@ -130,6 +152,8 @@ module.exports = {
   ELIGIBLE_LOOKBACK_MS,
   customerQrSettings,
   armRedemptionWindow,
+  claimPrizeValue,
+  publicPrizeLabel,
   publicCustomerWin,
   publicStaffQrContext,
   redemptionFlags,

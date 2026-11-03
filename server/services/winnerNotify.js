@@ -11,8 +11,9 @@ const {
   niterraPrizeImagePath,
 } = require('../lib/niterraCampaign');
 const { AUDI_CAMPAIGN_ID, AUDI_STORE_NAME, audiPrizeImagePath, isAudiVerificationMethod } = require('../lib/audiCampaign');
+const { isFordClaim } = require('../lib/fordCampaign');
 const { ensureWinnerRedemption, redemptionStatusLabel } = require('./redemption');
-const { customerQrSettings, armRedemptionWindow } = require('../lib/customerQr');
+const { customerQrSettings, armRedemptionWindow, publicPrizeLabel } = require('../lib/customerQr');
 
 function isNiterraClaim(claim) {
   if (!claim) return false;
@@ -115,7 +116,7 @@ function winnerSmsBody(claim) {
     return [
       `Congratulations ${firstName(claim.customerName)}!`,
       ``,
-      `You've won ${claim.prizeName} at ${store}!`,
+      `You've won ${publicPrizeLabel(claim)} at ${store}!`,
       ``,
       `Redeem your prize within ${qr.minutes} minutes.`,
       ``,
@@ -129,8 +130,8 @@ function winnerSmsBody(claim) {
 
   const store = claim.storeName
     || (isAudiClaim(claim) ? AUDI_STORE_NAME : isNiterraClaim(claim) ? NITERRA_STORE_NAME : HOKA_STORE_NAME);
-  const prizeLine = isAudiClaim(claim)
-    ? `You've won ${audiPrizeLabel(claim)} at ${store}.`
+  const prizeLine = (isAudiClaim(claim) || isFordClaim(claim))
+    ? `You've won ${isAudiClaim(claim) ? audiPrizeLabel(claim) : publicPrizeLabel(claim)} at ${store}.`
     : `You've won ${claim.prizeName} at ${store}.`;
   return [
     `Congratulations ${firstName(claim.customerName)}!`,
@@ -204,7 +205,7 @@ function winnerEmailText(claim) {
     `Winner: ${claim.customerName || '—'}`,
     `Mobile: ${maskMobile(claim.mobile)}`,
   ];
-  if (isAudiClaim(claim)) {
+  if (isAudiClaim(claim) || isFordClaim(claim)) {
     lines.push(`Model: ${claim.selectedBrand || '—'}`);
     lines.push(`Contract (last 4 digits): ${claim.receiptNumber || '—'}`);
   } else {
@@ -213,7 +214,7 @@ function winnerEmailText(claim) {
     lines.push(`Purchase Value: $${value}`);
   }
   lines.push(
-    `Prize: ${isAudiClaim(claim) ? audiPrizeLabel(claim) : (claim.prizeName || '—')}`,
+    `Prize: ${isAudiClaim(claim) ? audiPrizeLabel(claim) : publicPrizeLabel(claim)}`,
     `Redemption Code: ${claim.redemptionCode || '—'}`,
     `Status: ${status}`,
     '',
@@ -243,9 +244,10 @@ function winnerEmailHtml(claim) {
   const branding = winnerEmailBranding(claim);
   const store = claim.storeName || branding.defaultStore;
   const status = redemptionStatusLabel(claim.redemptionStatus);
-  const purchaseRows = isAudiClaim(claim)
+  const purchaseRows = (isAudiClaim(claim) || isFordClaim(claim))
     ? `${row('Model', claim.selectedBrand || '—')}${row('Contract (last 4 digits)', claim.receiptNumber || '—')}`
     : `${row('Purchase', claim.selectedBrand || '—')}${row('Purchase Value', `$${Number(claim.spendAmount || 0).toFixed(2)}`)}`;
+  const prizeLabel = isAudiClaim(claim) ? audiPrizeLabel(claim) : publicPrizeLabel(claim);
   const inner = `
     <p style="letter-spacing:0.14em;font-size:12px;color:${branding.accent};margin:0 0 8px;">${escapeHtml(branding.kicker)}</p>
     <h1 style="margin:0 0 20px;font-size:22px;">${escapeHtml(branding.title)}</h1>
@@ -255,7 +257,7 @@ function winnerEmailHtml(claim) {
       ${row('Winner', claim.customerName || '—')}
       ${row('Mobile', maskMobile(claim.mobile))}
       ${purchaseRows}
-      ${row('Prize', isAudiClaim(claim) ? audiPrizeLabel(claim) : (claim.prizeName || '—'))}
+      ${row('Prize', prizeLabel)}
       ${row('Redemption Code', claim.redemptionCode || '—')}
       ${row('Status', status)}
     </table>

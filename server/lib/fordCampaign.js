@@ -22,6 +22,21 @@ function fordVoucherDisplayName() {
   return FORD_VOUCHER_NAME;
 }
 
+/** e.g. "$650 Ford service or accessories voucher" */
+function fordPrizeLabel(prizeName, prizeValue) {
+  const name = prizeName || FORD_VOUCHER_NAME;
+  const value = Number(prizeValue);
+  if (!Number.isFinite(value) || value <= 0) return name;
+  if (/^\$\d/.test(String(name))) return name;
+  return `$${value} ${name}`;
+}
+
+function isFordClaim(claim) {
+  if (!claim) return false;
+  if (claim.campaignId === FORD_CAMPAIGN_ID) return true;
+  return isFordVerificationMethod(claim.verificationMethod);
+}
+
 function fordManifestPrizes() {
   return {
     tier1: FORD_VOUCHER_VALUES.flatMap((value) => ([
@@ -86,8 +101,10 @@ module.exports = {
   FORD_VOUCHER_MAX,
   FORD_VOUCHER_STEP,
   isFordVerificationMethod,
+  isFordClaim,
   fordDemoPrizes,
   fordVoucherDisplayName,
+  fordPrizeLabel,
   fordManifestPrizes,
   validateFordEntryPayload,
 };

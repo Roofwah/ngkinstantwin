@@ -9,7 +9,11 @@ const {
 const { notifyClaimFulfilment } = require('../services/labSession');
 const { HOKA_STORE_NAME, maskMobile } = require('../lib/hokaCampaign');
 const { NITERRA_CAMPAIGN_ID, NITERRA_STORE_NAME } = require('../lib/niterraCampaign');
-const { publicStaffQrContext } = require('../lib/customerQr');
+const {
+  publicStaffQrContext,
+  claimPrizeValue,
+  publicPrizeLabel,
+} = require('../lib/customerQr');
 
 function defaultStoreName(claim) {
   if (claim.campaignId === NITERRA_CAMPAIGN_ID
@@ -21,6 +25,7 @@ function defaultStoreName(claim) {
 
 function publicFulfilment(claim) {
   if (!claim) return null;
+  const prizeValue = claimPrizeValue(claim);
   return {
     campaignId: claim.campaignId || null,
     verificationMethod: claim.verificationMethod || null,
@@ -29,7 +34,8 @@ function publicFulfilment(claim) {
     mobile: maskMobile(claim.mobile),
     purchase: claim.selectedBrand || '—',
     purchaseValue: Number(claim.spendAmount || 0),
-    prize: claim.prizeName || '—',
+    prize: publicPrizeLabel(claim),
+    prizeValue,
     redemptionCode: claim.redemptionCode || '—',
     status: claim.redemptionStatus || 'AWAITING_FULFILMENT',
     statusLabel: redemptionStatusLabel(claim.redemptionStatus),
