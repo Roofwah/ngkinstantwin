@@ -22,9 +22,9 @@ export default {
     storeId: 'hankook-demo',
     location: 'Hankook Demo',
   },
-  qualifyingPurchase: 'Buy 4 Hankook tyres to qualify',
+  qualifyingPurchase: 'Buy 4 Hankook tires to qualify',
   eligibleBrands: ['iON', 'Ventus', 'Dynapro', 'Weatherflex', 'Kinergy'],
-  minSpendHint: '4 tyres required',
+  minSpendHint: '4 tires required',
   qualifyingPurchaseRules: {
     ...DEFAULT_QUALIFYING_RULES,
     defaultAllowDuplicateReceipts: true,
@@ -40,7 +40,7 @@ export default {
   customerMessages: {
     ...DEFAULT_CUSTOMER_MESSAGES,
     welcome: 'Scan the PUK to enter Hankook Instant Win — Driving Emotion',
-    receipt: 'Select your Hankook tyre line and complete entry on phone',
+    receipt: 'Select your Hankook tire line and complete entry on phone',
     outcomeWin: 'Congratulations — you won $200 cashback!',
     outcomeNoWin: 'Thanks for playing',
   },

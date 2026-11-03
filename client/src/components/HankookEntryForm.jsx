@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { sendOtp, verifyOtp } from '../api';
 import HankookEntryShell from './HankookEntryShell';
+import HankookCashbackCounter from './HankookCashbackCounter';
 import StaffWinCode from './StaffWinCode';
 import {
+  HANKOOK_CASHBACK_MAX,
+  HANKOOK_CASHBACK_NAME,
   HANKOOK_VERIFICATION_METHOD,
   hankookLines,
   hankookStoreName,
@@ -55,7 +58,7 @@ export default function HankookEntryForm({ campaign, onComplete }) {
       return;
     }
     if (!tyreLine) {
-      setError('Select the Hankook tyre line you purchased');
+      setError('Select the Hankook tire line you purchased');
       return;
     }
     if (!isValidHankookReceiptTail(receiptTail)) {
@@ -119,7 +122,7 @@ export default function HankookEntryForm({ campaign, onComplete }) {
         <div className="hankook-form">
           <p className="hankook-kicker">Hankook · Driving Emotion</p>
           <h1 className="hankook-title">Instant Win</h1>
-          <p className="hankook-lede">Buy 4 tyres to enter — every valid entry wins $200 cashback.</p>
+          <p className="hankook-lede">Enter your details to reveal your cashback.</p>
 
           {error && <div className="hankook-error" role="alert">{error}</div>}
 
@@ -150,7 +153,7 @@ export default function HankookEntryForm({ campaign, onComplete }) {
             <div className="hankook-store">{storeName}</div>
           </div>
           <div className="hankook-field">
-            <label htmlFor="hankook-line">Hankook tyre line</label>
+            <label htmlFor="hankook-line">Hankook tire line</label>
             <select
               id="hankook-line"
               value={tyreLine}
@@ -251,11 +254,14 @@ export default function HankookEntryForm({ campaign, onComplete }) {
             <p className="hankook-kicker">Hankook Instant Win</p>
             <h1>Congratulations{first ? ` ${first}` : ''}!</h1>
             <p className="hankook-lede hankook-lede--emphasis">You&apos;ve won</p>
-            <div className="hankook-prize">
-              <p className="hankook-prize-name">{reveal?.prizeName || '$200 Cashback'}</p>
-              {reveal?.prizeValue != null && (
-                <p className="hankook-prize-value">${Number(reveal.prizeValue).toFixed(0)} value</p>
-              )}
+            <div className="hankook-prize hankook-prize--reveal">
+              <HankookCashbackCounter
+                key={reveal?.claimId || 'cashback'}
+                value={reveal?.prizeValue ?? HANKOOK_CASHBACK_MAX}
+              />
+              <p className="hankook-cashback-label">
+                {reveal?.prizeName || HANKOOK_CASHBACK_NAME}
+              </p>
             </div>
             <p className="hankook-staff-msg">
               Redemption instructions have been sent to your mobile.

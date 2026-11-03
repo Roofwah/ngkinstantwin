@@ -22,9 +22,9 @@ function validateHankookEntryPayload(body, campaign, deviceRow, allowedLines) {
   }
 
   if (!body.selectedBrand) {
-    errors.push('Select the Hankook tyre line you purchased');
+    errors.push('Select the Hankook tire line you purchased');
   } else if (allowedLines?.length && !allowedLines.includes(body.selectedBrand)) {
-    errors.push('Invalid tyre line for this campaign');
+    errors.push('Invalid tire line for this campaign');
   }
 
   const today = new Date().toISOString().slice(0, 10);

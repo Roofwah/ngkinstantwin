@@ -150,14 +150,14 @@ const CAMPAIGN_UI = {
     idleFallback: '/campaigns/hankook/bg.jpg',
     slides: [
       { headline: 'DRIVING EMOTION', sub: 'Hankook Instant Win', src: '/campaigns/hankook/bg.jpg' },
-      { headline: 'BUY 4 TYRES', sub: 'iON · Ventus · Dynapro · Weatherflex · Kinergy', src: '/campaigns/hankook/bg.jpg' },
+      { headline: 'BUY 4 TIRES', sub: 'iON · Ventus · Dynapro · Weatherflex · Kinergy', src: '/campaigns/hankook/bg.jpg' },
       { headline: '$200 CASHBACK', sub: 'Every valid entry wins', src: '/campaigns/hankook/bg.jpg' },
     ],
     faq: [
-      { q: 'Campaign', a: 'Hankook Instant Win — Driving Emotion. Buy 4 qualifying Hankook tyres.' },
+      { q: 'Campaign', a: 'Hankook Instant Win — Driving Emotion. Buy 4 qualifying Hankook tires.' },
       { q: 'Start date', a: '3 November 2026' },
       { q: 'End date', a: '31 December 2026' },
-      { q: 'How to enter', a: 'Ask staff to issue a QR on this PUK, scan with your phone, select your tyre line, and verify your mobile.' },
+      { q: 'How to enter', a: 'Ask staff to issue a QR on this PUK, scan with your phone, select your tire line, and verify your mobile.' },
       { q: 'Prizes', a: 'Every valid entry wins $200 cashback.' },
       { q: 'On device', a: 'Idle shows Hankook art. Double tap for QR to /enter/hankook.' },
     ],

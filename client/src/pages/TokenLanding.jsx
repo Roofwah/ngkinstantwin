@@ -6,15 +6,18 @@ import InstantWinForm from '../components/InstantWinForm';
 import FordEntryForm from '../components/FordEntryForm';
 import AudiEntryForm from '../components/AudiEntryForm';
 import CastrolEntryForm from '../components/CastrolEntryForm';
+import HankookEntryForm from '../components/HankookEntryForm';
 import HokaEntryForm from '../components/HokaEntryForm';
 import NiterraCrosswordEntryForm from '../components/NiterraCrosswordEntryForm';
 import { FORD_CAMPAIGN_ID } from '../campaigns/ford';
 import { AUDI_CAMPAIGN_ID } from '../campaigns/audi';
 import { CASTROL_CAMPAIGN_ID } from '../campaigns/castrol';
+import { HANKOOK_CAMPAIGN_ID } from '../campaigns/hankook';
 import { HOKA_CAMPAIGN_ID } from '../campaigns/hokaCotswold';
 import { NITERRA_CAMPAIGN_ID } from '../campaigns/niterraRepco';
 import '../campaigns/ford.css';
 import '../campaigns/castrol.css';
+import '../campaigns/hankook.css';
 import '../campaigns/niterra-repco.css';
 import '../campaigns/hoka.css';
 
@@ -81,6 +84,7 @@ export default function TokenLanding() {
       FORD_CAMPAIGN_ID,
       AUDI_CAMPAIGN_ID,
       CASTROL_CAMPAIGN_ID,
+      HANKOOK_CAMPAIGN_ID,
       HOKA_CAMPAIGN_ID,
       NITERRA_CAMPAIGN_ID,
     ].includes(tokenData.campaign?.id);
@@ -145,6 +149,9 @@ export default function TokenLanding() {
   }
   if (campaignId === CASTROL_CAMPAIGN_ID) {
     return <CastrolEntryForm campaign={tokenData.campaign} onComplete={handleComplete} />;
+  }
+  if (campaignId === HANKOOK_CAMPAIGN_ID) {
+    return <HankookEntryForm campaign={tokenData.campaign} onComplete={handleComplete} />;
   }
   if (campaignId === HOKA_CAMPAIGN_ID) {
     return (

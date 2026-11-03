@@ -394,7 +394,7 @@ const DEMO_CAMPAIGNS = [
     name: 'Hankook Instant Win',
     brand: 'Hankook',
     tagline: 'Driving Emotion',
-    mechanic: 'Buy 4 Hankook tyres to qualify',
+    mechanic: 'Buy 4 Hankook tires to qualify',
     startDate: '2026-11-03',
     endDate: '2026-12-31',
     config: {

@@ -248,16 +248,67 @@
   color: #fff;
 }
 
-.hankook-prize-name {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
+.hankook-prize--reveal {
+  padding: 28px 14px 22px;
+  animation: hankookPrizeIn 0.55s ease-out;
 }
 
-.hankook-prize-value {
-  margin: 8px 0 0;
-  font-size: 1rem;
-  opacity: 0.9;
+@keyframes hankookPrizeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.hankook-prize--reveal .hankook-cashback-amount {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  margin: 0 0 14px;
+  min-height: clamp(5.5rem, 30vw, 9rem);
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 700;
+  line-height: 0.85;
+}
+
+.hankook-prize--reveal .hankook-cashback-amount__currency {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(2.8rem, 14vw, 4.5rem);
+  letter-spacing: 0;
+  color: #fff;
+  opacity: 0.85;
+}
+
+.hankook-prize--reveal .hankook-cashback-amount__value {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(6rem, 34vw, 10.5rem);
+  letter-spacing: -0.03em;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.12s ease-out;
+}
+
+.hankook-prize--reveal .hankook-cashback-amount--pulse .hankook-cashback-amount__value {
+  transform: scale(1.05);
+}
+
+.hankook-cashback-label {
+  margin: 0;
+  font-size: clamp(0.88rem, 3.6vw, 1rem);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .hankook-staff-msg {

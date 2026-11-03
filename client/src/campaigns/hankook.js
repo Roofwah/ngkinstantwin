@@ -20,6 +20,11 @@ export const HANKOOK_LINES = [
 
 export const HANKOOK_DEFAULT_STORE = 'Hankook Demo';
 
+export const HANKOOK_CASHBACK_MIN = 50;
+export const HANKOOK_CASHBACK_MAX = 200;
+export const HANKOOK_CASHBACK_STEP = 5;
+export const HANKOOK_CASHBACK_NAME = '$200 Cashback';
+
 export function hankookLandingArt(campaign) {
   return campaign?.config?.landingHeroUrl
     || campaign?.config?.formArtUrl
