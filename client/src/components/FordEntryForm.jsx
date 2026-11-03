@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { sendOtp, verifyOtp } from '../api';
 import FordEntryShell from './FordEntryShell';
+import FordConfetti from './FordConfetti';
 import FordVoucherCounter from './FordVoucherCounter';
 import StaffWinCode from './StaffWinCode';
 import {
@@ -124,6 +125,7 @@ export default function FordEntryForm({
 
   return (
     <FordEntryShell landingSrc={landingSrc} showLanding={showLanding}>
+      <FordConfetti active={step === STEPS.REVEAL && win} />
       {step === STEPS.FORM && (
         <div className="ford-form">
           <p className="ford-kicker">Ford · Go Further</p>
