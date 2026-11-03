@@ -324,10 +324,20 @@ function publicNotifyStatus(status) {
   return status === 'failed' ? 'failed' : 'sent';
 }
 
+/** Keep the mailbox from RESEND_FROM; always show as PUK Instant Win. */
+function resendFromHeader() {
+  const raw = envVal('RESEND_FROM', 'PUK Instant Win <onboarding@resend.dev>');
+  const angled = raw.match(/<([^>]+)>/);
+  const addr = angled
+    ? angled[1].trim()
+    : (raw.includes('@') ? raw.replace(/^.*?\s+/, '').replace(/[<>]/g, '').trim() : 'onboarding@resend.dev');
+  return `PUK Instant Win <${addr}>`;
+}
+
 async function sendWinnerEmail(claim) {
   const apiKey = envVal('RESEND_API_KEY');
   const to = envVal('WINNER_NOTIFY_EMAIL', 'chris@flowmarketing.com.au');
-  const from = envVal('RESEND_FROM', 'PUK Instant Win <onboarding@resend.dev>');
+  const from = resendFromHeader();
   const branding = winnerEmailBranding(claim);
 
   if (!apiKey) {
