@@ -7,17 +7,20 @@ import FordEntryForm from '../components/FordEntryForm';
 import AudiEntryForm from '../components/AudiEntryForm';
 import CastrolEntryForm from '../components/CastrolEntryForm';
 import HankookEntryForm from '../components/HankookEntryForm';
+import TacoBellEntryForm from '../components/TacoBellEntryForm';
 import HokaEntryForm from '../components/HokaEntryForm';
 import NiterraCrosswordEntryForm from '../components/NiterraCrosswordEntryForm';
 import { FORD_CAMPAIGN_ID } from '../campaigns/ford';
 import { AUDI_CAMPAIGN_ID } from '../campaigns/audi';
 import { CASTROL_CAMPAIGN_ID } from '../campaigns/castrol';
 import { HANKOOK_CAMPAIGN_ID } from '../campaigns/hankook';
+import { TACO_BELL_CAMPAIGN_ID } from '../campaigns/tacoBell';
 import { HOKA_CAMPAIGN_ID } from '../campaigns/hokaCotswold';
 import { NITERRA_CAMPAIGN_ID } from '../campaigns/niterraRepco';
 import '../campaigns/ford.css';
 import '../campaigns/castrol.css';
 import '../campaigns/hankook.css';
+import '../campaigns/tacoBell.css';
 import '../campaigns/niterra-repco.css';
 import '../campaigns/hoka.css';
 
@@ -85,6 +88,7 @@ export default function TokenLanding() {
       AUDI_CAMPAIGN_ID,
       CASTROL_CAMPAIGN_ID,
       HANKOOK_CAMPAIGN_ID,
+      TACO_BELL_CAMPAIGN_ID,
       HOKA_CAMPAIGN_ID,
       NITERRA_CAMPAIGN_ID,
     ].includes(tokenData.campaign?.id);
@@ -152,6 +156,9 @@ export default function TokenLanding() {
   }
   if (campaignId === HANKOOK_CAMPAIGN_ID) {
     return <HankookEntryForm campaign={tokenData.campaign} onComplete={handleComplete} />;
+  }
+  if (campaignId === TACO_BELL_CAMPAIGN_ID) {
+    return <TacoBellEntryForm campaign={tokenData.campaign} onComplete={handleComplete} />;
   }
   if (campaignId === HOKA_CAMPAIGN_ID) {
     return (

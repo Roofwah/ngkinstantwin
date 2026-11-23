@@ -1,19 +1,28 @@
 const { hasBirdConfig, getBirdEnv, isOtpDemoMode } = require('./otpMode');
+const {
+  resolveRegion,
+  toE164ForRegion,
+  birdChannelIdForRegion,
+} = require('./regions');
 
+/** @deprecated Prefer toE164ForRegion(mobile, 'AU') */
 function toE164Au(mobile) {
-  const s = String(mobile || '').replace(/[\s\-()]/g, '');
-  if (/^\+61/.test(s)) return s;
-  if (/^04\d{8}$/.test(s)) return '+61' + s.slice(1);
-  return s;
+  return toE164ForRegion(mobile, 'AU');
 }
 
 /**
  * Send a text SMS via Bird. Does not throw to the caller for winner notify —
  * returns { ok, skipped, error }. OTP route can still treat failure as fatal.
+ *
+ * @param {string} mobile
+ * @param {string} text
+ * @param {{ required?: boolean, region?: string }} [opts]
  */
-async function sendBirdSms(mobile, text, { required = false } = {}) {
+async function sendBirdSms(mobile, text, { required = false, region = 'AU' } = {}) {
+  const regionInfo = resolveRegion(region);
+
   if (isOtpDemoMode() && !required) {
-    console.log(`[DEMO] SMS to ${mobile}: ${text}`);
+    console.log(`[DEMO] SMS (${regionInfo.id}) to ${mobile}: ${text}`);
     return { ok: true, skipped: true, demo: true };
   }
 
@@ -22,8 +31,16 @@ async function sendBirdSms(mobile, text, { required = false } = {}) {
     return { ok: false, skipped: true, error: 'Bird not configured' };
   }
 
+  const channelId = birdChannelIdForRegion(regionInfo.id);
+  if (!channelId) {
+    const error = `Bird channel not configured for region ${regionInfo.id} (${regionInfo.birdChannelEnv})`;
+    console.warn(`[bird] ${error}`);
+    return { ok: false, skipped: true, error };
+  }
+
   const bird = getBirdEnv();
-  const url = `https://api.bird.com/workspaces/${bird.workspaceId}/channels/${bird.channelId}/messages`;
+  const e164 = toE164ForRegion(mobile, regionInfo.id);
+  const url = `https://api.bird.com/workspaces/${bird.workspaceId}/channels/${channelId}/messages`;
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -31,7 +48,7 @@ async function sendBirdSms(mobile, text, { required = false } = {}) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      receiver: { contacts: [{ identifierValue: toE164Au(mobile) }] },
+      receiver: { contacts: [{ identifierValue: e164 }] },
       body: { type: 'text', text: { text } },
     }),
   });
@@ -40,7 +57,7 @@ async function sendBirdSms(mobile, text, { required = false } = {}) {
     const error = data.message || data.error || `Bird HTTP ${response.status}`;
     return { ok: false, skipped: false, error };
   }
-  return { ok: true, skipped: false, demo: false };
+  return { ok: true, skipped: false, demo: false, region: regionInfo.id };
 }
 
-module.exports = { sendBirdSms, toE164Au };
+module.exports = { sendBirdSms, toE164Au, toE164ForRegion };

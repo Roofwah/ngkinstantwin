@@ -33,6 +33,15 @@ const {
   validateHankookEntryPayload,
   isHankookVerificationMethod,
 } = require('../lib/hankookCampaign');
+const {
+  validateTacoBellEntryPayload,
+  isTacoBellVerificationMethod,
+} = require('../lib/tacoBellCampaign');
+const {
+  campaignRegion,
+  normaliseMobileForRegion,
+  isValidMobileForRegion,
+} = require('../lib/regions');
 
 function isCrosswordEntry(method) {
   return method === 'niterra_crossword'
@@ -40,7 +49,8 @@ function isCrosswordEntry(method) {
     || isFordVerificationMethod(method)
     || isCastrolVerificationMethod(method)
     || isSmirnoffVerificationMethod(method)
-    || isHankookVerificationMethod(method);
+    || isHankookVerificationMethod(method)
+    || isTacoBellVerificationMethod(method);
 }
 
 function labAllowsDuplicateReceipts(labSessionId) {
@@ -59,10 +69,8 @@ function clearClaimForDuplicateReceipt(invoiceNumber) {
   db.prepare('DELETE FROM claims WHERE receiptNumber = ?').run(invoiceNumber);
 }
 
-function normaliseMobile(mobile) {
-  const s = (mobile || '').replace(/[\s\-()]/g, '');
-  if (/^\+614/.test(s)) return '0' + s.slice(3);
-  return s;
+function normaliseMobile(mobile, regionId = 'AU') {
+  return normaliseMobileForRegion(mobile, regionId);
 }
 
 function normaliseCustomerName(name) {
@@ -206,9 +214,10 @@ function createClaimWithReceipt({
   tokenId,
   tokenRecord,
 }) {
-  const normMobile = normaliseMobile(mobile);
-  if (!/^04\d{8}$/.test(normMobile)) {
-    return { error: 'Invalid mobile number', status: 400 };
+  const region = campaignRegion(campaign);
+  const normMobile = normaliseMobile(mobile, region.id);
+  if (!isValidMobileForRegion(normMobile, region.id)) {
+    return { error: region.invalidMobileMessage || 'Invalid mobile number', status: 400 };
   }
 
   const customerName = normaliseCustomerName(body.customerName);
@@ -242,6 +251,8 @@ function createClaimWithReceipt({
     validated = validateSmirnoffEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else if (isHankookVerificationMethod(body.verificationMethod)) {
     validated = validateHankookEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
+  } else if (isTacoBellVerificationMethod(body.verificationMethod)) {
+    validated = validateTacoBellEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else {
     validated = validateReceiptPayload(body, file);
   }

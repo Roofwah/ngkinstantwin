@@ -140,6 +140,8 @@ const CAMPAIGN_PHONE_ENTRY_PATH = {
   'audi-2026': '/enter/audi-instant-win',
   'hoka-2026': '/enter/hoka',
   'castrol-2026': '/enter/castrol',
+  'hankook-2026': '/enter/hankook',
+  'taco-bell-2026': '/enter/taco-bell',
 };
 
 function phoneEntryPathForSession(session) {

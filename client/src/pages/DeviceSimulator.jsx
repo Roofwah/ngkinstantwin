@@ -6,6 +6,10 @@ import { getPukHardware, listPukHardware, pukHardwarePath } from '../config/pukH
 
 const PROD_BASE = 'https://pure-random-instant-win-production.up.railway.app';
 
+/** Same wait art as firmware `/spiffs/qrbuild.mjpeg` (web MP4 remux). */
+const QRBUILD_SRC = '/dev/puk/qrbuild.mp4';
+const QRBUILD_MS = 1600;
+
 const CAMPAIGN_ENTER_PATH = {
   'niterra-ngk-2026': '/enter/repco',
   'hoka-2026': '/enter/hoka',
@@ -13,6 +17,7 @@ const CAMPAIGN_ENTER_PATH = {
   'ford-2026': '/enter/ford',
   'castrol-2026': '/enter/castrol',
   'hankook-2026': '/enter/hankook',
+  'taco-bell-2026': '/enter/taco-bell',
 };
 
 function campaignEnterPath(campaignId) {
@@ -160,6 +165,25 @@ const CAMPAIGN_UI = {
       { q: 'How to enter', a: 'Ask staff to issue a QR on this PUK, scan with your phone, select your tire line, and verify your mobile.' },
       { q: 'Prizes', a: 'Every valid entry wins $200 cashback.' },
       { q: 'On device', a: 'Idle shows Hankook art. Double tap for QR to /enter/hankook.' },
+    ],
+  },
+  'taco-bell-2026': {
+    sub: 'Live Más · US',
+    color: '#702382',
+    qrBg: '/campaigns/taco-bell/bg.svg',
+    idleFallback: '/campaigns/taco-bell/bg.svg',
+    slides: [
+      { headline: 'TACO BELL', sub: 'Instant Win · United States', src: '/campaigns/taco-bell/bg.svg' },
+      { headline: 'SCAN TO PLAY', sub: 'Verify with your US mobile', src: '/campaigns/taco-bell/bg.svg' },
+      { headline: 'WIN INSTANTLY', sub: 'Crunchwrap · Credit · More', src: '/campaigns/taco-bell/bg.svg' },
+    ],
+    faq: [
+      { q: 'Campaign', a: 'Taco Bell Instant Win — US market. Buy a participating menu item.' },
+      { q: 'Start date', a: '10 November 2026' },
+      { q: 'End date', a: '31 December 2026' },
+      { q: 'How to enter', a: 'Scan the PUK QR, enter a US mobile for OTP, select your menu item, and reveal.' },
+      { q: 'Prizes', a: 'Free Crunchwrap Supreme or $5 Taco Bell Credit.' },
+      { q: 'On device', a: 'Idle shows Taco Bell art. Double tap for QR to /enter/taco-bell.' },
     ],
   },
   'hoka-2026': {
@@ -354,12 +378,19 @@ export default function DeviceSimulator() {
     setTimeLeft(null);
     setDeviceState(STATE.GENERATING);
     setErrorMsg('');
+    const generateStarted = Date.now();
 
     try {
       const staticPuk2Qr = hw.id === 'puk2';
       const data = staticPuk2Qr
         ? { token: DEVICE_CODE, url: enterUrl }
         : await issueToken(DEVICE_CODE);
+      // Hold qrbuild for at least one full play (firmware play_retain feel)
+      const holdMs = Math.max(0, QRBUILD_MS - (Date.now() - generateStarted));
+      if (holdMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, holdMs));
+      }
+      if (stateRef.current !== STATE.GENERATING) return;
       setTokenData(data);
       setDeviceState(STATE.READY);
       blinkLed('#00e676');
@@ -1053,22 +1084,9 @@ function ScreenContent({
     return <IdleSlideshow campaign={campaign} tapPending={tapPending} />;
   }
 
-  // ── GENERATING ────────────────────────────────────────
+  // ── GENERATING — firmware qrbuild wait ────────────────
   if (state === STATE.GENERATING) {
-    return (
-      <div style={{ ...base, gap: 18 }}>
-        <div style={{
-          width: 40, height: 40,
-          border: '2px solid #1a1a1a',
-          borderTopColor: campaign.color,
-          borderRadius: '50%',
-          animation: 'spin 0.9s linear infinite',
-        }} />
-        <div style={{ fontFamily: 'monospace', fontSize: 8, letterSpacing: '0.16em', color: '#2a2a2a' }}>
-          GENERATING...
-        </div>
-      </div>
-    );
+    return <QrbuildWait screenW={screenW} screenH={screenH} />;
   }
 
   // ── READY / SCANNED ───────────────────────────────────
@@ -1082,7 +1100,14 @@ function ScreenContent({
     const qrModuleBg = qrPadBg || (qrBg ? 'transparent' : (isScanned ? '#040d04' : '#ffffff'));
 
     return (
-      <div style={{ ...base, justifyContent: 'space-between', padding: qrBg ? 0 : '16px 0 32px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{
+        ...base,
+        justifyContent: 'space-between',
+        padding: qrBg ? 0 : '16px 0 32px',
+        position: 'relative',
+        overflow: 'hidden',
+        animation: state === STATE.READY ? 'pukQrSoftIn 0.45s ease-out' : undefined,
+      }}>
         {qrBg && (
           <img
             src={qrBg}
@@ -1096,6 +1121,12 @@ function ScreenContent({
           />
         )}
 
+        <style>{`
+          @keyframes pukQrSoftIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+          }
+        `}</style>
         <div style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', width: '100%', height: '100%', padding: qrBg ? '16px 0 32px' : undefined }}>
         {!qrBg && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
@@ -1217,6 +1248,67 @@ function ScreenContent({
   }
 
   return null;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// GENERATING — firmware qrbuild preload (white + black Lottie remux)
+// ─────────────────────────────────────────────────────────────────
+function QrbuildWait({ screenW, screenH }) {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return undefined;
+    el.currentTime = 0;
+    const play = el.play();
+    if (play && typeof play.catch === 'function') play.catch(() => {});
+    return () => {
+      try { el.pause(); } catch { /* ignore */ }
+    };
+  }, []);
+
+  return (
+    <div style={{
+      width: '100%',
+      height: '100%',
+      background: '#ffffff',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      <video
+        ref={videoRef}
+        src={QRBUILD_SRC}
+        muted
+        playsInline
+        preload="auto"
+        // Play once, hold last frame (firmware play_retain)
+        onEnded={(e) => {
+          try {
+            const v = e.currentTarget;
+            v.pause();
+            if (v.duration && Number.isFinite(v.duration)) {
+              v.currentTime = Math.max(0, v.duration - 0.04);
+            }
+          } catch { /* ignore */ }
+        }}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: screenW ? '100%' : '100%',
+          height: screenH ? '100%' : '100%',
+          objectFit: 'cover',
+          background: '#ffffff',
+          pointerEvents: 'none',
+        }}
+      />
+      <style>{`
+        @keyframes pukQrSoftIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────

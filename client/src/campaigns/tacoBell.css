@@ -1,0 +1,299 @@
+/* Taco Bell Instant Win — US market */
+.taco-bell-page {
+  --tb-purple: #702382;
+  --tb-purple-dark: #4a155c;
+  --tb-gold: #fbbf24;
+  --tb-text: #1a1a1a;
+  --tb-muted: #4d4d4d;
+  --tb-input-border: #6e6e6e;
+  --tb-bg: #f7f4fb;
+  min-height: 100dvh;
+  background: var(--tb-bg);
+  color: var(--tb-text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.taco-bell-page * {
+  box-sizing: border-box;
+}
+
+.taco-bell-landing {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.taco-bell-landing__art {
+  width: 100%;
+  height: min(40svh, 280px);
+  display: block;
+  object-fit: cover;
+  object-position: center top;
+  background: var(--tb-purple);
+}
+
+.taco-bell-landing__fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 50%;
+  background: linear-gradient(180deg, transparent 0%, rgba(247, 244, 251, 0.65) 55%, var(--tb-bg) 100%);
+  pointer-events: none;
+}
+
+.taco-bell-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+.taco-bell-page--landing .taco-bell-container {
+  margin-top: -1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.taco-bell-card {
+  width: 100%;
+  padding: 28px 24px 36px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 10px 24px rgba(74, 21, 92, 0.12);
+  border-top: 4px solid var(--tb-purple);
+}
+
+.taco-bell-page--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+}
+
+.taco-bell-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(112, 35, 130, 0.2);
+  border-top-color: var(--tb-purple);
+  border-radius: 50%;
+  animation: tacoBellSpin 0.8s linear infinite;
+}
+
+@keyframes tacoBellSpin {
+  to { transform: rotate(360deg); }
+}
+
+.taco-bell-unavailable {
+  text-align: center;
+  padding: 24px;
+  background: #fff;
+  border-radius: 4px;
+  max-width: 360px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.taco-bell-unavailable h2 {
+  margin: 0 0 8px;
+  font-size: 1.125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tb-purple-dark);
+}
+
+.taco-bell-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tb-muted);
+}
+
+.taco-bell-title {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--tb-purple-dark);
+}
+
+.taco-bell-lede {
+  margin: 0 0 24px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--tb-muted);
+}
+
+.taco-bell-form {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.taco-bell-field {
+  margin-bottom: 16px;
+}
+
+.taco-bell-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--tb-purple-dark);
+}
+
+.taco-bell-field input,
+.taco-bell-field select {
+  width: 100%;
+  height: 50px;
+  padding: 8px 12px;
+  border: 1px solid var(--tb-input-border);
+  border-radius: 4px;
+  background: #fff;
+  font-size: 16px;
+}
+
+.taco-bell-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%234a155c' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.taco-bell-store {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  padding: 0 12px;
+  border: 1px solid var(--tb-input-border);
+  border-radius: 4px;
+  background: #f7f4fb;
+  font-size: 15px;
+}
+
+.taco-bell-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 48px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--tb-purple);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.taco-bell-cta:hover {
+  background: var(--tb-purple-dark);
+}
+
+.taco-bell-cta:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.taco-bell-ghost {
+  width: 100%;
+  margin-top: 16px;
+  background: transparent;
+  border: 0;
+  color: var(--tb-purple-dark);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.taco-bell-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b00;
+  font-size: 14px;
+}
+
+.taco-bell-demo {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  font-size: 14px;
+}
+
+.taco-bell-legal {
+  margin-top: 20px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--tb-muted);
+}
+
+.taco-bell-result h1 {
+  margin: 0 0 12px;
+  font-size: 1.5rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tb-purple-dark);
+}
+
+.taco-bell-lede--emphasis {
+  font-weight: 600;
+  color: var(--tb-purple-dark);
+}
+
+.taco-bell-prize {
+  margin: 20px 0;
+  padding: 24px 16px;
+  border-radius: 4px;
+  text-align: center;
+  background: var(--tb-purple-dark);
+  color: #fff;
+}
+
+.taco-bell-prize-name {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.taco-bell-prize-value {
+  margin: 8px 0 0;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.taco-bell-staff-msg {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.taco-bell-ref {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.taco-bell-ref__label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.taco-bell-code {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--tb-purple-dark);
+}

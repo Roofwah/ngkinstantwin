@@ -12,6 +12,7 @@ import AudiInstantWinEnter from './pages/AudiInstantWinEnter';
 import FordInstantWinEnter from './pages/FordInstantWinEnter';
 import CastrolInstantWinEnter from './pages/CastrolInstantWinEnter';
 import HankookInstantWinEnter from './pages/HankookInstantWinEnter';
+import TacoBellInstantWinEnter from './pages/TacoBellInstantWinEnter';
 import DeviceSimulator from './pages/DeviceSimulator';
 import Lab from './pages/Lab';
 import LabDisplay from './pages/LabDisplay';
@@ -53,6 +54,7 @@ export default function App() {
         <Route path="/enter/castrol"        element={<CastrolInstantWinEnter />} />
         <Route path="/enter/hoka"           element={<Navigate to="/enter?campaign=hoka-2026" replace />} />
         <Route path="/enter/hankook"        element={<HankookInstantWinEnter />} />
+        <Route path="/enter/taco-bell"      element={<TacoBellInstantWinEnter />} />
         <Route path="/demo/device"         element={<DeviceSimulator />} />
         <Route path="/demo/device/:hwId"   element={<DeviceSimulator />} />
         <Route path="/lab"                 element={<Lab />} />

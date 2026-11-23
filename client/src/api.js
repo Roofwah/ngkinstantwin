@@ -6,8 +6,26 @@ function adminHeaders(extra = {}) {
 }
 
 async function handleResponse(res) {
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  const text = await res.text();
+  let data = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(
+        res.ok
+          ? 'Server returned an invalid response'
+          : `Request failed (HTTP ${res.status})`,
+      );
+    }
+  } else if (!res.ok) {
+    throw new Error(
+      res.status === 502 || res.status === 503
+        ? 'API unavailable — ensure the backend is running (npm run dev in prmockup/)'
+        : `Request failed (HTTP ${res.status})`,
+    );
+  }
+  if (!res.ok) throw new Error(data?.error || `HTTP ${res.status}`);
   return data;
 }
 
@@ -30,20 +48,20 @@ export async function revealClaim(claimId) {
 
 // ─── OTP API ──────────────────────────────────────────────────────
 
-export async function sendOtp(mobile) {
+export async function sendOtp(mobile, region = 'AU') {
   const res = await fetch(`${BASE}/otp/send`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ mobile }),
+    body: JSON.stringify({ mobile, region }),
   });
   return handleResponse(res);
 }
 
-export async function verifyOtp(mobile, code) {
+export async function verifyOtp(mobile, code, region = 'AU') {
   const res = await fetch(`${BASE}/otp/verify`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ mobile, code }),
+    body: JSON.stringify({ mobile, code, region }),
   });
   return handleResponse(res);
 }
@@ -100,6 +118,27 @@ export async function updateLabSessionRules(sessionId, rules) {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(rules),
+  });
+  return handleResponse(res);
+}
+
+export async function getLabCampaignDetails(campaignId) {
+  const qs = campaignId ? `?campaignId=${encodeURIComponent(campaignId)}` : '';
+  const res = await fetch(`${BASE}/lab/campaign-details${qs}`);
+  return handleResponse(res);
+}
+
+export async function getLabManifestInfo(campaignId) {
+  const qs = campaignId ? `?campaignId=${encodeURIComponent(campaignId)}` : '';
+  const res = await fetch(`${BASE}/lab/manifest-info${qs}`);
+  return handleResponse(res);
+}
+
+export async function generateLabManifest(sessionId, windowHours = 24) {
+  const res = await fetch(`${BASE}/lab/session/${encodeURIComponent(sessionId)}/generate-manifest`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ windowHours }),
   });
   return handleResponse(res);
 }
@@ -221,12 +260,21 @@ export async function getFulfilment(token) {
   return handleResponse(res);
 }
 
-export async function completeFulfilment(token, fulfilledBy) {
+export async function completeFulfilment(token, fulfilledBy, outcome = 'fulfilled', options = {}) {
   const res = await fetch(`${BASE}/fulfil/${encodeURIComponent(token)}/complete`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fulfilledBy }),
+    body: JSON.stringify({
+      fulfilledBy,
+      outcome,
+      overrideExpired: options.overrideExpired === true,
+    }),
   });
+  return handleResponse(res);
+}
+
+export async function getWinnerPage(token) {
+  const res = await fetch(`${BASE}/win/${encodeURIComponent(token)}`);
   return handleResponse(res);
 }
 

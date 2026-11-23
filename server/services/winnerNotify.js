@@ -1,6 +1,7 @@
 const db = require('../db');
 const { log } = require('./auditLogger');
 const { sendBirdSms } = require('../lib/birdSms');
+const { campaignRegion } = require('../lib/regions');
 const { getBaseUrl, getLanIpv4 } = require('../lib/baseUrl');
 const { HOKA_STORE_NAME, maskMobile } = require('../lib/hokaCampaign');
 const {
@@ -406,8 +407,19 @@ async function notifyHokaWinner(claimId) {
   let emailStatus = 'failed';
   const errors = [];
 
+  let notifyRegion = 'AU';
+  try {
+    const campRow = claim.campaignId
+      ? db.prepare('SELECT config FROM campaigns WHERE id = ?').get(claim.campaignId)
+      : null;
+    const campConfig = campRow?.config ? JSON.parse(campRow.config) : {};
+    notifyRegion = campaignRegion({ config: campConfig }).id;
+  } catch {
+    notifyRegion = 'AU';
+  }
+
   const [smsResult, emailResult] = await Promise.allSettled([
-    sendBirdSms(claim.mobile, winnerSmsBody(claim), { required: true }),
+    sendBirdSms(claim.mobile, winnerSmsBody(claim), { required: true, region: notifyRegion }),
     sendWinnerEmail(claim),
   ]);
 

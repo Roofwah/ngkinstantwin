@@ -155,6 +155,7 @@ const { audiDemoPrizes } = require('./lib/audiCampaign');
 const { fordDemoPrizes } = require('./lib/fordCampaign');
 const { castrolDemoPrizes } = require('./lib/castrolCampaign');
 const { smirnoffDemoPrizes } = require('./lib/smirnoffCampaign');
+const { tacoBellDemoPrizes } = require('./lib/tacoBellCampaign');
 
 const DEMO_CAMPAIGNS = [
   {
@@ -399,6 +400,7 @@ const DEMO_CAMPAIGNS = [
     endDate: '2026-12-31',
     config: {
       themeColor: '#db5200',
+      region: 'AU',
       eligibleBrands: ['iON', 'Ventus', 'Dynapro', 'Weatherflex', 'Kinergy'],
       defaultStoreName: 'Hankook Demo',
       defaultStoreCode: 'hankook-demo',
@@ -417,6 +419,42 @@ const DEMO_CAMPAIGNS = [
         prizes: [
           { name: '$200 Cashback', value: 200, qty: 500 },
         ],
+      },
+    },
+  },
+  {
+    id: 'taco-bell-2026',
+    name: 'Taco Bell Instant Win',
+    brand: 'Taco Bell',
+    tagline: 'Live Más — Instant Win',
+    mechanic: 'Buy a participating Taco Bell menu item and enter',
+    startDate: '2026-11-10',
+    endDate: '2026-12-31',
+    config: {
+      themeColor: '#702382',
+      region: 'US',
+      entryVariant: 'taco-bell-instant-win',
+      entryPath: '/enter/taco-bell',
+      eligibleBrands: [
+        'Crunchwrap Supreme',
+        'Doritos Locos Tacos',
+        'Burrito',
+        'Quesadilla',
+        'Nachos',
+      ],
+      defaultStoreName: 'Taco Bell Demo',
+      defaultStoreCode: 'taco-bell-demo',
+      retailer: 'Taco Bell',
+      formArtUrl: '/campaigns/taco-bell/bg.svg',
+      landingHeroUrl: '/campaigns/taco-bell/bg.svg',
+      heroImageUrl: '/campaigns/taco-bell/bg.svg',
+      qrBgUrl: '/campaigns/taco-bell/bg.svg',
+      demoControl: {
+        enabled: true,
+        winEvery: 1,
+        sweepstakesOnLose: false,
+        claimOffset: 0,
+        prizes: tacoBellDemoPrizes(),
       },
     },
   },
@@ -515,7 +553,14 @@ for (const c of DEMO_CAMPAIGNS) {
                       claimOffset: prev.demoControl?.claimOffset || 0,
                     },
                   }
-                : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
+                : c.id === 'taco-bell-2026' && c.config.demoControl
+                  ? {
+                      demoControl: {
+                        ...c.config.demoControl,
+                        claimOffset: prev.demoControl?.claimOffset || 0,
+                      },
+                    }
+                  : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
   };
   if ([
     'niterra-ngk-2026',
@@ -524,6 +569,7 @@ for (const c of DEMO_CAMPAIGNS) {
     'ford-2026',
     'audi-2026',
     'hankook-2026',
+    'taco-bell-2026',
     'smirnoff-2026',
     'puk-demo',
   ].includes(c.id)) {
