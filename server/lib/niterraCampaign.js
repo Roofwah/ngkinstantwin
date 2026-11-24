@@ -1,5 +1,8 @@
 const NITERRA_CAMPAIGN_ID = 'niterra-ngk-2026';
 const NITERRA_STORE_NAME = 'Repco Waurn Ponds';
+const NITERRA_EMAIL_HERO_PATH = '/campaigns/niterra/iwbg.png';
+/** Store email + web fulfil column (between full-bleed and phone mockup). */
+const NITERRA_LAYOUT_MAX_PX = 600;
 const DEFAULT_MIN_SPEND = 50;
 
 function niterraMinSpend(campaign) {
@@ -51,6 +54,8 @@ function validateNiterraCrosswordPayload(body, campaign, deviceRow, allowedBrand
 module.exports = {
   NITERRA_CAMPAIGN_ID,
   NITERRA_STORE_NAME,
+  NITERRA_EMAIL_HERO_PATH,
+  NITERRA_LAYOUT_MAX_PX,
   niterraMinSpend,
   niterraPrizeImagePath,
   validateNiterraCrosswordPayload,

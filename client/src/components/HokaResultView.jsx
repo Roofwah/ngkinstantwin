@@ -34,9 +34,8 @@ export default function HokaResultView({ claim }) {
             )}
             <strong>{claim?.prizeName || 'an instant prize'}</strong>
           </div>
-          <p className="hoka-lede">
-            We’ve sent your redemption instructions to your mobile.
-            Show that message — and this code — to a staff member.
+          <p className="hoka-staff-msg">
+            Show this message to a staff member to redeem your prize.
           </p>
           {claim?.redemptionCode && (
             <div className="hoka-code">{claim.redemptionCode}</div>

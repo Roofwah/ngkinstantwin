@@ -25,8 +25,8 @@ const STAGE_SCREENS = {
     icon: '🔍',
   },
   purchase_validated: {
-    title: 'Purchase validated',
-    body: 'Eligible products and amount confirmed',
+    title: 'Purchase details',
+    body: 'Item and spend entered on phone',
     icon: '✓',
   },
   submitting: {
@@ -45,13 +45,23 @@ const STAGE_SCREENS = {
     icon: null,
   },
   prize_allocated: {
-    title: 'Scratch card',
-    body: 'Reveal your result on device',
+    title: 'Result revealed',
+    body: 'Instant win outcome shown on phone',
     icon: '✨',
   },
   reporting: {
     title: 'Complete',
     body: 'Your result is on your phone',
+    icon: '✓',
+  },
+  store_email_sent: {
+    title: 'Store notified',
+    body: 'Email sent to store inbox',
+    icon: '📧',
+  },
+  prize_fulfilled: {
+    title: 'Complete',
+    body: null,
     icon: '✓',
   },
 };
@@ -67,7 +77,10 @@ function outcomeBody(session, config) {
 export default function CustomerLivePanel({ session, config }) {
   const stage = session?.stage || 'entry_opened';
   const screen = STAGE_SCREENS[stage] || STAGE_SCREENS.entry_opened;
-  const isOutcome = stage === 'instant_win_outcome' || (session?.result && stage !== 'reporting');
+  const isOutcome = stage === 'instant_win_outcome'
+    || (session?.result && stage !== 'reporting' && stage !== 'store_email_sent' && stage !== 'prize_fulfilled' && stage !== 'prize_allocated');
+  const isFulfilComplete = session?.isWinner && stage === 'prize_fulfilled';
+  const isSweepstakesComplete = !session?.isWinner && session?.result && stage === 'prize_allocated';
 
   return (
     <div className="lab-live-panel">
@@ -76,7 +89,23 @@ export default function CustomerLivePanel({ session, config }) {
         <span className="lab-live-panel__signals">●●●</span>
       </div>
       <div className="lab-live-panel__content">
-        {isOutcome && session?.result ? (
+        {isSweepstakesComplete ? (
+          <>
+            <div className="lab-live-panel__icon">📋</div>
+            <h3 className="lab-live-panel__title">Journey complete</h3>
+            <p className="lab-live-panel__body">
+              {config?.customerMessages?.outcomeNoWin || 'Weekly draw entry confirmed'}
+            </p>
+          </>
+        ) : isFulfilComplete ? (
+          <>
+            <div className="lab-live-panel__icon lab-live-panel__icon--win">✓</div>
+            <h3 className="lab-live-panel__title">Journey complete</h3>
+            <p className="lab-live-panel__body">
+              {session.redemptionStatusLabel || 'Fulfilment confirmed in store'}
+            </p>
+          </>
+        ) : isOutcome && session?.result ? (
           <>
             <div className={`lab-live-panel__icon ${session.isWinner ? 'lab-live-panel__icon--win' : ''}`}>
               {session.isWinner ? '🎉' : '📋'}
@@ -90,7 +119,11 @@ export default function CustomerLivePanel({ session, config }) {
           <>
             <div className="lab-live-panel__icon">{screen.icon}</div>
             <h3 className="lab-live-panel__title">{screen.title}</h3>
-            <p className="lab-live-panel__body">{screen.body}</p>
+            <p className="lab-live-panel__body">
+              {stage === 'store_email_sent' && session?.redemptionStatusLabel
+                ? `${screen.body} · ${session.redemptionStatusLabel}`
+                : screen.body}
+            </p>
           </>
         )}
         {session?.mobileMasked && (

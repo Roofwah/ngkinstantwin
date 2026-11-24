@@ -1,0 +1,357 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+.fw-page {
+  min-height: 100dvh;
+  margin: 0;
+  background: #1a1a1a;
+  color: #c8c8c8;
+  font-family: Montserrat, Arial, Helvetica, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px 32px;
+  box-sizing: border-box;
+}
+
+.fw-page * { box-sizing: border-box; }
+
+.fw-note {
+  max-width: 520px;
+  margin: 0 0 16px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.fw-note a { color: #00c8ff; }
+
+.fw-stage {
+  width: 320px;
+  height: calc(480px * var(--fw-scale, 1));
+}
+
+.fw-panel {
+  width: 320px;
+  height: 480px;
+  position: relative;
+  overflow: hidden;
+  background: #030304;
+  color: #ececf0;
+  transform: scale(var(--fw-scale, 1));
+  transform-origin: top center;
+  user-select: none;
+  touch-action: none;
+}
+
+.fw-boot, .fw-idle, .fw-qr, .fw-full {
+  position: absolute;
+  inset: 0;
+}
+
+.fw-glow {
+  position: absolute;
+  left: 50%;
+  top: 46px;
+  width: 170px;
+  height: 170px;
+  margin-left: -85px;
+  border-radius: 50%;
+  background: #00c8ff;
+  opacity: 0.3;
+  animation: fw-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes fw-pulse {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.5; }
+}
+
+.fw-logo {
+  position: absolute;
+  left: 50%;
+  top: 56px;
+  width: 150px;
+  height: 150px;
+  margin-left: -75px;
+  object-fit: contain;
+}
+
+.fw-center {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  text-align: center;
+}
+
+.fw-status {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 64px;
+  text-align: center;
+  color: #00c8ff;
+  font-size: 18px;
+}
+
+.fw-status--ready { color: #00cc44; }
+
+.fw-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 36px;
+  width: 168px;
+  height: 4px;
+  margin-left: -84px;
+  background: #1a1a1a;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.fw-bar > span {
+  display: block;
+  height: 100%;
+  background: #00c8ff;
+  border-radius: 2px;
+}
+
+.fw-video, .fw-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  background: #000;
+}
+
+.fw-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(3, 3, 5, 0.82);
+}
+
+.fw-close {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
+  color: #ececf0;
+  font-size: 20px;
+  line-height: 1;
+  z-index: 2;
+}
+
+.fw-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.fw-row {
+  position: absolute;
+  left: 20px;
+  width: 280px;
+  height: 46px;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ececf0;
+  font-family: inherit;
+  font-size: 18px;
+  text-align: left;
+  padding: 0 36px 0 12px;
+}
+
+.fw-row span {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #5c5c66;
+}
+
+.fw-body {
+  position: absolute;
+  color: #8b8b96;
+  font-size: 14px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+
+.fw-legal-box {
+  position: absolute;
+  left: 18px;
+  top: 82px;
+  width: 284px;
+  height: 280px;
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #8b8b96;
+  font-size: 14px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+
+.fw-scan-label {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 110px;
+  text-align: center;
+  color: #fff;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 2px #000, 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000;
+}
+
+.fw-play-pad,
+.fw-qr-pad {
+  position: absolute;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fw-play-pad {
+  left: 36px;
+  top: 148px;
+  width: 248px;
+  height: 248px;
+}
+
+.fw-qr-pad {
+  left: 48px;
+  top: 150px;
+  width: 224px;
+  height: 224px;
+}
+
+.fw-cd {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 424px;
+  text-align: center;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px #000, 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000;
+}
+
+.fw-on-photo .fw-title {
+  color: #fff;
+  text-shadow: 0 1px 2px #000, 1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000;
+}
+
+.fw-on-photo .fw-row {
+  background: rgba(255, 255, 255, 0.78);
+  color: #111;
+}
+
+.fw-on-photo .fw-row span { color: #333; }
+
+.fw-on-photo .fw-legal-box {
+  background: rgba(255, 255, 255, 0.86);
+  color: #111;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.fw-old-btn {
+  display: block;
+  width: calc(100% - 8px);
+  min-height: 48px;
+  margin: 0 0 8px;
+  border: 1px solid #00c8ff;
+  border-radius: 8px;
+  background: #141414;
+  color: #fff;
+  font-family: inherit;
+  font-size: 16px;
+}
+
+.fw-old-btn--on { border-width: 2px; border-color: #ff9900; }
+
+.fw-list {
+  position: absolute;
+  left: 12px;
+  top: 84px;
+  width: 296px;
+  height: 300px;
+  overflow: auto;
+}
+
+.fw-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  text-align: center;
+  color: #8b8b96;
+  font-size: 18px;
+}
+
+.fw-dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 112px;
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+}
+
+.fw-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(236, 236, 240, 0.4);
+  background: rgba(236, 236, 240, 0.2);
+}
+
+.fw-dot--on { background: #ececf0; }
+.fw-dot--bad { background: #ff3333; border-color: #ff3333; }
+
+.fw-keys {
+  position: absolute;
+  left: 50%;
+  top: 188px;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: 84px 84px 84px;
+  gap: 12px;
+}
+
+.fw-key {
+  width: 84px;
+  height: 56px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ececf0;
+  font-family: inherit;
+  font-size: 26px;
+}
+
+.fw-key:active { background: rgba(255, 255, 255, 0.3); }
+
+.fw-replay {
+  margin-top: 14px;
+  background: transparent;
+  color: #ececf0;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-family: inherit;
+}

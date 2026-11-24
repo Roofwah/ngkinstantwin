@@ -1,15 +1,17 @@
-/** PUK access point — stub for future Cotswold-style campaigns */
+import { formatAccessPointLabel, resolveAccessPointFromConfig } from '../accessPointLabel';
+
+/** PUK desk unit — double-tap on physical panel issues demo QR; Lab phone runs the journey. */
 export default function PukAccess({ config }) {
+  const ap = resolveAccessPointFromConfig(config);
+  const label = formatAccessPointLabel(ap);
+  const deviceCode = config?.deviceCode || 'PR-PUK2-001';
+
   return (
     <div className="lab-access-puk">
-      <div style={{ fontSize: '2rem', marginBottom: 8 }}>⌚</div>
-      <div style={{ fontWeight: 700, color: '#f4f7fb', marginBottom: 6 }}>PUK Access Point</div>
-      <p style={{ margin: 0 }}>
-        {config?.campaignName || 'Campaign'} — wrist device issues dynamic QR.
-      </p>
-      <p style={{ margin: '8px 0 0', fontSize: '0.78rem' }}>
-        Configure <code style={{ color: '#00c8ff' }}>accessPointType: &apos;puk&apos;</code> to enable.
-      </p>
+      <div className="lab-access-puk__label">
+        {label || `${config?.retailer || 'Store'} — PUK desk unit`}
+      </div>
+      <div className="lab-access-qr__code">{deviceCode}</div>
     </div>
   );
 }

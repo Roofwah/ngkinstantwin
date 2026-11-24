@@ -1,0 +1,36 @@
+/* Niterra on shared white Ford entry shell — Repco orange accent */
+.ford-page--niterra .ford-cta::before {
+  background: #e86600;
+}
+
+.ford-page--niterra .ford-cta:hover::before {
+  background: #c75800;
+}
+
+.ford-page--niterra .ford-prize--reveal {
+  background: #071428;
+  border-color: rgba(232, 102, 0, 0.35);
+}
+
+.ford-page--niterra .ford-prize-art {
+  display: block;
+  width: min(220px, 70%);
+  max-height: 200px;
+  margin: 12px auto;
+  object-fit: contain;
+}
+
+.ford-page--niterra .ford-sweepstakes {
+  margin: 18px 0 8px;
+  padding: 14px 16px;
+  border: 1px solid rgba(232, 102, 0, 0.28);
+  border-radius: 4px;
+  color: #e86600;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ford-page--niterra .ford-code {
+  color: #e86600;
+}

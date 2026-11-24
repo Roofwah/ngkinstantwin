@@ -11,6 +11,7 @@ import {
 import { getLabCampaign } from '../config/labCampaigns';
 import { resolveAccessPointFromConfig } from '../lab/accessPointLabel';
 import LabCampaignPicker from '../lab/LabCampaignPicker';
+import LabNav from '../lab/LabNav';
 import LabShell from '../lab/LabShell';
 import '../lab/lab.css';
 
@@ -41,13 +42,17 @@ export default function Lab() {
   const autoReportedRef = useRef(false);
 
   useEffect(() => {
+    document.title = 'Turnstyle Lab';
+  }, []);
+
+  useEffect(() => {
     if (!config) return undefined;
 
     let cancelled = false;
 
     async function boot() {
       try {
-        await setDemoCampaign(config.campaignId);
+        setDemoCampaign(config.campaignId).catch(() => {});
 
         const storedId = sessionStorage.getItem(SESSION_ID_KEY);
         const storedConfigId = sessionStorage.getItem(SESSION_CONFIG_KEY);
@@ -64,11 +69,19 @@ export default function Lab() {
               ? await syncLabSessionAccessPoint(storedId, accessPoint)
               : existing;
             if (!rulesMatchConfig(synced, defaultRules)) {
-              synced = await updateLabSessionRules(storedId, defaultRules);
+              try {
+                synced = await updateLabSessionRules(storedId, defaultRules);
+              } catch {
+                sessionStorage.removeItem(SESSION_ID_KEY);
+                sessionStorage.removeItem(SESSION_CONFIG_KEY);
+                synced = null;
+              }
             }
-            if (!cancelled) {
-              setSession(synced);
-              return;
+            if (synced) {
+              if (!cancelled) {
+                setSession(synced);
+                return;
+              }
             }
           } catch {
             sessionStorage.removeItem(SESSION_ID_KEY);
@@ -78,6 +91,7 @@ export default function Lab() {
 
         const created = await createLabSession({
           labConfigId: config.configId,
+          labMode: config.labMode || 'customer',
           campaignId: config.campaignId,
           campaignName: config.campaignName,
           retailer: config.retailer,
@@ -85,6 +99,8 @@ export default function Lab() {
           accessPointId: accessPoint.accessPointId,
           storeId: accessPoint.storeId,
           storeLocation: accessPoint.storeLocation,
+          deviceCode: config.deviceCode || null,
+          entryPath: config.phoneEntryPath || null,
           clientOrigin: window.location.origin,
           rules: defaultRules,
         });
@@ -161,18 +177,31 @@ export default function Lab() {
   }, [session?.sessionId]);
 
   useEffect(() => {
-    if (session?.stage !== 'reporting' || !session?.claimId) return;
+    if (!session?.claimId) return undefined;
+    if (!session?.isWinner && session?.stage !== 'reporting' && session?.stage !== 'store_email_sent') {
+      return undefined;
+    }
 
     loadReport(session.sessionId).then((data) => {
-      if (data && !autoReportedRef.current) {
+      if (
+        data
+        && (session?.stage === 'reporting' || session?.stage === 'store_email_sent')
+        && !autoReportedRef.current
+      ) {
         autoReportedRef.current = true;
         setReportOpen(true);
       }
     });
-  }, [session?.stage, session?.claimId, session?.sessionId]);
+    return undefined;
+  }, [session?.stage, session?.claimId, session?.sessionId, session?.isWinner]);
 
   if (!configId) {
-    return <LabCampaignPicker />;
+    return (
+      <>
+        <LabNav />
+        <LabCampaignPicker />
+      </>
+    );
   }
 
   if (!config) {
@@ -205,7 +234,9 @@ export default function Lab() {
       onViewReport={session?.claimId ? openReport : undefined}
       reportOpen={reportOpen}
       report={report}
+      storeEmail={session?.isWinner ? report?.storeEmail : null}
       onCloseReport={() => setReportOpen(false)}
+      onSessionUpdate={setSession}
     />
   );
 }

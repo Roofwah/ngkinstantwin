@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import { issueToken, pollTokenStatus, getDeviceConfig, setDemoCampaign } from '../api';
 import { getPukHardware, listPukHardware, pukHardwarePath } from '../config/pukHardware';
+import PukModelViewer from '../components/puk3d/PukModelViewer';
+import '../components/puk3d/pukModelViewer.css';
 
 const PROD_BASE = 'https://pure-random-instant-win-production.up.railway.app';
 
@@ -253,6 +255,9 @@ export default function DeviceSimulator() {
   const [tapPending, setTapPending]     = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [deviceScale, setDeviceScale] = useState(1);
+  const [viewMode, setViewMode] = useState('2d'); // '2d' | '3d' — default preserves existing UX
+  const [threeMounted, setThreeMounted] = useState(false);
+  const [qrCanvasTick, setQrCanvasTick] = useState(0);
   const [enterUrl, setEnterUrl] = useState(
     () => resolvePhoneEnterUrl('niterra-ngk-2026') || `${PROD_BASE}${campaignEnterPath('niterra-ngk-2026')}`,
   );
@@ -264,6 +269,7 @@ export default function DeviceSimulator() {
   const tapTimerRef  = useRef(null);
   const ptrDownY     = useRef(null);
   const ptrDownTime  = useRef(null);
+  const qrCanvasRef  = useRef(null);
   stateRef.current   = deviceState;
 
   const stopAll = useCallback(() => {
@@ -525,6 +531,50 @@ export default function DeviceSimulator() {
     : '';
   const isExpiring = timeLeft !== null && timeLeft < 90000;
 
+  useEffect(() => {
+    if (!tokenUrl) return undefined;
+    const id = requestAnimationFrame(() => setQrCanvasTick((n) => n + 1));
+    return () => cancelAnimationFrame(id);
+  }, [tokenUrl, deviceState]);
+
+  const screenMedia3d = useMemo(() => {
+    if (deviceState === STATE.GENERATING) {
+      return { type: 'video', src: QRBUILD_SRC, key: 'qrbuild' };
+    }
+    if (deviceState === STATE.READY || deviceState === STATE.SCANNED) {
+      if (qrCanvasRef.current) {
+        return { type: 'canvas', canvas: qrCanvasRef.current, key: `qr-${tokenUrl}-${qrCanvasTick}` };
+      }
+      if (campaign.qrBg) return { type: 'image', src: campaign.qrBg, key: campaign.qrBg };
+      return { type: 'color', color: 0xffffff, key: 'qr-white' };
+    }
+    if (deviceState === STATE.IDLE) {
+      if (campaign.idleVideo) {
+        return { type: 'video', src: campaign.idleVideo, key: campaign.idleVideo };
+      }
+      if (campaign.idleFallback) {
+        return { type: 'image', src: campaign.idleFallback, key: campaign.idleFallback };
+      }
+      const slide = campaign.slides?.[0]?.src;
+      if (slide) return { type: 'image', src: slide, key: slide };
+    }
+    if (deviceState === STATE.ERROR) return { type: 'color', color: 0x1a0505, key: 'err' };
+    return { type: 'color', color: 0x050505, key: deviceState };
+  }, [deviceState, campaign, tokenUrl, qrCanvasTick]);
+
+  function handleScreenActivateFrom3d() {
+    // Mirror 2D screen tap behaviour without resetting campaign / view mode
+    if (deviceState === STATE.IDLE) {
+      handleGenerate();
+      return;
+    }
+    if (deviceState === STATE.READY || deviceState === STATE.SCANNED
+      || deviceState === STATE.REDEEMED || deviceState === STATE.EXPIRED
+      || deviceState === STATE.ERROR) {
+      handleReset();
+    }
+  }
+
   async function selectCampaign(c) {
     try {
       const data = await setDemoCampaign(c.id);
@@ -560,10 +610,11 @@ export default function DeviceSimulator() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: 12,
         padding: '12px 16px',
         boxSizing: 'border-box',
       }}>
-        <div>
+        <div style={{ minWidth: 0 }}>
           <p style={{
             fontFamily: 'var(--font-display)',
             fontSize: '0.95rem',
@@ -578,13 +629,54 @@ export default function DeviceSimulator() {
             {hw.shortLabel} &middot; {DEVICE_CODE} &middot; {campaign.name}
           </p>
         </div>
+        <div className="puk-view-tabs" role="tablist" aria-label="Simulator view">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={viewMode === '2d'}
+            className={`puk-view-tab${viewMode === '2d' ? ' is-active' : ''}`}
+            onClick={() => setViewMode('2d')}
+          >
+            2D Simulator
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={viewMode === '3d'}
+            className={`puk-view-tab${viewMode === '3d' ? ' is-active' : ''}`}
+            onClick={() => {
+              setThreeMounted(true);
+              setViewMode('3d');
+            }}
+          >
+            3D Model
+          </button>
+        </div>
       </header>
 
-      {/* Device — scaled to fit viewport */}
+      {/* Offscreen QR canvas for 3D screen texture (shared token state) */}
+      {tokenUrl && (
+        <div
+          aria-hidden
+          style={{ position: 'absolute', left: -9999, top: 0, width: 256, height: 256, overflow: 'hidden' }}
+        >
+          <QRCodeCanvas
+            value={tokenUrl}
+            size={256}
+            bgColor="#ffffff"
+            fgColor="#000000"
+            level="M"
+            includeMargin
+            ref={qrCanvasRef}
+          />
+        </div>
+      )}
+
+      {/* Device — scaled to fit viewport (2D) */}
       <div style={{
         flex: 1,
         minHeight: 0,
-        display: 'flex',
+        display: viewMode === '2d' ? 'flex' : 'none',
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
@@ -714,6 +806,24 @@ export default function DeviceSimulator() {
         )}
       </div>
       </div>
+
+      {/* 3D Model — same campaign / device state as 2D; mount once then keep warm */}
+      {threeMounted && (
+        <div
+          className="puk3d-stage"
+          style={{ display: viewMode === '3d' ? 'flex' : 'none' }}
+          role="tabpanel"
+          aria-hidden={viewMode !== '3d'}
+        >
+          <div className="puk3d-stage__inner">
+            <PukModelViewer
+              active={viewMode === '3d'}
+              screenMedia={screenMedia3d}
+              onScreenActivate={handleScreenActivateFrom3d}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Customer link — fixed footer when token active */}
       {tokenData && deviceState !== STATE.IDLE && (
@@ -1021,9 +1131,14 @@ function PanelChassis({ hw }) {
     <div style={{
       position: 'absolute', inset: 0, zIndex: 0,
       borderRadius: hw.bodyR,
-      background: 'linear-gradient(180deg, #2a2d33 0%, #16181c 42%, #0c0d10 100%)',
-      border: '1px solid #3a3d44',
-      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
+      background: 'linear-gradient(165deg, #121214 0%, #050506 40%, #000000 100%)',
+      // Outer edge of the PUK — thin glossy rim on the chassis perimeter
+      boxShadow: [
+        'inset 0 0 0 2px #0a0a0c',
+        'inset 0 0 0 3px rgba(255,255,255,0.12)',
+        'inset 0 1px 0 rgba(255,255,255,0.16)',
+        'inset 0 -1px 0 rgba(0,0,0,0.7)',
+      ].join(', '),
     }}>
       <div style={{
         position: 'absolute',
@@ -1032,7 +1147,7 @@ function PanelChassis({ hw }) {
         fontFamily: 'monospace',
         fontSize: 7,
         letterSpacing: '0.18em',
-        color: '#5a5e66',
+        color: '#3a3a40',
         pointerEvents: 'none',
       }}>
         {hw.shortLabel.toUpperCase()}
@@ -1041,8 +1156,8 @@ function PanelChassis({ hw }) {
         position: 'absolute',
         bottom: 8, left: '50%', transform: 'translateX(-50%)',
         width: 38, height: 6, borderRadius: 3,
-        background: '#08090b',
-        boxShadow: 'inset 0 0 0 1px #2a2d33',
+        background: '#030303',
+        boxShadow: 'inset 0 0 0 1px #1c1c20',
       }} />
     </div>
   );

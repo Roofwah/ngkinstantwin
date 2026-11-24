@@ -7,16 +7,14 @@ export default function StaticQrAccess({ entryUrl, config }) {
 
   return (
     <div className="lab-access-qr">
-      <QRCodeSVG value={entryUrl || ''} size={168} level="M" includeMargin={false} />
-      <div>
-        <div style={{ fontWeight: 700, fontSize: '0.9rem', textAlign: 'center' }}>
-          {label || `${config?.retailer || 'Retailer'} — Static QR`}
-        </div>
-        <div className="lab-access-qr__code">
-          {ap.accessPointId || '—'}
-        </div>
+      <QRCodeSVG value={entryUrl || ''} size={96} level="M" includeMargin={false} />
+      <div className="lab-access-puk__label">
+        {label || `${config?.retailer || 'Retailer'} — Static QR`}
       </div>
-      <div className="lab-access-qr__url">{entryUrl}</div>
+      <div className="lab-access-qr__code">
+        {ap.accessPointId || '—'}
+      </div>
+      {entryUrl && <div className="lab-access-qr__url">{entryUrl}</div>}
     </div>
   );
 }

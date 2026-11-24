@@ -15,6 +15,22 @@ function formatClock(ts) {
   });
 }
 
+function storeEmailLabel(status) {
+  if (status === 'failed') return 'Send failed';
+  return 'Sent to store';
+}
+
+function formatFulfilWhen(ts) {
+  if (!ts) return null;
+  return new Date(ts).toLocaleString('en-AU', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+}
+
 function formatLapsed(ms) {
   if (ms == null || ms < 0) return null;
   const totalSec = Math.floor(ms / 1000);
@@ -76,13 +92,40 @@ function stageDetail(stageId, { event, session, config, lapsedMs }) {
       return parts.length ? parts.join(' · ') : null;
     }
 
+    case 'purchase_validated': {
+      const parts = [];
+      if (lapsed) parts.push(lapsed);
+      if (event?.selectedBrand) parts.push(event.selectedBrand);
+      if (event?.spendAmount) parts.push(`$${event.spendAmount}`);
+      return parts.length ? parts.join(' · ') : null;
+    }
+
     case 'reading_receipt':
-    case 'purchase_validated':
     case 'submitting':
     case 'checking_instant_win':
     case 'prize_allocated':
     case 'reporting':
       return lapsed || null;
+
+    case 'store_email_sent': {
+      if (!event) return null;
+      const parts = [];
+      if (event.redemptionStatusLabel) parts.push(event.redemptionStatusLabel);
+      if (lapsed) parts.push(lapsed);
+      parts.push(storeEmailLabel(event.emailStatus));
+      return parts.length ? parts.join(' · ') : null;
+    }
+
+    case 'prize_fulfilled': {
+      if (!event) return null;
+      const parts = [];
+      if (event.redemptionStatusLabel) parts.push(event.redemptionStatusLabel);
+      if (lapsed) parts.push(lapsed);
+      if (event.fulfilledBy) parts.push(event.fulfilledBy);
+      const when = formatFulfilWhen(event.fulfilledAt || event.at);
+      if (when) parts.push(when);
+      return parts.length ? parts.join(' · ') : null;
+    }
 
     case 'instant_win_outcome': {
       const parts = [];
@@ -93,19 +136,75 @@ function stageDetail(stageId, { event, session, config, lapsedMs }) {
       return parts.length ? parts.join(' · ') : null;
     }
 
+    case 'campaign_brief':
+      return config?.retailer ? `${config.brand} · ${config.retailer}` : lapsed;
+
+    case 'prize_catalog': {
+      const parts = [];
+      if (lapsed) parts.push(lapsed);
+      if (config?.prizePresentation?.tier1) parts.push(config.prizePresentation.tier1);
+      return parts.length ? parts.join(' · ') : null;
+    }
+
+    case 'seed_published':
+      return event?.seed ? `${String(event.seed).slice(0, 12)}…` : lapsed;
+
+    case 'generating_manifest':
+      return lapsed || 'Computing schedule…';
+
+    case 'manifest_ready': {
+      const parts = [];
+      if (lapsed) parts.push(lapsed);
+      const count = event?.prizeCount ?? session?.manifestInfo?.prizeCount;
+      if (count != null) parts.push(`${count} prizes`);
+      return parts.length ? parts.join(' · ') : null;
+    }
+
+    case 'audit_verified':
+      return session?.manifestInfo?.sampleAuditHash
+        ? `${session.manifestInfo.sampleAuditHash.slice(0, 12)}…`
+        : lapsed;
+
+    case 'campaign_live':
+      return lapsed || 'Ready for customers';
+
     default:
       return lapsed || null;
   }
 }
 
+const WINNER_ONLY_STAGES = new Set(['store_email_sent', 'prize_fulfilled']);
+
 export default function JourneyTimeline({ stages, currentStageId, session, config }) {
   const [now, setNow] = useState(Date.now());
-  const currentIdx = stageIndex(stages, currentStageId);
-  const startedAt = session?.journeyStartedAt;
+  const sweepstakesOnly = Boolean(session?.result && !session?.isWinner);
+
+  const visibleStages = useMemo(() => {
+    if (!sweepstakesOnly) return stages;
+    return stages
+      .filter((s) => !WINNER_ONLY_STAGES.has(s.id))
+      .map((s) => (
+        s.id === 'prize_allocated'
+          ? {
+            ...s,
+            label: 'Journey complete',
+            hint: 'Weekly draw entry confirmed',
+          }
+          : s
+      ));
+  }, [stages, sweepstakesOnly]);
+
+  const currentIdx = stageIndex(visibleStages, currentStageId);
+  const startedAt = session?.journeyStartedAt || session?.createdAt;
   const eventsByStage = useMemo(
     () => eventMap(session?.journeyEvents),
     [session?.journeyEvents],
   );
+  const journeyComplete = config?.labMode === 'manifest'
+    ? Boolean(eventsByStage.get('campaign_live'))
+    : sweepstakesOnly
+      ? Boolean(eventsByStage.get('prize_allocated'))
+      : Boolean(eventsByStage.get('prize_fulfilled'));
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -114,13 +213,14 @@ export default function JourneyTimeline({ stages, currentStageId, session, confi
 
   return (
     <div className="lab-timeline">
-      {stages.map((stage, idx) => {
+      {visibleStages.map((stage, idx) => {
         const accessPointEvent = eventsByStage.get('access_point');
         const customerJoined = Boolean(eventsByStage.get('entry_opened'));
 
         let state = 'pending';
         if (idx < currentIdx) state = 'done';
-        if (idx === currentIdx) state = 'active';
+        if (idx === currentIdx && !journeyComplete) state = 'active';
+        if (journeyComplete && eventsByStage.has(stage.id)) state = 'done';
 
         // Access point only lights up once the customer has scanned and loaded /enter
         if (stage.id === 'access_point') {

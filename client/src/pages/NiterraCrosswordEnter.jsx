@@ -3,10 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 import { getDeviceConfig, submitDirectClaim, setDemoCampaign, postLabEvent } from '../api';
 import NiterraCrosswordEntryForm from '../components/NiterraCrosswordEntryForm';
 import { NITERRA_CAMPAIGN_ID } from '../campaigns/niterraRepco';
+import '../campaigns/niterra-repco.css';
 
-const DEFAULT_DEVICE = 'PR-PUK2-001';
+const DEFAULT_DEVICE = 'PR-DEMO-001';
 
-/** HOKA-style crossword entry for Niterra / Repco — separate from /enter receipt flow. */
+/** Niterra / Repco instant win — same Lab phone journey as Ford Display Lab. */
 export default function NiterraCrosswordEnter() {
   const [searchParams] = useSearchParams();
   const deviceCode = searchParams.get('device') || DEFAULT_DEVICE;
@@ -18,25 +19,34 @@ export default function NiterraCrosswordEnter() {
   const [config, setConfig] = useState(null);
 
   useEffect(() => {
-    setDemoCampaign(NITERRA_CAMPAIGN_ID).catch(() => {});
-  }, []);
-
-  useEffect(() => {
     if (!labSession || entryNotified.current) return;
     entryNotified.current = true;
     postLabEvent(labSession, 'entry_opened').catch(() => {});
   }, [labSession]);
 
   useEffect(() => {
-    getDeviceConfig(deviceCode)
-      .then((data) => {
+    let cancelled = false;
+
+    async function loadConfig() {
+      try {
+        await setDemoCampaign(NITERRA_CAMPAIGN_ID);
+        const data = await getDeviceConfig(deviceCode);
+        if (cancelled) return;
+        if (data?.campaign?.id !== NITERRA_CAMPAIGN_ID) {
+          throw new Error('Niterra campaign is not active on this device');
+        }
         setConfig(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message || 'Could not load campaign');
-        setLoading(false);
-      });
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message || 'Could not load campaign');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadConfig();
+    return () => { cancelled = true; };
   }, [deviceCode]);
 
   async function handleComplete(payload) {
@@ -50,23 +60,19 @@ export default function NiterraCrosswordEnter() {
 
   if (loading) {
     return (
-      <div className="page" style={{ alignItems: 'center', justifyContent: 'center', background: '#0b1a33' }}>
-        <span className="spinner" style={{ width: 40, height: 40, borderWidth: 3 }} />
+      <div className="ngk-page ngk-page--enter" style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span className="ngk-spinner" aria-label="Loading" />
       </div>
     );
   }
 
   if (error || !config?.campaign) {
     return (
-      <div className="page" style={{ background: '#0b1a33', color: '#f7f4ee' }}>
-        <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <div className="container">
-            <div className="card" style={{ textAlign: 'center' }}>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', marginBottom: 8 }}>Unavailable</h2>
-              <p style={{ color: 'var(--text-2)' }}>{error || 'No active campaign.'}</p>
-            </div>
-          </div>
-        </main>
+      <div className="ngk-page ngk-page--enter" style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+        <div className="ngk-form-panel" style={{ maxWidth: 420, width: '100%' }}>
+          <h2 className="ngk-title">Unavailable</h2>
+          <p className="ngk-lede">{error || 'Niterra Instant Win is not active on this device.'}</p>
+        </div>
       </div>
     );
   }
@@ -80,6 +86,7 @@ export default function NiterraCrosswordEnter() {
       campaign={config.campaign}
       device={config.device}
       brands={brands}
+      labSessionId={labSession}
       onComplete={handleComplete}
     />
   );

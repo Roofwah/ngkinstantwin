@@ -1,3 +1,5 @@
+import StoreEmailPreview from './StoreEmailPreview';
+
 function formatResult(result) {
   if (!result) return '—';
   if (result === 'NOT_WINNER') return 'No instant win — draw entry';
@@ -103,8 +105,23 @@ export default function CampaignReportModal({ open, report, session, onClose }) 
               <ReportRow label="Result" value={formatResult(data.result)} />
               <ReportRow label="Prize" value={data.prizeName || (data.result === 'NOT_WINNER' ? 'Weekly draw entry' : '—')} />
               <ReportRow label="Claim status" value={data.claimStatus} />
+              <ReportRow
+                label="Fulfilment status"
+                value={data.redemptionStatusLabel || data.redemptionStatus || '—'}
+              />
+              {data.fulfilledBy && <ReportRow label="Confirmed by" value={data.fulfilledBy} />}
               <ReportRow label="Submitted" value={formatDateTime(data.submittedAt)} />
             </section>
+
+            {isWinner && data.storeEmail && (
+              <section className="lab-report__section lab-report__section--email">
+                <h3 className="lab-report__heading">Store notification email</h3>
+                <p className="lab-report__hint">
+                  Sent to the store inbox when a customer wins — includes fulfil link for staff.
+                </p>
+                <StoreEmailPreview email={data.storeEmail} />
+              </section>
+            )}
           </div>
         )}
 

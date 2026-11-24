@@ -14,6 +14,7 @@ export default {
   brand: 'Ford',
   retailer: 'Ford Display Lab',
   deviceCode: 'PR-PUK2-001',
+  phoneEntryPath: '/enter/ford',
   accessPointType: 'puk',
   accessPointId: 'PUK-FORD-LAB',
   accessPoint: {

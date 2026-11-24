@@ -16,6 +16,10 @@ export default function LabDisplay() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    document.title = 'Turnstyle Lab';
+  }, []);
+
+  useEffect(() => {
     if (!sessionId) return undefined;
 
     let cancelled = false;

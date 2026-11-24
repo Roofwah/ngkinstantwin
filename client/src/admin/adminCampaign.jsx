@@ -50,5 +50,6 @@ export function campaignPreviewPath(campaignId) {
   if (campaignId === 'audi-2026') return '/enter/audi-instant-win';
   if (campaignId === 'ford-2026') return '/enter/ford';
   if (campaignId === 'castrol-2026') return '/enter/castrol?device=PR-PUK2-004';
+  if (campaignId === 'hankook-2026') return '/enter/hankook';
   return `/enter?campaign=${encodeURIComponent(campaignId)}`;
 }

@@ -4,7 +4,7 @@ import CustomerLivePanel from './CustomerLivePanel';
 const PHONE_STAGES = new Set([
   'entry_opened', 'otp_sent', 'customer_verified', 'receipt_received',
   'reading_receipt', 'purchase_validated', 'submitting', 'checking_instant_win',
-  'instant_win_outcome', 'prize_allocated', 'reporting',
+  'instant_win_outcome', 'prize_allocated', 'store_email_sent', 'reporting',
 ]);
 
 /**

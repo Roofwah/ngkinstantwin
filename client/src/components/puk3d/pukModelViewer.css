@@ -1,0 +1,68 @@
+.puk3d-viewer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #2a2a34;
+  touch-action: none;
+}
+
+.puk3d-viewer canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.puk-view-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(20, 20, 31, 0.92);
+  border: 1px solid #2e2e44;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.puk-view-tab {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #8a8a9a;
+  background: transparent;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.puk-view-tab:hover {
+  color: #ddd;
+}
+
+.puk-view-tab.is-active {
+  color: #fff;
+  background: #2a2a3d;
+}
+
+.puk3d-stage {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 0 12px 12px;
+  box-sizing: border-box;
+}
+
+.puk3d-stage__inner {
+  width: min(920px, 100%);
+  height: 100%;
+  min-height: 0;
+}

@@ -5,6 +5,7 @@ const DEFAULT_CAMPAIGN_ID = 'niterra-ngk-2026';
 const { AUDI_CAMPAIGN_ID, AUDI_VOUCHER_MIN } = require('../lib/audiCampaign');
 const { FORD_CAMPAIGN_ID, FORD_VOUCHER_MIN } = require('../lib/fordCampaign');
 const { HOKA_CAMPAIGN_ID } = require('../lib/hokaCampaign');
+const { NITERRA_CAMPAIGN_ID } = require('../lib/niterraCampaign');
 
 function getTotalClaimCount(campaignId) {
   if (!campaignId || campaignId === DEFAULT_CAMPAIGN_ID) {
@@ -31,7 +32,7 @@ function assignPrize(claimId, claimTime, campaignId = DEFAULT_CAMPAIGN_ID) {
   const resolvedCampaignId = campaignId || DEFAULT_CAMPAIGN_ID;
   const demoMode = process.env.DEMO_MODE === 'true';
 
-  if (resolvedCampaignId === HOKA_CAMPAIGN_ID) {
+  if (resolvedCampaignId === HOKA_CAMPAIGN_ID || resolvedCampaignId === NITERRA_CAMPAIGN_ID) {
     return assignNextAvailablePrize(claimId, resolvedCampaignId);
   }
 

@@ -41,7 +41,7 @@ export const PHONE_ENTRY_JOURNEY_STAGES = [
   { id: 'instant_win_outcome', label: 'Instant win outcome', hint: 'Winner or sweepstakes entry' },
   { id: 'prize_allocated', label: 'Result revealed', hint: 'Voucher count-up shown on phone' },
   { id: 'store_email_sent', label: 'Email notification sent to store', hint: 'Store inbox notified of instant win' },
-  { id: 'prize_fulfilled', label: 'Journey complete', hint: 'Prize fulfilled in store' },
+  { id: 'prize_fulfilled', label: 'Journey complete', hint: 'Staff status: store stock or order to store' },
 ];
 
 export const PHONE_ENTRY_TURNSTYLE_COMPONENTS = [

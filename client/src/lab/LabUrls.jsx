@@ -1,11 +1,13 @@
+import { resolveLabPhoneEntryUrl } from './resolveLabPhoneEntryUrl';
+
 /** Shows the exact URLs for Lab + phone QR — copy or scan these. */
-export default function LabUrls({ session, config, onNewSession }) {
+export default function LabUrls({ session, config }) {
   if (!session?.sessionId) return null;
 
   const labUrl = config?.configId
     ? `${window.location.origin}/lab/${config.configId}`
     : `${window.location.origin}/lab`;
-  const entryUrl = session.entryUrl;
+  const entryUrl = resolveLabPhoneEntryUrl(session, config) || session.entryUrl;
 
   return (
     <div className="lab-urls">
@@ -21,11 +23,6 @@ export default function LabUrls({ session, config, onNewSession }) {
         <span className="lab-urls__label">Session ID</span>
         <code className="lab-urls__value">{session.sessionId}</code>
       </div>
-      {onNewSession && (
-        <button type="button" className="lab-urls__reset" onClick={onNewSession}>
-          New session
-        </button>
-      )}
     </div>
   );
 }

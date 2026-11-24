@@ -1,11 +1,24 @@
-/** Lab config example #1 — Niterra / Repco / static QR */
+/** Lab config — Niterra / Repco (phone entry, same Lab shell as Ford Display Lab) */
 
 import {
   DEFAULT_CUSTOMER_MESSAGES,
   DEFAULT_QUALIFYING_RULES,
-  STANDARD_JOURNEY_STAGES,
-  STANDARD_TURNSTYLE_COMPONENTS,
+  PHONE_ENTRY_JOURNEY_STAGES,
+  PHONE_ENTRY_TURNSTYLE_COMPONENTS,
 } from './defaults';
+
+const NITERRA_PHONE_JOURNEY = PHONE_ENTRY_JOURNEY_STAGES.map((s) => {
+  if (s.id === 'purchase_validated') {
+    return { ...s, hint: 'Brand and spend entered on phone' };
+  }
+  return s;
+});
+
+const NITERRA_TURNSTYLE = PHONE_ENTRY_TURNSTYLE_COMPONENTS.map((c) => (
+  c.id === 'purchase'
+    ? { ...c, description: 'Self-declared brand & purchase amount' }
+    : c
+));
 
 export default {
   configId: 'niterra-repco',
@@ -14,10 +27,11 @@ export default {
   brand: 'NGK / NTK / KYB',
   retailer: 'Repco',
   deviceCode: 'PR-DEMO-001',
-  accessPointType: 'static-qr',
-  accessPointId: 'QR-REPCO-247',
+  phoneEntryPath: '/enter/repco',
+  accessPointType: 'puk',
+  accessPointId: 'PUK-NITERRA-LAB',
   accessPoint: {
-    qrId: 'QR-REPCO-247',
+    qrId: 'PUK-NITERRA-LAB',
     storeId: '247',
     location: 'Repco Waurn Ponds',
   },
@@ -26,25 +40,30 @@ export default {
   minSpendHint: 'Eligible product purchase required',
   qualifyingPurchaseRules: {
     ...DEFAULT_QUALIFYING_RULES,
+    defaultMinSpend: 50,
     defaultAllowDuplicateReceipts: true,
+    showDuplicateReceipts: true,
   },
+  embedCustomerPhone: true,
   branding: {
     accentColor: '#e86600',
     accentAlt: '#00c8ff',
     logoUrl: '/logos/purerandom.svg',
-    heroImageUrl: '/instant-win/hero.png',
+    heroImageUrl: '/campaigns/niterra/scan.jpg',
   },
   customerMessages: {
     ...DEFAULT_CUSTOMER_MESSAGES,
-    welcome: 'Scan to enter the Niterra Instant Win promotion',
-    receipt: 'Upload your Repco receipt',
+    welcome: 'Scan the PUK to enter Niterra Instant Win',
+    receipt: 'Enter your purchase details on phone',
+    outcomeWin: 'Congratulations — you won an instant prize!',
+    outcomeNoWin: 'Thanks for playing — weekly draw entry confirmed',
   },
   prizePresentation: {
-    tier1: 'Tier 1 instant prize',
-    tier2: 'Tier 2 provisional prize',
-    tier3: 'Tier 3 premium prize',
-    noWin: 'Weekly draw entry',
+    tier1: 'Instant prize (e.g. cap or voucher)',
+    tier2: 'Instant prize (e.g. cap or voucher)',
+    tier3: 'Instant prize (e.g. cap or voucher)',
+    noWin: 'Weekly prize draw entry',
   },
-  journeyStages: STANDARD_JOURNEY_STAGES,
-  turnstyleComponents: STANDARD_TURNSTYLE_COMPONENTS,
+  journeyStages: NITERRA_PHONE_JOURNEY,
+  turnstyleComponents: NITERRA_TURNSTYLE,
 };

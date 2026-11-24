@@ -3,6 +3,7 @@ const DEFAULT_SPEND_OPTIONS = [15, 25, 50, 75, 100];
 export default function QualifyingPurchaseControls({ config, rules, onRulesChange, disabled }) {
   const spendOptions = config?.qualifyingPurchaseRules?.minSpendOptions || DEFAULT_SPEND_OPTIONS;
   const minSpend = rules?.minSpend ?? config?.qualifyingPurchaseRules?.defaultMinSpend ?? 15;
+  const showDuplicateReceipts = config?.qualifyingPurchaseRules?.showDuplicateReceipts !== false;
   const allowDuplicateReceipts = rules?.allowDuplicateReceipts
     ?? config?.qualifyingPurchaseRules?.defaultAllowDuplicateReceipts
     ?? false;
@@ -42,22 +43,24 @@ export default function QualifyingPurchaseControls({ config, rules, onRulesChang
         </div>
       </div>
 
-      <div className="lab-qualifying__field lab-qualifying__field--toggle">
-        <div className="lab-qualifying__toggle-copy">
-          <span className="lab-qualifying__label">Allow duplicate receipts</span>
-          <span className="lab-qualifying__hint">For demo only</span>
+      {showDuplicateReceipts && (
+        <div className="lab-qualifying__field lab-qualifying__field--toggle">
+          <div className="lab-qualifying__toggle-copy">
+            <span className="lab-qualifying__label">Allow duplicate receipts</span>
+            <span className="lab-qualifying__hint">For demo only</span>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            className={`lab-toggle${allowDuplicateReceipts ? ' lab-toggle--on' : ''}`}
+            aria-checked={allowDuplicateReceipts}
+            onClick={toggleDuplicates}
+            disabled={disabled}
+          >
+            <span className="lab-toggle__thumb" />
+          </button>
         </div>
-        <button
-          type="button"
-          role="switch"
-          className={`lab-toggle${allowDuplicateReceipts ? ' lab-toggle--on' : ''}`}
-          aria-checked={allowDuplicateReceipts}
-          onClick={toggleDuplicates}
-          disabled={disabled}
-        >
-          <span className="lab-toggle__thumb" />
-        </button>
-      </div>
+      )}
     </div>
   );
 }

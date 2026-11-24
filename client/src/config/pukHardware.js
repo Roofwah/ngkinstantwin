@@ -1,6 +1,9 @@
 /**
  * Web PUK simulator hardware profile.
  * Physical unit: WT32-SC01 Plus (PUK2) — 320×480 portrait panel.
+ *
+ * Body / bezel ratios derived from `public/dev/puk/pukmodel.glb`
+ * (PUKV7_LATEST 62.8×94.5, pukscreen 52.31×79.75). LCD stays 320×480.
  */
 
 export const DEFAULT_PUK_HARDWARE_ID = 'puk2';
@@ -16,12 +19,12 @@ export const PUK_HARDWARE = {
     form: 'panel',
     bodySrc: null,
     glassSrc: null,
-    bodyW: 356,
-    bodyH: 536,
+    bodyW: 396,
+    bodyH: 585,
     bodyR: 16,
     screen: {
-      top: 22,
-      left: 18,
+      top: 50,
+      left: 36,
       width: 320,
       height: 480,
       radius: 6,

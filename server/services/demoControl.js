@@ -93,6 +93,17 @@ function defaultControl(campaignId) {
       prizes: castrolDemoPrizes(),
     };
   }
+  if (campaignId === 'smirnoff-2026') {
+    const { smirnoffDemoPrizes } = require('../lib/smirnoffCampaign');
+    return {
+      enabled: true,
+      winEvery: 1,
+      sweepstakesOnLose: false,
+      sweepstakesMessage: DEFAULT_SWEEPSTAKES,
+      claimOffset: 0,
+      prizes: smirnoffDemoPrizes(),
+    };
+  }
   return {
     enabled: false,
     winEvery: 2,

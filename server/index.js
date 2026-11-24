@@ -73,6 +73,7 @@ app.use('/api/scan', require('./routes/scan'));
 app.use('/api/device', require('./routes/device'));
 app.use('/api/lab', require('./routes/lab'));
 app.use('/api/fulfil', require('./routes/fulfil'));
+app.use('/api/win', require('./routes/win'));
 
 // Health check — used by Render and puk-firmware on boot
 app.get('/api/health', (req, res) => {
