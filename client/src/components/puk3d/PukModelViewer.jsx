@@ -532,8 +532,16 @@ export default function PukModelViewer({
         const tex = new THREE.CanvasTexture(media.canvas);
         tex.minFilter = THREE.LinearFilter;
         tex.magFilter = THREE.LinearFilter;
+        tex.generateMipmaps = false;
         tex.needsUpdate = true;
         screenTexture = tex;
+        // Live LCD composites (QR + timer) — refresh every frame from the shared canvas
+        if (media.live) {
+          screenCanvas = media.canvas;
+          screenCanvasPaint = () => {
+            tex.needsUpdate = true;
+          };
+        }
         applyScreenMaterial(tex, 0xffffff, {
           width: media.canvas.width,
           height: media.canvas.height,

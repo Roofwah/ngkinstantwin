@@ -19,18 +19,18 @@
   display: inline-flex;
   gap: 4px;
   padding: 3px;
-  border-radius: 999px;
-  background: rgba(20, 20, 31, 0.92);
-  border: 1px solid #2e2e44;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  border-radius: 10px;
+  background: #111;
+  border: 1px solid #222;
+  box-sizing: border-box;
 }
 
 .puk-view-tab {
   appearance: none;
   border: 0;
   cursor: pointer;
-  padding: 7px 14px;
-  border-radius: 999px;
+  padding: 10px 14px;
+  border-radius: 8px;
   font-family: inherit;
   font-size: 0.72rem;
   letter-spacing: 0.06em;

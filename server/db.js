@@ -459,6 +459,35 @@ const DEMO_CAMPAIGNS = [
     },
   },
   {
+    id: 'guinness-2026',
+    name: 'Guinness Instant Win',
+    brand: 'Guinness',
+    tagline: 'Guinness Instant Win',
+    mechanic: 'Ask staff for a QR and scan to play',
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    config: {
+      themeColor: '#cba135',
+      entryPath: '/enter/guinness',
+      defaultStoreName: 'Guinness Demo',
+      defaultStoreCode: 'guinness-demo',
+      retailer: 'Guinness',
+      idleVideoUrl: '/campaigns/guinness/guinness.mp4',
+      qrBgUrl: '/campaigns/guinness/bg.jpg',
+      qrFgColor: '#ffffff',
+      heroImageUrl: '/campaigns/guinness/bg.jpg',
+      demoControl: {
+        enabled: true,
+        winEvery: 1,
+        sweepstakesOnLose: false,
+        claimOffset: 0,
+        prizes: [
+          { name: 'Guinness Demo Prize', value: 25, qty: 100 },
+        ],
+      },
+    },
+  },
+  {
     id: 'puk-demo',
     name: 'PUK Demo',
     brand: 'PUK',
@@ -570,6 +599,7 @@ for (const c of DEMO_CAMPAIGNS) {
     'audi-2026',
     'hankook-2026',
     'taco-bell-2026',
+    'guinness-2026',
     'smirnoff-2026',
     'puk-demo',
   ].includes(c.id)) {

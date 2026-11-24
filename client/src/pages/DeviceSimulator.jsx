@@ -20,6 +20,7 @@ const CAMPAIGN_ENTER_PATH = {
   'castrol-2026': '/enter/castrol',
   'hankook-2026': '/enter/hankook',
   'taco-bell-2026': '/enter/taco-bell',
+  'guinness-2026': '/enter/guinness',
 };
 
 function campaignEnterPath(campaignId) {
@@ -207,6 +208,21 @@ const CAMPAIGN_UI = {
       { q: 'Prizes', a: 'Qualifying HOKA spend back, up to $200, plus instant prizes.' },
     ],
   },
+  'guinness-2026': {
+    sub: 'Guinness Instant Win',
+    color: '#cba135',
+    idleVideo: '/campaigns/guinness/guinness.mp4',
+    qrBg: '/campaigns/guinness/bg.jpg',
+    qrFgColor: '#ffffff',
+    qrPadBg: 'transparent',
+    slides: [
+      { headline: 'GUINNESS', sub: 'Instant Win', src: '/campaigns/guinness/bg.jpg' },
+    ],
+    faq: [
+      { q: 'Campaign', a: 'Guinness Instant Win.' },
+      { q: 'On device', a: 'Idle loops Guinness art. Double tap for QR.' },
+    ],
+  },
 };
 
 function mergeCampaign(apiCampaign) {
@@ -270,7 +286,19 @@ export default function DeviceSimulator() {
   const ptrDownY     = useRef(null);
   const ptrDownTime  = useRef(null);
   const qrCanvasRef  = useRef(null);
+  const lcdCompositeRef = useRef(null); // 320×480 canvas painted for 3D screen (QR + timer)
+  const qrBgImageRef = useRef(null);
   stateRef.current   = deviceState;
+
+  function getLcdComposite() {
+    if (!lcdCompositeRef.current) {
+      const c = document.createElement('canvas');
+      c.width = 320;
+      c.height = 480;
+      lcdCompositeRef.current = c;
+    }
+    return lcdCompositeRef.current;
+  }
 
   const stopAll = useCallback(() => {
     clearInterval(pollRef.current);
@@ -405,6 +433,7 @@ export default function DeviceSimulator() {
       // Token itself stays valid server-side for 10 minutes
       const DISPLAY_MS = 60 * 1000;
       const displayEnd = Date.now() + DISPLAY_MS;
+      setTimeLeft(DISPLAY_MS);
 
       timerRef.current = setInterval(() => {
         const rem = Math.max(0, displayEnd - Date.now());
@@ -537,16 +566,144 @@ export default function DeviceSimulator() {
     return () => cancelAnimationFrame(id);
   }, [tokenUrl, deviceState]);
 
+  // Preload campaign QR background for 3D LCD composite
+  useEffect(() => {
+    qrBgImageRef.current = null;
+    if (!campaign.qrBg) return undefined;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      qrBgImageRef.current = img;
+      setQrCanvasTick((n) => n + 1);
+    };
+    img.src = campaign.qrBg;
+    return undefined;
+  }, [campaign.qrBg]);
+
+  /** Paint the same READY UI the 2D screen shows (bg + QR + countdown) for the 3D texture. */
+  const paintLcdComposite = useCallback(() => {
+    const canvas = getLcdComposite();
+    if (!canvas) return false;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return false;
+    const W = canvas.width;
+    const H = canvas.height;
+    const isScanned = deviceState === STATE.SCANNED;
+    const qrScale = hw.qrScale || 0.7;
+    const qrSize = Math.round(W * qrScale);
+    const timerLabel = formatTime(timeLeft);
+    const timerColor = (timeLeft !== null && timeLeft < 90000)
+      ? '#ff5252'
+      : (isScanned ? '#ffab00' : (campaign.qrBg ? '#ffffff' : campaign.color));
+
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, W, H);
+
+    if (deviceState === STATE.READY || deviceState === STATE.SCANNED) {
+      const bgImg = qrBgImageRef.current;
+      if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
+        ctx.drawImage(bgImg, 0, 0, W, H);
+      } else if (!campaign.qrBg) {
+        // Header chip when no scan art
+        ctx.fillStyle = isScanned ? '#ffab00' : campaign.color;
+        ctx.beginPath();
+        ctx.arc(W / 2 - 52, 28, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.font = '700 11px monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(isScanned ? 'SCANNED' : 'SCAN TO PLAY', W / 2 - 42, 28);
+      }
+
+      const qrEl = qrCanvasRef.current;
+      const qx = Math.round((W - qrSize) / 2);
+      const qy = campaign.qrBg ? Math.round(H * 0.28) : Math.round((H - qrSize) / 2 - 20);
+      if (qrEl && qrEl.width > 0) {
+        if (!campaign.qrBg) {
+          // White pad behind QR
+          const pad = 10;
+          const rx = qx - pad;
+          const ry = qy - pad;
+          const rw = qrSize + pad * 2;
+          const rh = qrSize + pad * 2;
+          const r = 14;
+          ctx.fillStyle = isScanned ? '#040d04' : '#ffffff';
+          ctx.beginPath();
+          ctx.moveTo(rx + r, ry);
+          ctx.arcTo(rx + rw, ry, rx + rw, ry + rh, r);
+          ctx.arcTo(rx + rw, ry + rh, rx, ry + rh, r);
+          ctx.arcTo(rx, ry + rh, rx, ry, r);
+          ctx.arcTo(rx, ry, rx + rw, ry, r);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.drawImage(qrEl, qx, qy, qrSize, qrSize);
+      }
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = '700 26px monospace';
+      ctx.fillStyle = timerColor;
+      if (campaign.qrBg) {
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 8;
+      }
+      ctx.fillText(timerLabel, W / 2, H - 48);
+      ctx.shadowBlur = 0;
+      return true;
+    }
+
+    if (deviceState === STATE.REDEEMED) {
+      ctx.fillStyle = '#00c853';
+      ctx.font = '700 14px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('COMPLETE', W / 2, H / 2);
+      return true;
+    }
+    if (deviceState === STATE.EXPIRED) {
+      ctx.fillStyle = '#ff5252';
+      ctx.font = '700 14px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('EXPIRED', W / 2, H / 2);
+      return true;
+    }
+    if (deviceState === STATE.ERROR) {
+      ctx.fillStyle = '#ff5252';
+      ctx.font = '700 12px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('ERROR', W / 2, H / 2 - 12);
+      ctx.fillStyle = '#666';
+      ctx.font = '10px monospace';
+      ctx.fillText(String(errorMsg || '').slice(0, 36), W / 2, H / 2 + 12);
+      return true;
+    }
+    return false;
+  }, [deviceState, timeLeft, campaign, hw.qrScale, errorMsg]);
+
+  useEffect(() => {
+    if (deviceState === STATE.READY || deviceState === STATE.SCANNED
+      || deviceState === STATE.REDEEMED || deviceState === STATE.EXPIRED
+      || deviceState === STATE.ERROR) {
+      // Keep LCD composite in sync (timer + QR mount); 3D texture reads this canvas live
+      const id = requestAnimationFrame(() => paintLcdComposite());
+      return () => cancelAnimationFrame(id);
+    }
+    return undefined;
+  }, [paintLcdComposite, qrCanvasTick]);
+
   const screenMedia3d = useMemo(() => {
     if (deviceState === STATE.GENERATING) {
       return { type: 'video', src: QRBUILD_SRC, key: 'qrbuild' };
     }
-    if (deviceState === STATE.READY || deviceState === STATE.SCANNED) {
-      if (qrCanvasRef.current) {
-        return { type: 'canvas', canvas: qrCanvasRef.current, key: `qr-${tokenUrl}-${qrCanvasTick}` };
-      }
-      if (campaign.qrBg) return { type: 'image', src: campaign.qrBg, key: campaign.qrBg };
-      return { type: 'color', color: 0xffffff, key: 'qr-white' };
+    if (deviceState === STATE.READY || deviceState === STATE.SCANNED
+      || deviceState === STATE.REDEEMED || deviceState === STATE.EXPIRED
+      || deviceState === STATE.ERROR) {
+      return {
+        type: 'canvas',
+        canvas: getLcdComposite(),
+        live: true,
+        key: `lcd-${deviceState}-${tokenUrl || 'x'}-${qrCanvasTick > 0 ? 'ready' : 'wait'}`,
+      };
     }
     if (deviceState === STATE.IDLE) {
       if (campaign.idleVideo) {
@@ -558,7 +715,6 @@ export default function DeviceSimulator() {
       const slide = campaign.slides?.[0]?.src;
       if (slide) return { type: 'image', src: slide, key: slide };
     }
-    if (deviceState === STATE.ERROR) return { type: 'color', color: 0x1a0505, key: 'err' };
     return { type: 'color', color: 0x050505, key: deviceState };
   }, [deviceState, campaign, tokenUrl, qrCanvasTick]);
 
@@ -607,51 +763,22 @@ export default function DeviceSimulator() {
       <header style={{
         flexShrink: 0,
         width: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 12,
         padding: '12px 16px',
         boxSizing: 'border-box',
       }}>
-        <div style={{ minWidth: 0 }}>
-          <p style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '0.95rem',
-            fontWeight: 700,
-            color: '#888',
-            margin: 0,
-            letterSpacing: '0.04em',
-          }}>
-            PureRandom PUK Simulator
-          </p>
-          <p style={{ fontSize: '0.62rem', color: '#3a3a3a', letterSpacing: '0.08em', margin: '2px 0 0' }}>
-            {hw.shortLabel} &middot; {DEVICE_CODE} &middot; {campaign.name}
-          </p>
-        </div>
-        <div className="puk-view-tabs" role="tablist" aria-label="Simulator view">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={viewMode === '2d'}
-            className={`puk-view-tab${viewMode === '2d' ? ' is-active' : ''}`}
-            onClick={() => setViewMode('2d')}
-          >
-            2D Simulator
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={viewMode === '3d'}
-            className={`puk-view-tab${viewMode === '3d' ? ' is-active' : ''}`}
-            onClick={() => {
-              setThreeMounted(true);
-              setViewMode('3d');
-            }}
-          >
-            3D Model
-          </button>
-        </div>
+        <p style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: '0.95rem',
+          fontWeight: 700,
+          color: '#888',
+          margin: 0,
+          letterSpacing: '0.04em',
+        }}>
+          PureRandom PUK Simulator
+        </p>
+        <p style={{ fontSize: '0.62rem', color: '#3a3a3a', letterSpacing: '0.08em', margin: '2px 0 0' }}>
+          {hw.shortLabel} &middot; {DEVICE_CODE} &middot; {campaign.name}
+        </p>
       </header>
 
       {/* Offscreen QR canvas for 3D screen texture (shared token state) */}
@@ -663,10 +790,10 @@ export default function DeviceSimulator() {
           <QRCodeCanvas
             value={tokenUrl}
             size={256}
-            bgColor="#ffffff"
-            fgColor="#000000"
+            bgColor={campaign.qrPadBg && campaign.qrPadBg !== 'transparent' ? campaign.qrPadBg : (campaign.qrBg ? '#000000' : '#ffffff')}
+            fgColor={campaign.qrFgColor || '#000000'}
             level="M"
-            includeMargin
+            includeMargin={false}
             ref={qrCanvasRef}
           />
         </div>
@@ -895,6 +1022,12 @@ export default function DeviceSimulator() {
           onSelectCampaign={selectCampaign}
           hw={hw}
           hardwareOptions={listPukHardware()}
+          viewMode={viewMode}
+          onSelectView={(mode) => {
+            if (mode === '3d') setThreeMounted(true);
+            setViewMode(mode);
+            setSettingsModalOpen(false);
+          }}
           onSelectHardware={(next) => {
             setSettingsModalOpen(false);
             if (next.id === hw.id) return;
@@ -944,8 +1077,19 @@ function SettingsModal({
   hw,
   hardwareOptions,
   onSelectHardware,
+  viewMode,
+  onSelectView,
   onClose,
 }) {
+  const sectionTitle = {
+    margin: '0 0 10px',
+    fontFamily: 'monospace',
+    fontSize: '0.62rem',
+    letterSpacing: '0.18em',
+    textTransform: 'uppercase',
+    color: '#555',
+    fontWeight: 700,
+  };
   return (
     <div
       role="dialog"
@@ -1019,15 +1163,33 @@ function SettingsModal({
 
         <div style={{ overflowY: 'auto', padding: '16px 18px 18px' }}>
           <section style={{ marginBottom: 22 }}>
-            <h3 style={{
-              margin: '0 0 10px',
-              fontFamily: 'monospace',
-              fontSize: '0.62rem',
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              color: '#555',
-              fontWeight: 700,
-            }}>
+            <h3 style={sectionTitle}>View</h3>
+            <div className="puk-view-tabs" role="tablist" aria-label="Simulator view" style={{ width: '100%' }}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewMode === '2d'}
+                className={`puk-view-tab${viewMode === '2d' ? ' is-active' : ''}`}
+                style={{ flex: 1 }}
+                onClick={() => onSelectView('2d')}
+              >
+                2D Simulator
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={viewMode === '3d'}
+                className={`puk-view-tab${viewMode === '3d' ? ' is-active' : ''}`}
+                style={{ flex: 1 }}
+                onClick={() => onSelectView('3d')}
+              >
+                3D Model
+              </button>
+            </div>
+          </section>
+
+          <section style={{ marginBottom: 22 }}>
+            <h3 style={sectionTitle}>
               Campaign
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -1071,15 +1233,7 @@ function SettingsModal({
           </section>
 
           <section>
-            <h3 style={{
-              margin: '0 0 10px',
-              fontFamily: 'monospace',
-              fontSize: '0.62rem',
-              letterSpacing: '0.18em',
-              textTransform: 'uppercase',
-              color: '#555',
-              fontWeight: 700,
-            }}>
+            <h3 style={sectionTitle}>
               Hardware
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
