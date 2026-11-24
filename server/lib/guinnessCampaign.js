@@ -22,7 +22,8 @@ function isGuinnessVerificationMethod(method) {
 }
 
 function guinnessStoreName(campaign, deviceRow) {
-  return deviceRow?.storeName || campaign?.config?.defaultStoreName || GUINNESS_DEFAULT_STORE;
+  // Venue is campaign-owned (Shamrock Arms) — do not inherit Cotswold/other device labels
+  return campaign?.config?.defaultStoreName || GUINNESS_DEFAULT_STORE || deviceRow?.storeName;
 }
 
 /**

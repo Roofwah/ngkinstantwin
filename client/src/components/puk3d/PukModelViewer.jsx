@@ -39,7 +39,7 @@ export default function PukModelViewer({
     let screenCanvasPaint = null;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x2a2a34);
+    scene.background = new THREE.Color(0x9e9ea6);
 
     const camera = new THREE.PerspectiveCamera(32, 1, 0.01, 100);
     camera.position.set(0.55, 0.32, 0.95);
@@ -321,9 +321,7 @@ export default function PukModelViewer({
 
       chooseBestOrientation(object, screen);
 
-      // Near face-on default (~−5° yaw), slight pitch for presence
-      object.rotateY((-5 * Math.PI) / 180);
-      object.rotateX((-3 * Math.PI) / 180);
+      // Square to camera — no baked yaw/pitch so it floats face-on and can be straightened
       object.updateMatrixWorld(true);
 
       const mid = new THREE.Box3().setFromObject(object).getCenter(new THREE.Vector3());
@@ -335,14 +333,16 @@ export default function PukModelViewer({
       const fCenter = framed.getCenter(new THREE.Vector3());
       controls.target.copy(fCenter);
       const dist = Math.max(fSize.x, fSize.y, fSize.z) * 2.05;
-      // Camera almost dead-ahead so the −5° model yaw reads correctly (not a 45° orbit)
+      // Dead-ahead camera (no X lean)
       camera.position.set(
-        fCenter.x + dist * 0.04,
-        fCenter.y + dist * 0.08,
-        fCenter.z + dist * 1.15,
+        fCenter.x,
+        fCenter.y + dist * 0.02,
+        fCenter.z + dist * 1.2,
       );
       controls.minDistance = dist * 0.4;
       controls.maxDistance = dist * 3.4;
+      controls.minPolarAngle = 0;
+      controls.maxPolarAngle = Math.PI;
       controls.update();
       placeContactShadow(object);
     }

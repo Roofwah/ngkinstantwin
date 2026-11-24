@@ -754,7 +754,7 @@ export default function DeviceSimulator() {
       maxHeight: '100dvh',
       overflow: 'hidden',
       touchAction: 'none',
-      background: 'radial-gradient(ellipse 120% 80% at 50% 40%, #2e2e48 0%, #1a1a2e 50%, #0d0d18 100%)',
+      background: 'radial-gradient(ellipse 120% 80% at 50% 40%, #b8b8be 0%, #9e9ea6 55%, #8a8a92 100%)',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -772,13 +772,13 @@ export default function DeviceSimulator() {
           fontFamily: 'var(--font-display)',
           fontSize: '0.95rem',
           fontWeight: 700,
-          color: '#888',
+          color: '#2e2e34',
           margin: 0,
           letterSpacing: '0.04em',
         }}>
           PureRandom PUK Simulator
         </p>
-        <p style={{ fontSize: '0.62rem', color: '#3a3a3a', letterSpacing: '0.08em', margin: '2px 0 0' }}>
+        <p style={{ fontSize: '0.62rem', color: '#4a4a52', letterSpacing: '0.08em', margin: '2px 0 0' }}>
           {hw.shortLabel} &middot; {DEVICE_CODE} &middot; {campaign.name}
         </p>
       </header>

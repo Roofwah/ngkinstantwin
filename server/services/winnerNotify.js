@@ -35,17 +35,24 @@ function emailKicker(brand) {
   return `${upper} INSTANT WIN`;
 }
 
+function brandForSubject(brand) {
+  const raw = String(brand || 'PUK').trim() || 'PUK';
+  // Avoid "Guinness Instant Win Instant Winner"
+  return raw.replace(/\s+instant\s+win$/i, '').trim() || 'PUK';
+}
+
 function winnerEmailBranding(claim) {
   const qr = customerQrSettings(claim);
   if (qr) {
-    const store = claim.storeName || qr.storeName;
+    const store = claim.storeName || qr.storeName || 'Demo Store';
+    const brand = brandForSubject(qr.brand || 'PUK');
     return {
       kicker: emailKicker(qr.brand || 'PUK'),
       title: 'Instant Winner',
-      subject: `${store} — Instant Winner`,
+      subject: `${brand} Instant Winner`,
       accent: qr.theme.accent,
       buttonText: '#ffffff',
-      defaultStore: qr.storeName || store,
+      defaultStore: store,
     };
   }
   if (isAudiClaim(claim)) {
@@ -53,10 +60,10 @@ function winnerEmailBranding(claim) {
     return {
       kicker: 'AUDI INSTANT WIN',
       title: 'Instant Winner',
-      subject: `${store} — Instant Winner`,
+      subject: 'Audi Instant Winner',
       accent: '#bb0a30',
       buttonText: '#ffffff',
-      defaultStore: AUDI_STORE_NAME,
+      defaultStore: store,
     };
   }
   if (isNiterraClaim(claim)) {
@@ -64,10 +71,10 @@ function winnerEmailBranding(claim) {
     return {
       kicker: 'NITERRA INSTANT WIN',
       title: 'Instant Winner',
-      subject: `${store} — Instant Winner`,
+      subject: 'Niterra Instant Winner',
       accent: '#e31837',
       buttonText: '#ffffff',
-      defaultStore: NITERRA_STORE_NAME,
+      defaultStore: store,
     };
   }
   if (claim?.campaignId === 'hoka-2026') {
@@ -75,20 +82,31 @@ function winnerEmailBranding(claim) {
     return {
       kicker: 'HOKA INSTANT WIN',
       title: 'Instant Winner',
-      subject: `${store} — Instant Winner`,
+      subject: 'HOKA Instant Winner',
       accent: '#dfff00',
       buttonText: '#0a1628',
-      defaultStore: HOKA_STORE_NAME,
+      defaultStore: store,
+    };
+  }
+  if (claim?.campaignId === 'guinness-2026') {
+    const store = claim.storeName || 'Shamrock Arms';
+    return {
+      kicker: 'GUINNESS INSTANT WIN',
+      title: 'Instant Winner',
+      subject: 'Guinness Instant Winner',
+      accent: '#cba135',
+      buttonText: '#ffffff',
+      defaultStore: store,
     };
   }
   const store = claim?.storeName || 'Demo Store';
   return {
     kicker: 'PUK INSTANT WIN',
     title: 'Instant Winner',
-    subject: `${store} — Instant Winner`,
+    subject: `${brandForSubject(claim?.campaignId || 'PUK')} Instant Winner`,
     accent: '#d48c48',
     buttonText: '#ffffff',
-    defaultStore: 'Demo Store',
+    defaultStore: store,
   };
 }
 
@@ -130,7 +148,15 @@ function winnerSmsBody(claim) {
   }
 
   const store = claim.storeName
-    || (isAudiClaim(claim) ? AUDI_STORE_NAME : isNiterraClaim(claim) ? NITERRA_STORE_NAME : HOKA_STORE_NAME);
+    || (isAudiClaim(claim)
+      ? AUDI_STORE_NAME
+      : isNiterraClaim(claim)
+        ? NITERRA_STORE_NAME
+        : claim?.campaignId === 'hoka-2026'
+          ? HOKA_STORE_NAME
+          : claim?.campaignId === 'guinness-2026'
+            ? 'Shamrock Arms'
+            : 'Demo Store');
   const prizeLine = (isAudiClaim(claim) || isFordClaim(claim))
     ? `You've won ${isAudiClaim(claim) ? audiPrizeLabel(claim) : publicPrizeLabel(claim)} at ${store}.`
     : `You've won ${claim.prizeName} at ${store}.`;
