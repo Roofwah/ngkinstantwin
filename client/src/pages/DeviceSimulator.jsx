@@ -345,7 +345,7 @@ export default function DeviceSimulator() {
     const prevTitle = document.title;
     const prevOverflow = document.body.style.overflow;
     const prevHtmlOverflow = document.documentElement.style.overflow;
-    document.title = 'PureRandom PUK Simulator';
+    document.title = 'PUK';
 
     let appTitleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
     const createdMeta = !appTitleMeta;
@@ -355,7 +355,7 @@ export default function DeviceSimulator() {
       appTitleMeta.setAttribute('name', 'apple-mobile-web-app-title');
       document.head.appendChild(appTitleMeta);
     }
-    appTitleMeta.setAttribute('content', 'PUK Simulator');
+    appTitleMeta.setAttribute('content', 'PUK');
 
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
