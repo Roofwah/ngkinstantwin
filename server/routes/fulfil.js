@@ -9,18 +9,26 @@ const {
 const { notifyClaimFulfilment } = require('../services/labSession');
 const { HOKA_STORE_NAME, maskMobile } = require('../lib/hokaCampaign');
 const { NITERRA_CAMPAIGN_ID, NITERRA_STORE_NAME } = require('../lib/niterraCampaign');
+const { AUDI_STORE_NAME } = require('../lib/audiCampaign');
 const {
   publicStaffQrContext,
   claimPrizeValue,
   publicPrizeLabel,
+  customerQrSettings,
 } = require('../lib/customerQr');
 
+/** Never fall back to Cotswold — that was leaking onto every non-Niterra win. */
 function defaultStoreName(claim) {
+  const qr = customerQrSettings(claim);
+  if (qr?.storeName) return qr.storeName;
   if (claim.campaignId === NITERRA_CAMPAIGN_ID
     || claim.verificationMethod === 'niterra_crossword') {
     return NITERRA_STORE_NAME;
   }
-  return HOKA_STORE_NAME;
+  if (claim.campaignId === 'hoka-2026') return HOKA_STORE_NAME;
+  if (claim.campaignId === 'audi-2026') return AUDI_STORE_NAME;
+  if (claim.campaignId === 'guinness-2026') return 'Shamrock Arms';
+  return 'Demo Store';
 }
 
 function publicFulfilment(claim) {

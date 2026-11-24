@@ -22,6 +22,8 @@ export const PUK_HARDWARE = {
     bodyW: 396,
     bodyH: 585,
     bodyR: 16,
+    // Physical enclosure (mm) — for 2D dimension overlay
+    mm: { w: 62.8, h: 94.5, d: 14 },
     screen: {
       top: 50,
       left: 36,

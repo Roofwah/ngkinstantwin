@@ -6,7 +6,8 @@ function isHankookVerificationMethod(method) {
 }
 
 function hankookStoreName(campaign, deviceRow) {
-  return deviceRow?.storeName || campaign?.config?.defaultStoreName || 'Hankook Demo';
+  // Campaign venue first — demo PUK device may still be labelled Cotswold
+  return campaign?.config?.defaultStoreName || deviceRow?.storeName || 'Hankook Demo';
 }
 
 function normaliseReceiptTail(raw) {

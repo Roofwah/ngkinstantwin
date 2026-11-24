@@ -53,7 +53,8 @@ function isFordVerificationMethod(method) {
 }
 
 function fordStoreName(campaign, deviceRow) {
-  return deviceRow?.storeName || campaign?.config?.defaultStoreName || 'Ford Display Lab';
+  // Campaign venue first — demo PUK device may still be labelled Cotswold
+  return campaign?.config?.defaultStoreName || deviceRow?.storeName || 'Ford Display Lab';
 }
 
 function normaliseContractNumber(raw) {

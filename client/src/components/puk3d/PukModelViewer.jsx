@@ -4,7 +4,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import './pukModelViewer.css';
 
-const MODEL_URL = '/dev/puk/pukmodel.glb';
+// Cache-bust when GLB updates (query must change or browsers keep the old file)
+const MODEL_URL = '/dev/puk/pukmodel.glb?v=20261124-1455';
 const SCREEN_NAME = 'pukscreen';
 const AUTO_ROTATE_RESUME_MS = 5000;
 const AUTO_ROTATE_SPEED = 0.55;
@@ -351,6 +352,26 @@ export default function PukModelViewer({
       object.traverse((obj) => {
         if (!obj.isMesh || obj === screen) return;
         const name = (obj.name || '').toLowerCase();
+        // Keep back screws / USB / decal — charcoal flatten made rear detail vanish on spin
+        const isHardware = name.includes('button-m4')
+          || name.includes('screw')
+          || name.includes('usb')
+          || name.includes('decal');
+        if (isHardware) {
+          const mats = [].concat(obj.material || []);
+          mats.forEach((m) => {
+            if (!m) return;
+            // Readable metal against matte body (export metalness can be out of range)
+            if (m.color && !name.includes('decal')) {
+              m.color.setRGB(0.55, 0.56, 0.58);
+            }
+            if ('metalness' in m) m.metalness = Math.min(1, Math.max(0.65, m.metalness || 0.7));
+            if ('roughness' in m) m.roughness = Math.min(0.45, m.roughness ?? 0.35);
+            if ('envMapIntensity' in m) m.envMapIntensity = 0.6;
+            m.needsUpdate = true;
+          });
+          return;
+        }
         const isSurround = name === 'cube' || name.includes('surround') || name.includes('bezel');
         const mats = [].concat(obj.material || []);
         const next = mats.map((m) => {

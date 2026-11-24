@@ -16,7 +16,8 @@ function isCastrolVerificationMethod(method) {
 }
 
 function castrolStoreName(campaign, deviceRow) {
-  return deviceRow?.storeName || campaign?.config?.defaultStoreName || 'Castrol Instant Win';
+  // Campaign venue first — demo PUK device may still be labelled Cotswold
+  return campaign?.config?.defaultStoreName || deviceRow?.storeName || 'Castrol Instant Win';
 }
 
 function normaliseReceiptTail(raw) {

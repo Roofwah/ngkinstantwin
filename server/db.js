@@ -712,17 +712,8 @@ if (!existingPuk2) {
 db.prepare(`UPDATE devices SET retailer = ?, storeName = ?, storeCode = ?, locationLabel = ? WHERE deviceCode IN ('PR-DEMO-001', 'PR-UNIT-001')`)
   .run('Repco', 'Repco Waurn Ponds', '247', 'Store 247');
 
-db.prepare(`UPDATE devices SET name = ?, retailer = ?, storeName = ?, storeCode = ?, campaignId = ?, locationLabel = ?, updatedAt = ? WHERE deviceCode = ?`)
-  .run(
-    'PUK2 Cotswold Demo',
-    'Cotswold Outdoor',
-    'Cotswold Outdoor Birmingham',
-    'cotswold-birmingham',
-    'hoka-2026',
-    'Birmingham UK',
-    Date.now(),
-    'PR-PUK2-001',
-  );
+// Do not force-reset PR-PUK2-001 to Cotswold on every boot — that leaked onto
+// every demo campaign's win QR. Venue is set from the active demo campaign.
 
 const existingPuk2Dev4 = db.prepare('SELECT id FROM devices WHERE deviceCode = ?').get('PR-PUK2-004');
 if (!existingPuk2Dev4) {

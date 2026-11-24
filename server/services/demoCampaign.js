@@ -37,14 +37,43 @@ function getActiveDemoCampaignId(db) {
 }
 
 function setActiveDemoCampaignId(db, campaignId) {
-  const campaign = db.prepare('SELECT id FROM campaigns WHERE id = ? AND status = ?').get(campaignId, 'active');
-  if (!campaign) {
+  const row = db.prepare('SELECT id, brand, config FROM campaigns WHERE id = ? AND status = ?')
+    .get(campaignId, 'active');
+  if (!row) {
     throw new Error('Unknown or inactive campaign');
   }
   db.prepare(`
     INSERT INTO demo_settings (key, value) VALUES (?, ?)
     ON CONFLICT(key) DO UPDATE SET value = excluded.value
   `).run(SETTINGS_KEY, campaignId);
+
+  // Keep shared demo PUKs aligned with the active campaign venue
+  // (stops Cotswold / Hoka store labels leaking onto other campaigns).
+  const config = parseConfig(row.config);
+  const storeName = config.defaultStoreName || null;
+  const storeCode = config.defaultStoreCode || null;
+  const retailer = row.brand || null;
+  if (storeName || storeCode || retailer) {
+    const codes = [...DEMO_DEVICE_CODES];
+    const placeholders = codes.map(() => '?').join(', ');
+    db.prepare(`
+      UPDATE devices
+      SET storeName = COALESCE(?, storeName),
+          storeCode = COALESCE(?, storeCode),
+          retailer = COALESCE(?, retailer),
+          campaignId = ?,
+          updatedAt = ?
+      WHERE deviceCode IN (${placeholders})
+    `).run(
+      storeName,
+      storeCode,
+      retailer,
+      campaignId,
+      Date.now(),
+      ...codes,
+    );
+  }
+
   return campaignId;
 }
 

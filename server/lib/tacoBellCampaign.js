@@ -15,7 +15,8 @@ function isTacoBellVerificationMethod(method) {
 }
 
 function tacoBellStoreName(campaign, deviceRow) {
-  return deviceRow?.storeName || campaign?.config?.defaultStoreName || 'Taco Bell Demo';
+  // Campaign venue first — demo PUK device may still be labelled Cotswold
+  return campaign?.config?.defaultStoreName || deviceRow?.storeName || 'Taco Bell Demo';
 }
 
 function normaliseReceiptTail(raw) {

@@ -274,6 +274,7 @@ export default function DeviceSimulator() {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [deviceScale, setDeviceScale] = useState(1);
   const [viewMode, setViewMode] = useState('2d'); // '2d' | '3d' — default preserves existing UX
+  const [showDimensions, setShowDimensions] = useState(false);
   const [threeMounted, setThreeMounted] = useState(false);
   const [qrCanvasTick, setQrCanvasTick] = useState(0);
   const [enterUrl, setEnterUrl] = useState(
@@ -375,9 +376,12 @@ export default function DeviceSimulator() {
       const headerH = 52;
       const footerH = tokenData && deviceState !== STATE.IDLE ? 36 : 0;
       const pad = 16;
-      const availW = window.innerWidth - pad * 2;
+      // Fixed gutters (dims left/bottom + ruler icon) — PUK scale never depends on toggle
+      const availW = window.innerWidth - pad * 2 - 52;
       const availH = window.innerHeight - headerH - footerH - pad;
-      setDeviceScale(Math.min(1, availW / hw.bodyW, availH / hw.bodyH));
+      const sW = (availW - 52) / (hw.bodyW + 96);
+      const sH = availH / (hw.bodyH + 64);
+      setDeviceScale(Math.min(1, sW, sH));
     }
     updateScale();
     window.addEventListener('resize', updateScale);
@@ -801,7 +805,7 @@ export default function DeviceSimulator() {
         </div>
       )}
 
-      {/* Device — scaled to fit viewport (2D) */}
+      {/* Device — scaled to fit viewport (2D). PUK size is stable; dims draw outside. */}
       <div style={{
         flex: 1,
         minHeight: 0,
@@ -810,130 +814,180 @@ export default function DeviceSimulator() {
         justifyContent: 'center',
         width: '100%',
         overflow: 'hidden',
+        position: 'relative',
       }}>
+      {(() => {
+        const s = deviceScale;
+        // Fixed gutters so toggling dims never resizes/moves the PUK
+        const gutL = 96 * s;
+        const gutB = 64 * s;
+        const gutR = 52;
+        return (
       <div style={{
         position: 'relative',
-        width: hw.bodyW,
-        height: hw.bodyH,
-        transform: `scale(${deviceScale})`,
-        transformOrigin: 'center center',
-        filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.35))',
+        width: gutL + hw.bodyW * s + gutR,
+        height: hw.bodyH * s + gutB,
+        flexShrink: 0,
       }}>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: gutL,
+          width: hw.bodyW,
+          height: hw.bodyH,
+          transform: `scale(${s})`,
+          transformOrigin: 'top left',
+          filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.35))',
+        }}>
 
-        {/* Layer 1: CSS chassis when no body PNG */}
-        {!hw.bodySrc && (
-          <PanelChassis hw={hw} />
-        )}
+          {/* Layer 1: CSS chassis when no body PNG */}
+          {!hw.bodySrc && (
+            <PanelChassis hw={hw} />
+          )}
 
-        {/* Layer 2: Live screen */}
-        <div
-          style={{
-            position: 'absolute',
-            top: SCREEN.top, left: SCREEN.left,
-            width: SCREEN.width, height: SCREEN.height,
-            borderRadius: SCREEN.radius,
-            background: '#000',
-            overflow: 'hidden',
-            zIndex: 1,
-            cursor: 'pointer',
-            userSelect: 'none',
-          }}
-          onMouseDown={handlePtrDown}
-          onMouseUp={handlePtrUp}
-          onTouchStart={handlePtrDown}
-          onTouchEnd={handlePtrUp}
-        >
-          <ScreenContent
-            state={deviceState}
-            campaign={campaign}
-            tokenData={tokenData}
-            tokenUrl={tokenUrl}
-            timeLeft={timeLeft}
-            errorMsg={errorMsg}
-            formatTime={formatTime}
-            isExpiring={isExpiring}
-            screenW={SCREEN.width}
-            screenH={SCREEN.height}
-            qrScale={hw.qrScale}
-            tapPending={tapPending}
-            menuOpen={menuOpen}
-            activePanel={activePanel}
-            onOpenMenu={() => { setMenuOpen(true); setActivePanel(null); }}
-            onCloseMenu={() => { setMenuOpen(false); setActivePanel(null); }}
-            onOpenPanel={p => setActivePanel(p)}
-            onClosePanel={() => setActivePanel(null)}
-          />
-          {/* Screen glass sheen */}
-          <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0,
-            height: '30%',
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)',
-            borderRadius: `${SCREEN.radius}px ${SCREEN.radius}px 0 0`,
-            pointerEvents: 'none',
-          }} />
+          {/* Layer 2: Live screen */}
+          <div
+            style={{
+              position: 'absolute',
+              top: SCREEN.top, left: SCREEN.left,
+              width: SCREEN.width, height: SCREEN.height,
+              borderRadius: SCREEN.radius,
+              background: '#000',
+              overflow: 'hidden',
+              zIndex: 1,
+              cursor: 'pointer',
+              userSelect: 'none',
+            }}
+            onMouseDown={handlePtrDown}
+            onMouseUp={handlePtrUp}
+            onTouchStart={handlePtrDown}
+            onTouchEnd={handlePtrUp}
+          >
+            <ScreenContent
+              state={deviceState}
+              campaign={campaign}
+              tokenData={tokenData}
+              tokenUrl={tokenUrl}
+              timeLeft={timeLeft}
+              errorMsg={errorMsg}
+              formatTime={formatTime}
+              isExpiring={isExpiring}
+              screenW={SCREEN.width}
+              screenH={SCREEN.height}
+              qrScale={hw.qrScale}
+              tapPending={tapPending}
+              menuOpen={menuOpen}
+              activePanel={activePanel}
+              onOpenMenu={() => { setMenuOpen(true); setActivePanel(null); }}
+              onCloseMenu={() => { setMenuOpen(false); setActivePanel(null); }}
+              onOpenPanel={p => setActivePanel(p)}
+              onClosePanel={() => setActivePanel(null)}
+            />
+            {/* Screen glass sheen */}
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0,
+              height: '30%',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)',
+              borderRadius: `${SCREEN.radius}px ${SCREEN.radius}px 0 0`,
+              pointerEvents: 'none',
+            }} />
+          </div>
+
+          {/* Layer 3: Body PNG */}
+          {hw.bodySrc && (
+            <img
+              src={hw.bodySrc}
+              width={hw.bodyW} height={hw.bodyH}
+              draggable={false} alt=""
+              style={{
+                position: 'absolute', inset: 0, zIndex: 2,
+                width: '100%', height: '100%',
+                display: 'block',
+                userSelect: 'none', pointerEvents: 'none',
+                filter: 'brightness(0.40) contrast(1.1)',
+              }}
+            />
+          )}
+
+          {/* Layer 4: Glass overlay */}
+          {hw.glassSrc && (
+            <img
+              src={hw.glassSrc}
+              width={hw.bodyW} height={hw.bodyH}
+              draggable={false} alt=""
+              style={{
+                position: 'absolute', inset: 0, zIndex: 3,
+                width: '100%', height: '100%',
+                display: 'block',
+                pointerEvents: 'none', userSelect: 'none',
+                opacity: 0.5,
+              }}
+            />
+          )}
+
+          {/* LED */}
+          {hw.hasLed && (
+            <div style={{
+              position: 'absolute', zIndex: 4,
+              top: 17, left: '50%',
+              transform: 'translateX(-50%)',
+              width: 6, height: 6, borderRadius: '50%',
+              background: ledColor || 'transparent',
+              boxShadow: ledColor ? `0 0 6px ${ledColor}, 0 0 16px ${ledColor}80` : 'none',
+              transition: 'background 0.2s ease, box-shadow 0.2s ease',
+              pointerEvents: 'none',
+            }} />
+          )}
+
+          {/* PWR button hit area */}
+          {hw.btnPwr && (
+            <div
+              title="PWR — generate token"
+              onMouseDown={() => { if (deviceState !== STATE.GENERATING) handleGenerate(); }}
+              onTouchEnd={e => { e.preventDefault(); if (deviceState !== STATE.GENERATING) handleGenerate(); }}
+              style={{
+                position: 'absolute', zIndex: 5,
+                top: SCREEN.top + hw.btnPwr.topOffset, right: hw.btnPwr.right,
+                width: hw.btnPwr.w, height: hw.btnPwr.h,
+                cursor: deviceState === STATE.GENERATING ? 'not-allowed' : 'pointer',
+              }}
+            />
+          )}
+
+          {showDimensions && hw.mm && (
+            <DimensionOverlay bodyW={hw.bodyW} bodyH={hw.bodyH} mm={hw.mm} />
+          )}
         </div>
 
-        {/* Layer 3: Body PNG */}
-        {hw.bodySrc && (
-          <img
-            src={hw.bodySrc}
-            width={hw.bodyW} height={hw.bodyH}
-            draggable={false} alt=""
-            style={{
-              position: 'absolute', inset: 0, zIndex: 2,
-              width: '100%', height: '100%',
-              display: 'block',
-              userSelect: 'none', pointerEvents: 'none',
-              filter: 'brightness(0.40) contrast(1.1)',
-            }}
-          />
-        )}
-
-        {/* Layer 4: Glass overlay */}
-        {hw.glassSrc && (
-          <img
-            src={hw.glassSrc}
-            width={hw.bodyW} height={hw.bodyH}
-            draggable={false} alt=""
-            style={{
-              position: 'absolute', inset: 0, zIndex: 3,
-              width: '100%', height: '100%',
-              display: 'block',
-              pointerEvents: 'none', userSelect: 'none',
-              opacity: 0.5,
-            }}
-          />
-        )}
-
-        {/* LED */}
-        {hw.hasLed && (
-          <div style={{
-            position: 'absolute', zIndex: 4,
-            top: 17, left: '50%',
-            transform: 'translateX(-50%)',
-            width: 6, height: 6, borderRadius: '50%',
-            background: ledColor || 'transparent',
-            boxShadow: ledColor ? `0 0 6px ${ledColor}, 0 0 16px ${ledColor}80` : 'none',
-            transition: 'background 0.2s ease, box-shadow 0.2s ease',
-            pointerEvents: 'none',
-          }} />
-        )}
-
-        {/* PWR button hit area */}
-        {hw.btnPwr && (
-          <div
-            title="PWR — generate token"
-            onMouseDown={() => { if (deviceState !== STATE.GENERATING) handleGenerate(); }}
-            onTouchEnd={e => { e.preventDefault(); if (deviceState !== STATE.GENERATING) handleGenerate(); }}
-            style={{
-              position: 'absolute', zIndex: 5,
-              top: SCREEN.top + hw.btnPwr.topOffset, right: hw.btnPwr.right,
-              width: hw.btnPwr.w, height: hw.btnPwr.h,
-              cursor: deviceState === STATE.GENERATING ? 'not-allowed' : 'pointer',
-            }}
-          />
-        )}
+        <button
+          type="button"
+          aria-label="Toggle dimensions"
+          aria-pressed={showDimensions}
+          title="Dimensions"
+          onClick={() => setShowDimensions((v) => !v)}
+          style={{
+            position: 'absolute',
+            left: gutL + hw.bodyW * s + 6,
+            top: (hw.bodyH * s) / 2,
+            transform: 'translateY(-50%)',
+            zIndex: 6,
+            appearance: 'none',
+            border: 'none',
+            background: 'transparent',
+            color: showDimensions ? '#1a1a1e' : '#4a4a52',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 4,
+            opacity: showDimensions ? 1 : 0.72,
+          }}
+        >
+          <RulerIcon />
+        </button>
       </div>
+        );
+      })()}
       </div>
 
       {/* 3D Model — same campaign / device state as 2D; mount once then keep warm */}
@@ -1277,6 +1331,166 @@ function SettingsModal({
             </div>
           </section>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function RulerIcon() {
+  return (
+    <svg
+      width="34"
+      height="34"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+      style={{ transform: 'rotate(90deg)', display: 'block' }}
+    >
+      <rect x="3" y="7.5" width="18" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M6.5 7.5v4M9.5 7.5v2.5M12.5 7.5v4M15.5 7.5v2.5M18.5 7.5v4"
+        stroke="currentColor"
+        strokeWidth="1.45"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** 2D mm callouts beside the PUK — does not affect PUK scale. Easy to remove. */
+function DimensionOverlay({ bodyW, bodyH, mm }) {
+  const [t, setT] = useState(0); // 0 → 1 animation progress
+
+  useEffect(() => {
+    let raf = 0;
+    const start = performance.now();
+    const dur = 900;
+    const tick = (now) => {
+      const p = Math.min(1, (now - start) / dur);
+      const eased = 1 - (1 - p) ** 3;
+      setT(eased);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [mm.h, mm.w, mm.d]);
+
+  const ink = '#2e2e34';
+  const tickLen = 12;
+  const rulerGap = 36; // space between chassis edge and ruler line
+  const labelGap = 28; // extra space between ruler line and height text
+  const hGrow = bodyH * t;
+  const wGrow = bodyW * t;
+  const shownH = (mm.h * t).toFixed(1);
+  const shownW = (mm.w * t).toFixed(1);
+  const shownD = (mm.d * t).toFixed(t >= 1 ? 0 : 1);
+  const hLineX = -rulerGap;
+  const wLineY = bodyH + rulerGap;
+
+  const labelStyle = {
+    position: 'absolute',
+    fontFamily: 'monospace',
+    fontSize: 18,
+    fontWeight: 700,
+    letterSpacing: '0.03em',
+    color: ink,
+    whiteSpace: 'nowrap',
+    pointerEvents: 'none',
+    opacity: Math.min(1, t * 1.4),
+  };
+  const line = (extra) => ({
+    position: 'absolute',
+    background: ink,
+    pointerEvents: 'none',
+    ...extra,
+  });
+
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 4,
+        pointerEvents: 'none',
+        overflow: 'visible',
+      }}
+    >
+      {/* Height — left of chassis, expands downward */}
+      <div style={line({
+        left: hLineX,
+        top: 0,
+        width: 2,
+        height: hGrow,
+      })} />
+      <div style={line({
+        left: hLineX - tickLen / 2,
+        top: 0,
+        width: tickLen,
+        height: 2,
+        opacity: t > 0.02 ? 1 : 0,
+      })} />
+      <div style={line({
+        left: hLineX - tickLen / 2,
+        top: hGrow,
+        width: tickLen,
+        height: 2,
+        opacity: t > 0.05 ? 1 : 0,
+      })} />
+      <div style={{
+        ...labelStyle,
+        left: hLineX - labelGap,
+        top: hGrow / 2,
+        transform: 'translate(-50%, -50%) rotate(-90deg)',
+        transformOrigin: 'center center',
+      }}>
+        {shownH} mm
+      </div>
+
+      {/* Width — below chassis, expands rightward */}
+      <div style={line({
+        left: 0,
+        top: wLineY,
+        width: wGrow,
+        height: 2,
+      })} />
+      <div style={line({
+        left: 0,
+        top: wLineY - tickLen / 2,
+        width: 2,
+        height: tickLen,
+        opacity: t > 0.02 ? 1 : 0,
+      })} />
+      <div style={line({
+        left: wGrow,
+        top: wLineY - tickLen / 2,
+        width: 2,
+        height: tickLen,
+        opacity: t > 0.05 ? 1 : 0,
+      })} />
+      <div style={{
+        ...labelStyle,
+        left: wGrow / 2,
+        top: wLineY + 18,
+        transform: 'translateX(-50%)',
+        fontSize: 20,
+      }}>
+        {shownW} mm
+      </div>
+
+      {/* Thickness — top-right of chassis (away from ruler icon mid-right) */}
+      <div style={{
+        ...labelStyle,
+        left: bodyW + 14,
+        top: 4,
+        fontSize: 16,
+        lineHeight: 1.35,
+        opacity: Math.max(0, (t - 0.35) / 0.65),
+      }}>
+        <div style={{ opacity: 0.55, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          Thick
+        </div>
+        {shownD} mm
       </div>
     </div>
   );
