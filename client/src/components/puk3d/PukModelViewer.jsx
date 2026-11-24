@@ -321,9 +321,9 @@ export default function PukModelViewer({
 
       chooseBestOrientation(object, screen);
 
-      // Three-quarter front presentation on top of best facing
-      object.rotateY(0.42);
-      object.rotateX(-0.14);
+      // Near face-on default (~−5° yaw), slight pitch for presence
+      object.rotateY((-5 * Math.PI) / 180);
+      object.rotateX((-3 * Math.PI) / 180);
       object.updateMatrixWorld(true);
 
       const mid = new THREE.Box3().setFromObject(object).getCenter(new THREE.Vector3());
@@ -335,10 +335,11 @@ export default function PukModelViewer({
       const fCenter = framed.getCenter(new THREE.Vector3());
       controls.target.copy(fCenter);
       const dist = Math.max(fSize.x, fSize.y, fSize.z) * 2.05;
+      // Camera almost dead-ahead so the −5° model yaw reads correctly (not a 45° orbit)
       camera.position.set(
-        fCenter.x + dist * 0.55,
-        fCenter.y + dist * 0.18,
-        fCenter.z + dist * 1.05,
+        fCenter.x + dist * 0.04,
+        fCenter.y + dist * 0.08,
+        fCenter.z + dist * 1.15,
       );
       controls.minDistance = dist * 0.4;
       controls.maxDistance = dist * 3.4;

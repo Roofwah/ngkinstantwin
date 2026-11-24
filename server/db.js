@@ -468,21 +468,31 @@ const DEMO_CAMPAIGNS = [
     endDate: '2026-12-31',
     config: {
       themeColor: '#cba135',
+      region: 'AU',
+      entryVariant: 'guinness-instant-win',
       entryPath: '/enter/guinness',
-      defaultStoreName: 'Guinness Demo',
-      defaultStoreCode: 'guinness-demo',
-      retailer: 'Guinness',
+      eligibleBrands: ['Guinness'],
+      defaultStoreName: 'Shamrock Arms',
+      defaultStoreCode: 'shamrock-arms',
+      retailer: 'Shamrock Arms',
       idleVideoUrl: '/campaigns/guinness/guinness.mp4',
       qrBgUrl: '/campaigns/guinness/bg.jpg',
       qrFgColor: '#ffffff',
+      formArtUrl: '/campaigns/guinness/bg.jpg',
+      landingHeroUrl: '/campaigns/guinness/bg.jpg',
       heroImageUrl: '/campaigns/guinness/bg.jpg',
       demoControl: {
         enabled: true,
         winEvery: 1,
         sweepstakesOnLose: false,
         claimOffset: 0,
+        // Merch pool (Niterra / Hoka shape), not cashback
         prizes: [
-          { name: 'Guinness Demo Prize', value: 25, qty: 100 },
+          { name: 'Guinness Bag', value: 45, qty: 40, image: '/campaigns/guinness/bag.png' },
+          { name: 'Guinness Beanie', value: 35, qty: 40, image: '/campaigns/guinness/beanie.png' },
+          { name: 'Guinness Cap', value: 35, qty: 40, image: '/campaigns/guinness/cap.png' },
+          { name: 'Guinness Scarf', value: 40, qty: 40, image: '/campaigns/guinness/scarf.png' },
+          { name: 'Guinness Umbrella', value: 45, qty: 40, image: '/campaigns/guinness/umbrella.png' },
         ],
       },
     },
@@ -589,7 +599,14 @@ for (const c of DEMO_CAMPAIGNS) {
                         claimOffset: prev.demoControl?.claimOffset || 0,
                       },
                     }
-                  : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
+                  : c.id === 'guinness-2026' && c.config.demoControl
+                    ? {
+                        demoControl: {
+                          ...c.config.demoControl,
+                          claimOffset: prev.demoControl?.claimOffset || 0,
+                        },
+                      }
+                    : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
   };
   if ([
     'niterra-ngk-2026',

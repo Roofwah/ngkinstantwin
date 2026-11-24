@@ -219,8 +219,10 @@ const CAMPAIGN_UI = {
       { headline: 'GUINNESS', sub: 'Instant Win', src: '/campaigns/guinness/bg.jpg' },
     ],
     faq: [
-      { q: 'Campaign', a: 'Guinness Instant Win.' },
-      { q: 'On device', a: 'Idle loops Guinness art. Double tap for QR.' },
+      { q: 'Campaign', a: 'Guinness Instant Win at Shamrock Arms — ask staff for a QR and scan to play.' },
+      { q: 'How to enter', a: 'Scan the PUK QR, enter your name and mobile, verify, and reveal.' },
+      { q: 'Prizes', a: 'Guinness Bag, Beanie, Cap, Scarf, or Umbrella.' },
+      { q: 'On device', a: 'Idle loops Guinness art. Double tap for QR to /enter/guinness.' },
     ],
   },
 };

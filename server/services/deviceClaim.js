@@ -38,6 +38,10 @@ const {
   isTacoBellVerificationMethod,
 } = require('../lib/tacoBellCampaign');
 const {
+  validateGuinnessEntryPayload,
+  isGuinnessVerificationMethod,
+} = require('../lib/guinnessCampaign');
+const {
   campaignRegion,
   normaliseMobileForRegion,
   isValidMobileForRegion,
@@ -50,7 +54,8 @@ function isCrosswordEntry(method) {
     || isCastrolVerificationMethod(method)
     || isSmirnoffVerificationMethod(method)
     || isHankookVerificationMethod(method)
-    || isTacoBellVerificationMethod(method);
+    || isTacoBellVerificationMethod(method)
+    || isGuinnessVerificationMethod(method);
 }
 
 function labAllowsDuplicateReceipts(labSessionId) {
@@ -253,6 +258,8 @@ function createClaimWithReceipt({
     validated = validateHankookEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else if (isTacoBellVerificationMethod(body.verificationMethod)) {
     validated = validateTacoBellEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
+  } else if (isGuinnessVerificationMethod(body.verificationMethod)) {
+    validated = validateGuinnessEntryPayload(body, campaign, deviceRow);
   } else {
     validated = validateReceiptPayload(body, file);
   }
