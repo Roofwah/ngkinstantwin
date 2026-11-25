@@ -61,11 +61,13 @@ export default function App() {
         <Route path="/enter/loves"          element={<LovesInstantWinEnter />} />
         <Route path="/demo/device"         element={<DeviceSimulator />} />
         <Route path="/demo/device/:hwId"   element={<DeviceSimulator />} />
-        {/* Stable share URL for partners (Zitcha) — same simulator + campaign selector */}
-        <Route path="/demo/zitcha"         element={<DeviceSimulator />} />
-        <Route path="/demo/zitcha/:hwId"   element={<DeviceSimulator />} />
-        <Route path="/demo/loves"          element={<Navigate to="/demo/zitcha" replace />} />
-        <Route path="/demo/loves/:hwId"    element={<Navigate to="/demo/zitcha" replace />} />
+        {/* Zitcha share link — Loves-only PUK simulator */}
+        <Route path="/zitcha/demo"         element={<DeviceSimulator lockedCampaignId="loves-2026" />} />
+        <Route path="/zitcha/demo/:hwId"   element={<DeviceSimulator lockedCampaignId="loves-2026" />} />
+        <Route path="/demo/zitcha"         element={<Navigate to="/zitcha/demo" replace />} />
+        <Route path="/demo/zitcha/:hwId"   element={<Navigate to="/zitcha/demo" replace />} />
+        <Route path="/demo/loves"          element={<Navigate to="/zitcha/demo" replace />} />
+        <Route path="/demo/loves/:hwId"    element={<Navigate to="/zitcha/demo" replace />} />
         <Route path="/lab"                 element={<Lab />} />
         <Route path="/lab/display/:sessionId" element={<LabDisplay />} />
         <Route path="/lab/:configId"        element={<Lab />} />
