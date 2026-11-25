@@ -61,6 +61,8 @@ export default function App() {
         <Route path="/enter/loves"          element={<LovesInstantWinEnter />} />
         <Route path="/demo/device"         element={<DeviceSimulator />} />
         <Route path="/demo/device/:hwId"   element={<DeviceSimulator />} />
+        <Route path="/demo/loves"          element={<DeviceSimulator lockedCampaignId="loves-2026" />} />
+        <Route path="/demo/loves/:hwId"    element={<DeviceSimulator lockedCampaignId="loves-2026" />} />
         <Route path="/lab"                 element={<Lab />} />
         <Route path="/lab/display/:sessionId" element={<LabDisplay />} />
         <Route path="/lab/:configId"        element={<Lab />} />

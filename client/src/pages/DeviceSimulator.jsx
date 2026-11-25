@@ -272,14 +272,24 @@ const DEFAULT_CAMPAIGN = mergeCampaign({
   config: { themeColor: '#e86600' },
 });
 
-export default function DeviceSimulator() {
+export default function DeviceSimulator({ lockedCampaignId = null } = {}) {
   const { hwId } = useParams();
   const navigate = useNavigate();
   const hw = getPukHardware(hwId);
   const SCREEN = hw.screen;
   const DEVICE_CODE = hw.deviceCode;
+  const campaignLocked = Boolean(lockedCampaignId);
 
-  const [campaign, setCampaign]       = useState(DEFAULT_CAMPAIGN);
+  const [campaign, setCampaign]       = useState(() => (
+    lockedCampaignId && CAMPAIGN_UI[lockedCampaignId]
+      ? mergeCampaign({
+          id: lockedCampaignId,
+          name: lockedCampaignId === 'loves-2026' ? 'Loves Instant Win' : (CAMPAIGN_UI[lockedCampaignId].name || lockedCampaignId),
+          brand: CAMPAIGN_UI[lockedCampaignId].sub || '',
+          config: { themeColor: CAMPAIGN_UI[lockedCampaignId].color },
+        })
+      : DEFAULT_CAMPAIGN
+  ));
   const [campaignOptions, setCampaignOptions] = useState([]);
   const [deviceState, setDeviceState] = useState(STATE.IDLE);
   const [tokenData, setTokenData]     = useState(null);
@@ -296,7 +306,10 @@ export default function DeviceSimulator() {
   const [threeMounted, setThreeMounted] = useState(false);
   const [qrCanvasTick, setQrCanvasTick] = useState(0);
   const [enterUrl, setEnterUrl] = useState(
-    () => resolvePhoneEnterUrl('niterra-ngk-2026') || `${PROD_BASE}${campaignEnterPath('niterra-ngk-2026')}`,
+    () => {
+      const startId = lockedCampaignId || 'niterra-ngk-2026';
+      return resolvePhoneEnterUrl(startId) || `${PROD_BASE}${campaignEnterPath(startId)}`;
+    },
   );
 
   const pollRef      = useRef(null);
@@ -331,14 +344,39 @@ export default function DeviceSimulator() {
   useEffect(() => {
     let cancelled = false;
     getDeviceConfig(DEVICE_CODE)
-      .then((data) => {
+      .then(async (data) => {
         if (cancelled) return;
+        if (campaignLocked && lockedCampaignId) {
+          try {
+            const switched = await setDemoCampaign(lockedCampaignId);
+            if (cancelled) return;
+            const next = switched.config?.campaign
+              ? mergeCampaign(switched.config.campaign)
+              : mergeCampaign({
+                  id: lockedCampaignId,
+                  name: 'Loves Instant Win',
+                  brand: 'Loves',
+                  config: { themeColor: '#ed2224' },
+                });
+            setCampaign(next);
+            setCampaignOptions([next]);
+            return;
+          } catch (err) {
+            console.warn('Locked campaign switch failed:', err.message);
+            const fallback = (data.availableCampaigns || []).find((c) => c.id === lockedCampaignId)
+              || { id: lockedCampaignId, name: 'Loves Instant Win', brand: 'Loves', config: { themeColor: '#ed2224' } };
+            const next = mergeCampaign(fallback);
+            setCampaign(next);
+            setCampaignOptions([next]);
+            return;
+          }
+        }
         setCampaign(mergeCampaign(data.campaign));
         setCampaignOptions((data.availableCampaigns || []).map((c) => mergeCampaign(c)));
       })
       .catch((err) => console.warn('Device config load failed:', err.message));
     return () => { cancelled = true; };
-  }, [DEVICE_CODE]);
+  }, [DEVICE_CODE, campaignLocked, lockedCampaignId]);
 
   useEffect(() => {
     const path = campaignEnterPath(campaign.id);
@@ -756,6 +794,10 @@ export default function DeviceSimulator() {
   }
 
   async function selectCampaign(c) {
+    if (campaignLocked) {
+      setSettingsModalOpen(false);
+      return;
+    }
     try {
       const data = await setDemoCampaign(c.id);
       const next = data.config?.campaign ? mergeCampaign(data.config.campaign) : c;
@@ -1094,6 +1136,7 @@ export default function DeviceSimulator() {
           campaign={campaign}
           campaignOptions={campaignOptions.length ? campaignOptions : [campaign]}
           onSelectCampaign={selectCampaign}
+          hideCampaignPicker={campaignLocked}
           hw={hw}
           hardwareOptions={listPukHardware()}
           viewMode={viewMode}
@@ -1113,7 +1156,11 @@ export default function DeviceSimulator() {
             setLedColor(null);
             setMenuOpen(false);
             setActivePanel(null);
-            navigate(pukHardwarePath(next.id));
+            if (campaignLocked && lockedCampaignId === 'loves-2026') {
+              navigate(next.id === 'puk2' || !next.id ? '/demo/loves' : `/demo/loves/${next.id}`);
+            } else {
+              navigate(pukHardwarePath(next.id));
+            }
           }}
           onClose={() => setSettingsModalOpen(false)}
         />
@@ -1148,6 +1195,7 @@ function SettingsModal({
   campaign,
   campaignOptions,
   onSelectCampaign,
+  hideCampaignPicker = false,
   hw,
   hardwareOptions,
   onSelectHardware,
@@ -1266,6 +1314,34 @@ function SettingsModal({
             <h3 style={sectionTitle}>
               Campaign
             </h3>
+            {hideCampaignPicker ? (
+              <div
+                style={{
+                  padding: '12px 14px',
+                  background: campaign.color || '#ed2224',
+                  color: '#000',
+                  border: `1px solid ${campaign.color || '#ed2224'}`,
+                  borderRadius: 8,
+                  fontFamily: 'monospace',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {campaign.name}
+                <span style={{
+                  display: 'block',
+                  fontSize: '0.6rem',
+                  fontWeight: 400,
+                  opacity: 0.75,
+                  marginTop: 2,
+                  letterSpacing: '0.06em',
+                }}>
+                  {campaign.sub}
+                </span>
+              </div>
+            ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {campaignOptions.map(c => {
                 const active = campaign.id === c.id;
@@ -1304,6 +1380,7 @@ function SettingsModal({
                 );
               })}
             </div>
+            )}
           </section>
 
           <section>
