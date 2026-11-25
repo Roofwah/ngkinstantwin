@@ -99,6 +99,17 @@ function winnerEmailBranding(claim) {
       defaultStore: store,
     };
   }
+  if (claim?.campaignId === 'loves-2026') {
+    const store = claim.storeName || 'Loves Travel Stop Rock Falls IL';
+    return {
+      kicker: 'LOVES INSTANT WIN',
+      title: 'Instant Winner',
+      subject: 'Loves Instant Winner',
+      accent: '#ed2224',
+      buttonText: '#ffffff',
+      defaultStore: store,
+    };
+  }
   const store = claim?.storeName || 'Demo Store';
   return {
     kicker: 'PUK INSTANT WIN',
@@ -156,7 +167,9 @@ function winnerSmsBody(claim) {
           ? HOKA_STORE_NAME
           : claim?.campaignId === 'guinness-2026'
             ? 'Shamrock Arms'
-            : 'Demo Store');
+            : claim?.campaignId === 'loves-2026'
+              ? 'Loves Travel Stop Rock Falls IL'
+              : 'Demo Store');
   const prizeLine = (isAudiClaim(claim) || isFordClaim(claim))
     ? `You've won ${isAudiClaim(claim) ? audiPrizeLabel(claim) : publicPrizeLabel(claim)} at ${store}.`
     : `You've won ${claim.prizeName} at ${store}.`;

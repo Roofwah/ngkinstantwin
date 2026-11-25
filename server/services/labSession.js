@@ -143,6 +143,7 @@ const CAMPAIGN_PHONE_ENTRY_PATH = {
   'hankook-2026': '/enter/hankook',
   'taco-bell-2026': '/enter/taco-bell',
   'guinness-2026': '/enter/guinness',
+  'loves-2026': '/enter/loves',
 };
 
 function phoneEntryPathForSession(session) {

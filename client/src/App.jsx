@@ -14,6 +14,7 @@ import CastrolInstantWinEnter from './pages/CastrolInstantWinEnter';
 import HankookInstantWinEnter from './pages/HankookInstantWinEnter';
 import TacoBellInstantWinEnter from './pages/TacoBellInstantWinEnter';
 import GuinnessInstantWinEnter from './pages/GuinnessInstantWinEnter';
+import LovesInstantWinEnter from './pages/LovesInstantWinEnter';
 import DeviceSimulator from './pages/DeviceSimulator';
 import Lab from './pages/Lab';
 import LabDisplay from './pages/LabDisplay';
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="/enter/hankook"        element={<HankookInstantWinEnter />} />
         <Route path="/enter/taco-bell"      element={<TacoBellInstantWinEnter />} />
         <Route path="/enter/guinness"       element={<GuinnessInstantWinEnter />} />
+        <Route path="/enter/loves"          element={<LovesInstantWinEnter />} />
         <Route path="/demo/device"         element={<DeviceSimulator />} />
         <Route path="/demo/device/:hwId"   element={<DeviceSimulator />} />
         <Route path="/lab"                 element={<Lab />} />

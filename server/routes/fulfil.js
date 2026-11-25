@@ -28,6 +28,7 @@ function defaultStoreName(claim) {
   if (claim.campaignId === 'hoka-2026') return HOKA_STORE_NAME;
   if (claim.campaignId === 'audi-2026') return AUDI_STORE_NAME;
   if (claim.campaignId === 'guinness-2026') return 'Shamrock Arms';
+  if (claim.campaignId === 'loves-2026') return 'Loves Travel Stop Rock Falls IL';
   return 'Demo Store';
 }
 

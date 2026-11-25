@@ -1,0 +1,323 @@
+/* Loves Instant Win — form over travel-stop art with red accent */
+.loves-page {
+  --loves-gold: #ed2224;
+  --loves-gold-dark: #c41c1e;
+  --loves-text: #f5f2ec;
+  --loves-muted: #a8a49c;
+  --loves-input-border: #3a3a3a;
+  --loves-bg-image: url('/campaigns/loves/bg.jpg');
+  min-height: 100dvh;
+  background-color: #000;
+  background-image: var(--loves-bg-image);
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  color: var(--loves-text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.loves-page * {
+  box-sizing: border-box;
+}
+
+.loves-page__scrim {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.55) 40%,
+    rgba(0, 0, 0, 0.82) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.loves-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 28px 16px 48px;
+  min-height: 100dvh;
+}
+
+.loves-card {
+  width: 100%;
+  padding: 28px 24px 36px;
+  background: rgba(12, 12, 12, 0.92);
+  border-radius: 4px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+  border-top: 4px solid var(--loves-gold);
+  border: 1px solid #222;
+  border-top-width: 4px;
+  border-top-color: var(--loves-gold);
+}
+
+.loves-page--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+}
+
+.loves-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(203, 161, 53, 0.25);
+  border-top-color: var(--loves-gold);
+  border-radius: 50%;
+  animation: lovesSpin 0.8s linear infinite;
+}
+
+@keyframes lovesSpin {
+  to { transform: rotate(360deg); }
+}
+
+.loves-unavailable {
+  text-align: center;
+  padding: 24px;
+  background: rgba(12, 12, 12, 0.94);
+  border-radius: 4px;
+  max-width: 360px;
+  border: 1px solid #333;
+}
+
+.loves-unavailable h2 {
+  margin: 0 0 8px;
+  font-size: 1.125rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--loves-gold);
+}
+
+.loves-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--loves-gold);
+}
+
+.loves-title {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #fff;
+}
+
+.loves-lede {
+  margin: 0 0 24px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--loves-muted);
+}
+
+.loves-form {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.loves-field {
+  margin-bottom: 16px;
+}
+
+.loves-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--loves-gold);
+}
+
+.loves-field input,
+.loves-field select {
+  width: 100%;
+  height: 50px;
+  padding: 8px 12px;
+  border: 1px solid var(--loves-input-border);
+  border-radius: 4px;
+  background: #0a0a0a;
+  color: #fff;
+  font-size: 16px;
+}
+
+.loves-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ed2224' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.loves-store {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  padding: 0 12px;
+  border: 1px solid var(--loves-input-border);
+  border-radius: 4px;
+  background: #111;
+  font-size: 15px;
+  color: #ddd;
+}
+
+.loves-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 48px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--loves-gold);
+  color: #000;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.loves-cta:hover {
+  background: var(--loves-gold-dark);
+}
+
+.loves-cta:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.loves-ghost {
+  width: 100%;
+  margin-top: 16px;
+  background: transparent;
+  border: 0;
+  color: var(--loves-gold);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.loves-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #2a1010;
+  border: 1px solid #7a3030;
+  color: #ffb4b4;
+  font-size: 14px;
+}
+
+.loves-demo {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #1a160c;
+  border: 1px solid #5a4a20;
+  font-size: 14px;
+  color: #e8d9a8;
+}
+
+.loves-legal {
+  margin-top: 20px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--loves-muted);
+}
+
+.loves-result h1 {
+  margin: 0 0 12px;
+  font-size: 1.5rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.loves-lede--emphasis {
+  font-weight: 600;
+  color: var(--loves-gold);
+}
+
+.loves-prize {
+  margin: 20px 0;
+  padding: 24px 16px;
+  border-radius: 4px;
+  text-align: center;
+  background: #111;
+  border: 1px solid var(--loves-gold);
+  color: #fff;
+}
+
+.loves-prize--reveal {
+  padding: 28px 14px 22px;
+  animation: lovesPrizeIn 0.55s ease-out;
+}
+
+@keyframes lovesPrizeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.loves-prize-img {
+  display: block;
+  width: min(220px, 70%);
+  height: auto;
+  margin: 0 auto 16px;
+  object-fit: contain;
+}
+
+.loves-prize-name {
+  margin: 0 0 8px;
+  font-size: clamp(1.15rem, 4.5vw, 1.45rem);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--loves-gold);
+}
+
+.loves-prize-value {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--loves-muted);
+}
+
+.loves-staff-msg {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--loves-muted);
+}
+
+.loves-ref {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.loves-ref__label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  color: var(--loves-muted);
+}
+
+.loves-code {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--loves-gold);
+}

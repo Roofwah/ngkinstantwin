@@ -42,6 +42,10 @@ const {
   isGuinnessVerificationMethod,
 } = require('../lib/guinnessCampaign');
 const {
+  validateLovesEntryPayload,
+  isLovesVerificationMethod,
+} = require('../lib/lovesCampaign');
+const {
   campaignRegion,
   normaliseMobileForRegion,
   isValidMobileForRegion,
@@ -55,7 +59,8 @@ function isCrosswordEntry(method) {
     || isSmirnoffVerificationMethod(method)
     || isHankookVerificationMethod(method)
     || isTacoBellVerificationMethod(method)
-    || isGuinnessVerificationMethod(method);
+    || isGuinnessVerificationMethod(method)
+    || isLovesVerificationMethod(method);
 }
 
 function labAllowsDuplicateReceipts(labSessionId) {
@@ -260,6 +265,8 @@ function createClaimWithReceipt({
     validated = validateTacoBellEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else if (isGuinnessVerificationMethod(body.verificationMethod)) {
     validated = validateGuinnessEntryPayload(body, campaign, deviceRow);
+  } else if (isLovesVerificationMethod(body.verificationMethod)) {
+    validated = validateLovesEntryPayload(body, campaign, deviceRow);
   } else {
     validated = validateReceiptPayload(body, file);
   }

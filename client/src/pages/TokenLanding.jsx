@@ -9,6 +9,7 @@ import CastrolEntryForm from '../components/CastrolEntryForm';
 import HankookEntryForm from '../components/HankookEntryForm';
 import TacoBellEntryForm from '../components/TacoBellEntryForm';
 import GuinnessEntryForm from '../components/GuinnessEntryForm';
+import LovesEntryForm from '../components/LovesEntryForm';
 import HokaEntryForm from '../components/HokaEntryForm';
 import NiterraCrosswordEntryForm from '../components/NiterraCrosswordEntryForm';
 import { FORD_CAMPAIGN_ID } from '../campaigns/ford';
@@ -17,6 +18,7 @@ import { CASTROL_CAMPAIGN_ID } from '../campaigns/castrol';
 import { HANKOOK_CAMPAIGN_ID } from '../campaigns/hankook';
 import { TACO_BELL_CAMPAIGN_ID } from '../campaigns/tacoBell';
 import { GUINNESS_CAMPAIGN_ID } from '../campaigns/guinness';
+import { LOVES_CAMPAIGN_ID } from '../campaigns/loves';
 import { HOKA_CAMPAIGN_ID } from '../campaigns/hokaCotswold';
 import { NITERRA_CAMPAIGN_ID } from '../campaigns/niterraRepco';
 import '../campaigns/ford.css';
@@ -24,6 +26,7 @@ import '../campaigns/castrol.css';
 import '../campaigns/hankook.css';
 import '../campaigns/tacoBell.css';
 import '../campaigns/guinness.css';
+import '../campaigns/loves.css';
 import '../campaigns/niterra-repco.css';
 import '../campaigns/hoka.css';
 
@@ -166,6 +169,9 @@ export default function TokenLanding() {
   }
   if (campaignId === GUINNESS_CAMPAIGN_ID) {
     return <GuinnessEntryForm campaign={tokenData.campaign} onComplete={handleComplete} />;
+  }
+  if (campaignId === LOVES_CAMPAIGN_ID) {
+    return <LovesEntryForm campaign={tokenData.campaign} onComplete={handleComplete} />;
   }
   if (campaignId === HOKA_CAMPAIGN_ID) {
     return (

@@ -21,6 +21,7 @@ const CAMPAIGN_ENTER_PATH = {
   'hankook-2026': '/enter/hankook',
   'taco-bell-2026': '/enter/taco-bell',
   'guinness-2026': '/enter/guinness',
+  'loves-2026': '/enter/loves',
 };
 
 function campaignEnterPath(campaignId) {
@@ -223,6 +224,23 @@ const CAMPAIGN_UI = {
       { q: 'How to enter', a: 'Scan the PUK QR, enter your name and mobile, verify, and reveal.' },
       { q: 'Prizes', a: 'Guinness Bag, Beanie, Cap, Scarf, or Umbrella.' },
       { q: 'On device', a: 'Idle loops Guinness art. Double tap for QR to /enter/guinness.' },
+    ],
+  },
+  'loves-2026': {
+    sub: 'Loves Instant Win',
+    color: '#ed2224',
+    idleVideo: '/campaigns/loves/loves.mp4',
+    qrBg: '/campaigns/loves/bg.jpg',
+    qrFgColor: '#ffffff',
+    qrPadBg: 'transparent',
+    slides: [
+      { headline: 'LOVES', sub: 'Instant Win', src: '/campaigns/loves/bg.jpg' },
+    ],
+    faq: [
+      { q: 'Campaign', a: 'Loves Instant Win at Loves Travel Stop Rock Falls IL — ask staff for a QR and scan to play.' },
+      { q: 'How to enter', a: 'Scan the PUK QR, enter your name and mobile, verify, and reveal.' },
+      { q: 'Prizes', a: 'Cooler, Cap, Car, Card, Powerbank, or Sunglasses.' },
+      { q: 'On device', a: 'Idle loops Loves art. Double tap for QR to /enter/loves.' },
     ],
   },
 };

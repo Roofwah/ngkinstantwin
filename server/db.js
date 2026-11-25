@@ -498,6 +498,45 @@ const DEMO_CAMPAIGNS = [
     },
   },
   {
+    id: 'loves-2026',
+    name: 'Loves Instant Win',
+    brand: 'Loves',
+    tagline: 'Loves Instant Win',
+    mechanic: 'Ask staff for a QR and scan to play',
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    config: {
+      themeColor: '#ed2224',
+      region: 'US',
+      entryVariant: 'loves-instant-win',
+      entryPath: '/enter/loves',
+      eligibleBrands: ['Loves'],
+      defaultStoreName: 'Loves Travel Stop Rock Falls IL',
+      defaultStoreCode: 'loves-rock-falls',
+      retailer: 'Loves',
+      idleVideoUrl: '/campaigns/loves/loves.mp4',
+      qrBgUrl: '/campaigns/loves/bg.jpg',
+      qrFgColor: '#ffffff',
+      formArtUrl: '/campaigns/loves/bg.jpg',
+      landingHeroUrl: '/campaigns/loves/bg.jpg',
+      heroImageUrl: '/campaigns/loves/bg.jpg',
+      demoControl: {
+        enabled: true,
+        winEvery: 1,
+        sweepstakesOnLose: false,
+        claimOffset: 0,
+        prizes: [
+          { name: 'Cooler', value: 65, qty: 40, image: '/campaigns/loves/cooler.png' },
+          { name: 'Cap', value: 25, qty: 40, image: '/campaigns/loves/cap.png' },
+          { name: 'Car', value: 100, qty: 4, image: '/campaigns/loves/car.png' },
+          { name: 'Card', value: 50, qty: 40, image: '/campaigns/loves/card.png' },
+          { name: 'Powerbank', value: 40, qty: 40, image: '/campaigns/loves/powerbank.png' },
+          { name: 'Sunglasses', value: 35, qty: 40, image: '/campaigns/loves/sunglasses.png' },
+        ],
+      },
+    },
+  },
+  {
     id: 'puk-demo',
     name: 'PUK Demo',
     brand: 'PUK',
@@ -606,7 +645,14 @@ for (const c of DEMO_CAMPAIGNS) {
                           claimOffset: prev.demoControl?.claimOffset || 0,
                         },
                       }
-                    : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
+                    : c.id === 'loves-2026' && c.config.demoControl
+                      ? {
+                          demoControl: {
+                            ...c.config.demoControl,
+                            claimOffset: prev.demoControl?.claimOffset || 0,
+                          },
+                        }
+                      : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
   };
   if ([
     'niterra-ngk-2026',
@@ -617,6 +663,7 @@ for (const c of DEMO_CAMPAIGNS) {
     'hankook-2026',
     'taco-bell-2026',
     'guinness-2026',
+    'loves-2026',
     'smirnoff-2026',
     'puk-demo',
   ].includes(c.id)) {

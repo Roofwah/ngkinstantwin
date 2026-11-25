@@ -10,6 +10,7 @@ import { CASTROL_CAMPAIGN_ID } from '../campaigns/castrol';
 import { HANKOOK_CAMPAIGN_ID } from '../campaigns/hankook';
 import { TACO_BELL_CAMPAIGN_ID } from '../campaigns/tacoBell';
 import { GUINNESS_CAMPAIGN_ID } from '../campaigns/guinness';
+import { LOVES_CAMPAIGN_ID } from '../campaigns/loves';
 
 const DEFAULT_DEVICE = 'PR-DEMO-001';
 
@@ -99,6 +100,14 @@ export default function InstantWinDirect() {
     if (labSession) qs.set('labSession', labSession);
     const suffix = qs.toString() ? `?${qs.toString()}` : '';
     return <Navigate to={`/enter/guinness${suffix}`} replace />;
+  }
+
+  if (campaignParam === LOVES_CAMPAIGN_ID) {
+    const qs = new URLSearchParams();
+    if (deviceCode !== DEFAULT_DEVICE) qs.set('device', deviceCode);
+    if (labSession) qs.set('labSession', labSession);
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return <Navigate to={`/enter/loves${suffix}`} replace />;
   }
 
   async function handleComplete(receiptPayload) {
