@@ -526,9 +526,9 @@ const DEMO_CAMPAIGNS = [
         sweepstakesOnLose: false,
         claimOffset: 0,
         prizes: [
-          { name: 'Cooler', value: 65, qty: 40, image: '/campaigns/loves/cooler.png' },
+          { name: 'Cooler', value: 10, qty: 40, image: '/campaigns/loves/cooler.png' },
           { name: 'Cap', value: 25, qty: 40, image: '/campaigns/loves/cap.png' },
-          { name: 'Car', value: 100, qty: 4, image: '/campaigns/loves/car.png' },
+          { name: 'Car', value: 60, qty: 4, image: '/campaigns/loves/car.png' },
           { name: 'Card', value: 50, qty: 40, image: '/campaigns/loves/card.png' },
           { name: 'Powerbank', value: 40, qty: 40, image: '/campaigns/loves/powerbank.png' },
           { name: 'Sunglasses', value: 35, qty: 40, image: '/campaigns/loves/sunglasses.png' },
