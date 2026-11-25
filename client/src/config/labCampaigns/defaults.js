@@ -53,6 +53,10 @@ export const PHONE_ENTRY_TURNSTYLE_COMPONENTS = [
   { id: 'store_notify', label: 'Store notification', description: 'Email sent to store inbox' },
 ];
 
+/** Aliases for older lab configs (hoka-cotswold) that still import these names. */
+export const HOKA_JOURNEY_STAGES = PHONE_ENTRY_JOURNEY_STAGES;
+export const HOKA_TURNSTYLE_COMPONENTS = PHONE_ENTRY_TURNSTYLE_COMPONENTS;
+
 export const DEFAULT_QUALIFYING_RULES = {
   minSpendOptions: [15, 25, 50, 75, 100],
   defaultMinSpend: 15,
