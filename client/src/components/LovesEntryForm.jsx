@@ -40,6 +40,9 @@ export default function LovesEntryForm({ campaign, onComplete }) {
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [otpDemo, setOtpDemo] = useState(false);
   const [reveal, setReveal] = useState(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [smsConsent, setSmsConsent] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
   async function handleVerifyAndEnter() {
     setError('');
@@ -51,6 +54,14 @@ export default function LovesEntryForm({ campaign, onComplete }) {
     const norm = normaliseMobileForRegion(mobile, region.id);
     if (!isValidMobileForRegion(norm, region.id)) {
       setError(region.invalidMobileMessage);
+      return;
+    }
+    if (!termsAccepted) {
+      setError('Please agree to the Official Rules to continue');
+      return;
+    }
+    if (!smsConsent) {
+      setError('SMS verification consent is required to send a one-time code');
       return;
     }
 
@@ -86,6 +97,8 @@ export default function LovesEntryForm({ campaign, onComplete }) {
         storeName,
         receiptSource: 'not_required',
         verificationMethod: LOVES_VERIFICATION_METHOD,
+        termsAccepted: true,
+        marketingOptIn,
       });
       if (outcome?.claimId) {
         setReveal(outcome);
@@ -124,7 +137,7 @@ export default function LovesEntryForm({ campaign, onComplete }) {
             />
           </div>
           <div className="loves-field">
-            <label htmlFor="loves-mobile">Mobile number</label>
+            <label htmlFor="loves-mobile">US mobile number</label>
             <input
               id="loves-mobile"
               type="tel"
@@ -139,17 +152,53 @@ export default function LovesEntryForm({ campaign, onComplete }) {
             <div className="loves-store">{storeName}</div>
           </div>
 
+          <div className="loves-optins">
+            <label className="loves-check">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => { setTermsAccepted(e.target.checked); setError(''); }}
+              />
+              <span>
+                I agree to the Official Rules and Privacy Policy for this Instant Win promotion.
+              </span>
+            </label>
+            <label className="loves-check">
+              <input
+                type="checkbox"
+                checked={smsConsent}
+                onChange={(e) => { setSmsConsent(e.target.checked); setError(''); }}
+              />
+              <span>
+                I consent to receive a one-time SMS verification code at the number provided.
+                Msg &amp; data rates may apply. Consent is required to enter.
+              </span>
+            </label>
+            <label className="loves-check loves-check--optional">
+              <input
+                type="checkbox"
+                checked={marketingOptIn}
+                onChange={(e) => setMarketingOptIn(e.target.checked)}
+              />
+              <span>
+                Optional: Send me Loves offers and updates via SMS/email.
+                Not required to enter.
+              </span>
+            </label>
+          </div>
+
           <button
             className="loves-cta"
             type="button"
             onClick={handleVerifyAndEnter}
-            disabled={otpSending}
+            disabled={otpSending || !termsAccepted || !smsConsent}
           >
             <span>{otpSending ? 'Sending code…' : 'Verify & enter'}</span>
           </button>
 
           <p className="loves-legal">
-            By continuing you agree to the promotion terms. Outcomes are determined after mobile verification.
+            A one-time code will be sent to your US mobile. Instant-win outcomes are determined
+            after verification.
           </p>
         </div>
       )}

@@ -105,6 +105,20 @@ function birdChannelIdForRegion(regionId) {
   return '';
 }
 
+/**
+ * Whether this region can send real OTP SMS.
+ * US uses the newer platform API (BIRD_API_KEY + BIRD_SMS_FROM_US), not a Channel UUID.
+ */
+function birdSmsReadyForRegion(regionId) {
+  const region = resolveRegion(regionId);
+  if (region.id === 'US') {
+    const apiKey = String(process.env.BIRD_API_KEY || '').trim();
+    const from = String(process.env.BIRD_SMS_FROM_US || '').trim();
+    return apiKey.length > 0 && from.length > 0;
+  }
+  return Boolean(birdChannelIdForRegion(region.id));
+}
+
 module.exports = {
   REGIONS,
   resolveRegion,
@@ -113,4 +127,5 @@ module.exports = {
   isValidMobileForRegion,
   toE164ForRegion,
   birdChannelIdForRegion,
+  birdSmsReadyForRegion,
 };

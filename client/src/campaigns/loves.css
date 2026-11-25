@@ -226,6 +226,36 @@
   color: #e8d9a8;
 }
 
+.loves-optins {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 4px 0 18px;
+}
+
+.loves-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--loves-muted);
+  cursor: pointer;
+}
+
+.loves-check input {
+  margin-top: 2px;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--loves-gold);
+}
+
+.loves-check--optional span {
+  color: #8a8680;
+}
+
 .loves-legal {
   margin-top: 20px;
   font-size: 11px;

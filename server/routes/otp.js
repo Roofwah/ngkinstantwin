@@ -7,6 +7,7 @@ const {
   normaliseMobileForRegion,
   isValidMobileForRegion,
   birdChannelIdForRegion,
+  birdSmsReadyForRegion,
 } = require('../lib/regions');
 
 // In-memory OTP store: `${region}:${mobile}` -> { code, expiresAt, attempts }
@@ -36,6 +37,11 @@ router.get('/status', (req, res) => {
       NZ: Boolean(birdChannelIdForRegion('NZ')),
       US: Boolean(birdChannelIdForRegion('US')),
     },
+    smsReady: {
+      AU: birdSmsReadyForRegion('AU'),
+      NZ: birdSmsReadyForRegion('NZ'),
+      US: birdSmsReadyForRegion('US'),
+    },
     ready: bird.accessKey && bird.workspaceId && bird.channelId,
   });
 });
@@ -49,8 +55,8 @@ router.post('/send', async (req, res) => {
     return res.status(400).json({ error: region.invalidMobileMessage });
   }
 
-  const regionChannelReady = Boolean(birdChannelIdForRegion(region.id));
-  const useDemo = isOtpDemoMode() || !regionChannelReady;
+  const regionReady = birdSmsReadyForRegion(region.id);
+  const useDemo = isOtpDemoMode() || !regionReady;
   const code = useDemo ? DEMO_CODE : generateCode();
   otpStore.set(otpKey(region.id, mobile), {
     code,
@@ -60,7 +66,7 @@ router.post('/send', async (req, res) => {
   });
 
   if (useDemo) {
-    const reason = isOtpDemoMode() ? 'otp_demo_mode' : 'region_channel_missing';
+    const reason = isOtpDemoMode() ? 'otp_demo_mode' : 'region_sms_not_configured';
     console.log(`[DEMO] OTP (${region.id}/${reason}) for ${mobile}: ${code}`);
     return res.json({ sent: true, demo: true, region: region.id, reason });
   }
