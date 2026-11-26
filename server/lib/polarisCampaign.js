@@ -1,8 +1,19 @@
 const POLARIS_CAMPAIGN_ID = 'polaris-2026';
 const POLARIS_VERIFICATION_METHOD = 'polaris_agpower';
 
-const POLARIS_CASH_NAME = 'Cash';
-const POLARIS_CASH_VALUE = 1000;
+const POLARIS_CASHBACK_NAME = 'Cashback';
+const POLARIS_CASHBACK_MIN = 100;
+const POLARIS_CASHBACK_MAX = 1000;
+const POLARIS_CASHBACK_STEP = 50;
+const POLARIS_CASHBACK_VALUES = Array.from(
+  { length: (POLARIS_CASHBACK_MAX - POLARIS_CASHBACK_MIN) / POLARIS_CASHBACK_STEP + 1 },
+  (_, i) => POLARIS_CASHBACK_MIN + i * POLARIS_CASHBACK_STEP,
+);
+
+/** @deprecated use POLARIS_CASHBACK_NAME */
+const POLARIS_CASH_NAME = POLARIS_CASHBACK_NAME;
+/** @deprecated use POLARIS_CASHBACK_MAX */
+const POLARIS_CASH_VALUE = POLARIS_CASHBACK_MAX;
 
 const POLARIS_MODELS = [
   'Ranger 500',
@@ -16,16 +27,20 @@ const POLARIS_MODELS = [
 ];
 
 function polarisDemoPrizes() {
-  return [{ name: POLARIS_CASH_NAME, value: POLARIS_CASH_VALUE, qty: 40 }];
+  return POLARIS_CASHBACK_VALUES.map((value) => ({
+    name: POLARIS_CASHBACK_NAME,
+    value,
+    qty: 2,
+  }));
 }
 
 function polarisCashDisplayName() {
-  return POLARIS_CASH_NAME;
+  return POLARIS_CASHBACK_NAME;
 }
 
-/** e.g. "$1000 Cash" */
+/** e.g. "$650 Cashback" */
 function polarisPrizeLabel(prizeName, prizeValue) {
-  const name = prizeName || POLARIS_CASH_NAME;
+  const name = prizeName || POLARIS_CASHBACK_NAME;
   const value = Number(prizeValue);
   if (!Number.isFinite(value) || value <= 0) return name;
   if (/^\$\d/.test(String(name))) return name;
@@ -40,10 +55,10 @@ function isPolarisClaim(claim) {
 
 function polarisManifestPrizes() {
   return {
-    tier1: Array.from({ length: 40 }, () => ({
-      prizeName: POLARIS_CASH_NAME,
-      value: POLARIS_CASH_VALUE,
-    })),
+    tier1: POLARIS_CASHBACK_VALUES.flatMap((value) => ([
+      { prizeName: POLARIS_CASHBACK_NAME, value },
+      { prizeName: POLARIS_CASHBACK_NAME, value },
+    ])),
     tier2: [],
     tier3: [],
   };
@@ -97,6 +112,10 @@ function validatePolarisEntryPayload(body, campaign, deviceRow, allowedModels) {
 module.exports = {
   POLARIS_CAMPAIGN_ID,
   POLARIS_VERIFICATION_METHOD,
+  POLARIS_CASHBACK_NAME,
+  POLARIS_CASHBACK_MIN,
+  POLARIS_CASHBACK_MAX,
+  POLARIS_CASHBACK_STEP,
   POLARIS_CASH_NAME,
   POLARIS_CASH_VALUE,
   POLARIS_MODELS,

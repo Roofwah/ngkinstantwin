@@ -4,6 +4,7 @@ const { usesNthWinDemo, isWinSlot } = require('./demoControl');
 const DEFAULT_CAMPAIGN_ID = 'niterra-ngk-2026';
 const { AUDI_CAMPAIGN_ID, AUDI_VOUCHER_MIN } = require('../lib/audiCampaign');
 const { FORD_CAMPAIGN_ID, FORD_VOUCHER_MIN } = require('../lib/fordCampaign');
+const { POLARIS_CAMPAIGN_ID, POLARIS_CASHBACK_MIN } = require('../lib/polarisCampaign');
 const { HOKA_CAMPAIGN_ID } = require('../lib/hokaCampaign');
 const { NITERRA_CAMPAIGN_ID } = require('../lib/niterraCampaign');
 
@@ -62,6 +63,17 @@ function assignPrize(claimId, claimTime, campaignId = DEFAULT_CAMPAIGN_ID) {
     return { result: 'NOT_WINNER', prize: null };
   }
 
+  if (resolvedCampaignId === POLARIS_CAMPAIGN_ID) {
+    const prize = db.prepare(`
+      SELECT * FROM manifest
+      WHERE status = 'AVAILABLE' AND campaignId = ? AND value >= ?
+      ORDER BY RANDOM()
+      LIMIT 1
+    `).get(resolvedCampaignId, POLARIS_CASHBACK_MIN);
+    if (prize) return assignAndReturn(claimId, prize);
+    return { result: 'NOT_WINNER', prize: null };
+  }
+
   const prize = db.prepare(`
     SELECT * FROM manifest
     WHERE status = 'AVAILABLE'
@@ -106,6 +118,16 @@ function assignDemoMode(claimId, campaignId) {
       ORDER BY RANDOM()
       LIMIT 1
     `).get(campaignId, FORD_VOUCHER_MIN);
+    if (prize) return assignAndReturn(claimId, prize);
+  }
+
+  if (campaignId === POLARIS_CAMPAIGN_ID) {
+    const prize = db.prepare(`
+      SELECT * FROM manifest
+      WHERE status = 'AVAILABLE' AND campaignId = ? AND value >= ?
+      ORDER BY RANDOM()
+      LIMIT 1
+    `).get(campaignId, POLARIS_CASHBACK_MIN);
     if (prize) return assignAndReturn(claimId, prize);
   }
 

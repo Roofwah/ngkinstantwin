@@ -29,8 +29,15 @@ export const POLARIS_MODELS = [
 
 export const POLARIS_DEFAULT_DEALER = 'AGPower Lilydale';
 
-export const POLARIS_CASH_NAME = 'Cash';
-export const POLARIS_CASH_VALUE = 1000;
+export const POLARIS_CASHBACK_NAME = 'Cashback';
+export const POLARIS_CASHBACK_MIN = 100;
+export const POLARIS_CASHBACK_MAX = 1000;
+export const POLARIS_CASHBACK_STEP = 50;
+
+/** @deprecated */
+export const POLARIS_CASH_NAME = POLARIS_CASHBACK_NAME;
+/** @deprecated */
+export const POLARIS_CASH_VALUE = POLARIS_CASHBACK_MAX;
 
 export function polarisDealerName(campaign) {
   return campaign?.config?.defaultStoreName || POLARIS_DEFAULT_DEALER;
@@ -51,7 +58,7 @@ export function isValidPolarisInvoiceTail(value) {
 }
 
 export function polarisPrizeLabel(prizeName, prizeValue) {
-  const name = prizeName || POLARIS_CASH_NAME;
+  const name = prizeName || POLARIS_CASHBACK_NAME;
   const value = Number(prizeValue);
   if (!Number.isFinite(value) || value <= 0) return name;
   if (/^\$\d/.test(String(name))) return name;

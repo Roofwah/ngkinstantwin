@@ -255,7 +255,7 @@ const CAMPAIGN_UI = {
     faq: [
       { q: 'Campaign', a: 'Polaris Instant Win at AGPower Lilydale — enter after a qualifying Polaris purchase.' },
       { q: 'How to enter', a: 'Scan the QR code, select your purchased model, enter the last 4 digits of your invoice, and verify your mobile.' },
-      { q: 'Prizes', a: 'Every valid entry wins $1000 cash.' },
+      { q: 'Prizes', a: 'Every entry wins Polaris cashback — values from $100 up to $1000.' },
       { q: 'On device', a: 'Idle video loops on the panel. Double tap for QR to /enter/polaris.' },
     ],
   },

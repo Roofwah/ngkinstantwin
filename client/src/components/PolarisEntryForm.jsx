@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { sendOtp, verifyOtp } from '../api';
 import PolarisEntryShell from './PolarisEntryShell';
+import PolarisCashbackCounter from './PolarisCashbackCounter';
 import StaffWinCode from './StaffWinCode';
 import {
   POLARIS_VERIFICATION_METHOD,
-  POLARIS_CASH_NAME,
-  POLARIS_CASH_VALUE,
+  POLARIS_CASHBACK_NAME,
   polarisDealerName,
   polarisLandingArt,
   polarisModels,
-  polarisPrizeLabel,
   isPolarisWin,
   isValidPolarisInvoiceTail,
 } from '../campaigns/polaris';
@@ -122,10 +121,6 @@ export default function PolarisEntryForm({
   const first = normaliseName(fullName).split(/\s+/)[0];
   const landingSrc = polarisLandingArt(campaign);
   const showLanding = step === STEPS.FORM || step === STEPS.OTP;
-  const prizeLine = polarisPrizeLabel(
-    reveal?.prizeName || POLARIS_CASH_NAME,
-    reveal?.prizeValue ?? POLARIS_CASH_VALUE,
-  );
 
   return (
     <PolarisEntryShell landingSrc={landingSrc} showLanding={showLanding}>
@@ -267,7 +262,13 @@ export default function PolarisEntryForm({
             <h1>Congratulations{first ? ` ${first}` : ''}!</h1>
             <p className="polaris-lede polaris-lede--emphasis">You&apos;ve won</p>
             <div className="polaris-prize polaris-prize--reveal">
-              <p className="polaris-voucher-label">{prizeLine}</p>
+              <PolarisCashbackCounter
+                key={reveal?.claimId || 'cashback'}
+                value={reveal?.prizeValue}
+              />
+              <p className="polaris-voucher-label">
+                {reveal?.prizeName || POLARIS_CASHBACK_NAME}
+              </p>
             </div>
             <p className="polaris-staff-msg">
               Redemption instructions have been sent to your mobile.
