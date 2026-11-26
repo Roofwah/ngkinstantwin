@@ -53,5 +53,6 @@ export function campaignPreviewPath(campaignId) {
   if (campaignId === 'hankook-2026') return '/enter/hankook';
   if (campaignId === 'guinness-2026') return '/enter/guinness';
   if (campaignId === 'loves-2026') return '/enter/loves';
+  if (campaignId === 'polaris-2026') return '/enter/polaris';
   return `/enter?campaign=${encodeURIComponent(campaignId)}`;
 }

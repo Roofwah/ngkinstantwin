@@ -11,6 +11,7 @@ import { HANKOOK_CAMPAIGN_ID } from '../campaigns/hankook';
 import { TACO_BELL_CAMPAIGN_ID } from '../campaigns/tacoBell';
 import { GUINNESS_CAMPAIGN_ID } from '../campaigns/guinness';
 import { LOVES_CAMPAIGN_ID } from '../campaigns/loves';
+import { POLARIS_CAMPAIGN_ID } from '../campaigns/polaris';
 
 const DEFAULT_DEVICE = 'PR-DEMO-001';
 
@@ -42,7 +43,7 @@ export default function InstantWinDirect() {
   useEffect(() => {
     if (campaignParam === NITERRA_CAMPAIGN_ID || campaignParam === FORD_CAMPAIGN_ID
       || campaignParam === CASTROL_CAMPAIGN_ID || campaignParam === HANKOOK_CAMPAIGN_ID
-      || campaignParam === TACO_BELL_CAMPAIGN_ID) return;
+      || campaignParam === TACO_BELL_CAMPAIGN_ID || campaignParam === POLARIS_CAMPAIGN_ID) return;
     getDeviceConfig(deviceCode)
       .then(data => {
         setConfig(data);
@@ -68,6 +69,14 @@ export default function InstantWinDirect() {
     if (labSession) qs.set('labSession', labSession);
     const suffix = qs.toString() ? `?${qs.toString()}` : '';
     return <Navigate to={`/enter/ford${suffix}`} replace />;
+  }
+
+  if (campaignParam === POLARIS_CAMPAIGN_ID) {
+    const qs = new URLSearchParams();
+    if (deviceCode !== DEFAULT_DEVICE) qs.set('device', deviceCode);
+    if (labSession) qs.set('labSession', labSession);
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return <Navigate to={`/enter/polaris${suffix}`} replace />;
   }
 
   if (campaignParam === CASTROL_CAMPAIGN_ID) {

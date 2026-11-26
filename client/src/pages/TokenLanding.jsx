@@ -4,6 +4,7 @@ import { validateToken, submitTokenClaim } from '../api';
 import { getInstantWinTheme } from '../config/instantWinThemes';
 import InstantWinForm from '../components/InstantWinForm';
 import FordEntryForm from '../components/FordEntryForm';
+import PolarisEntryForm from '../components/PolarisEntryForm';
 import AudiEntryForm from '../components/AudiEntryForm';
 import CastrolEntryForm from '../components/CastrolEntryForm';
 import HankookEntryForm from '../components/HankookEntryForm';
@@ -13,6 +14,7 @@ import LovesEntryForm from '../components/LovesEntryForm';
 import HokaEntryForm from '../components/HokaEntryForm';
 import NiterraCrosswordEntryForm from '../components/NiterraCrosswordEntryForm';
 import { FORD_CAMPAIGN_ID } from '../campaigns/ford';
+import { POLARIS_CAMPAIGN_ID } from '../campaigns/polaris';
 import { AUDI_CAMPAIGN_ID } from '../campaigns/audi';
 import { CASTROL_CAMPAIGN_ID } from '../campaigns/castrol';
 import { HANKOOK_CAMPAIGN_ID } from '../campaigns/hankook';
@@ -22,6 +24,7 @@ import { LOVES_CAMPAIGN_ID } from '../campaigns/loves';
 import { HOKA_CAMPAIGN_ID } from '../campaigns/hokaCotswold';
 import { NITERRA_CAMPAIGN_ID } from '../campaigns/niterraRepco';
 import '../campaigns/ford.css';
+import '../campaigns/polaris.css';
 import '../campaigns/castrol.css';
 import '../campaigns/hankook.css';
 import '../campaigns/tacoBell.css';
@@ -91,6 +94,7 @@ export default function TokenLanding() {
     });
     const branded = [
       FORD_CAMPAIGN_ID,
+      POLARIS_CAMPAIGN_ID,
       AUDI_CAMPAIGN_ID,
       CASTROL_CAMPAIGN_ID,
       HANKOOK_CAMPAIGN_ID,
@@ -145,6 +149,15 @@ export default function TokenLanding() {
       <FordEntryForm
         campaign={tokenData.campaign}
         vehicles={brands}
+        onComplete={handleComplete}
+      />
+    );
+  }
+  if (campaignId === POLARIS_CAMPAIGN_ID) {
+    return (
+      <PolarisEntryForm
+        campaign={tokenData.campaign}
+        models={brands}
         onComplete={handleComplete}
       />
     );

@@ -3,6 +3,7 @@ const db = require('../db');
 const { loadCampaign } = require('./demoCampaign');
 const { audiDemoPrizes } = require('../lib/audiCampaign');
 const { fordDemoPrizes } = require('../lib/fordCampaign');
+const { polarisDemoPrizes } = require('../lib/polarisCampaign');
 
 const DEFAULT_SWEEPSTAKES =
   "You're not an instant winner this time. You've been automatically entered into the sweepstakes prize draw.";
@@ -80,6 +81,16 @@ function defaultControl(campaignId) {
       sweepstakesMessage: DEFAULT_SWEEPSTAKES,
       claimOffset: 0,
       prizes: fordDemoPrizes(),
+    };
+  }
+  if (campaignId === 'polaris-2026') {
+    return {
+      enabled: true,
+      winEvery: 1,
+      sweepstakesOnLose: false,
+      sweepstakesMessage: DEFAULT_SWEEPSTAKES,
+      claimOffset: 0,
+      prizes: polarisDemoPrizes(),
     };
   }
   if (campaignId === 'castrol-2026') {

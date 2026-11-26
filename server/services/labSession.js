@@ -137,6 +137,7 @@ function buildPhoneBaseUrl(session) {
 const CAMPAIGN_PHONE_ENTRY_PATH = {
   'niterra-ngk-2026': '/enter/repco',
   'ford-2026': '/enter/ford',
+  'polaris-2026': '/enter/polaris',
   'audi-2026': '/enter/audi-instant-win',
   'hoka-2026': '/enter/hoka',
   'castrol-2026': '/enter/castrol',

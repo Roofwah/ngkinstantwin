@@ -22,6 +22,7 @@ const CAMPAIGN_ENTER_PATH = {
   'taco-bell-2026': '/enter/taco-bell',
   'guinness-2026': '/enter/guinness',
   'loves-2026': '/enter/loves',
+  'polaris-2026': '/enter/polaris',
 };
 
 function campaignEnterPath(campaignId) {
@@ -241,6 +242,21 @@ const CAMPAIGN_UI = {
       { q: 'How to enter', a: 'Scan the PUK QR, enter your name and mobile, verify, and reveal.' },
       { q: 'Prizes', a: 'Cooler, Cap, Car, Card, Powerbank, or Sunglasses.' },
       { q: 'On device', a: 'Idle loops Loves art. Double tap for QR to /enter/loves.' },
+    ],
+  },
+  'polaris-2026': {
+    sub: 'Polaris Instant Win',
+    color: '#2842c2',
+    idleVideo: '/campaigns/polaris/polaris.mp4',
+    idleFallback: '/campaigns/polaris/bg.jpg',
+    slides: [],
+    qrBg: '/campaigns/polaris/bg.jpg',
+    qrPadBg: '#ffffff',
+    faq: [
+      { q: 'Campaign', a: 'Polaris Instant Win at AGPower Lilydale — enter after a qualifying Polaris purchase.' },
+      { q: 'How to enter', a: 'Scan the QR code, select your purchased model, enter the last 4 digits of your invoice, and verify your mobile.' },
+      { q: 'Prizes', a: 'Every valid entry wins $1000 cash.' },
+      { q: 'On device', a: 'Idle video loops on the panel. Double tap for QR to /enter/polaris.' },
     ],
   },
 };

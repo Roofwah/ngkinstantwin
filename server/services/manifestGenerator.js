@@ -63,6 +63,10 @@ function prizesForCampaign(campaignId) {
   if (campaignId === 'niterra-ngk-2026') return NITERRA_PRIZES;
   if (campaignId === 'audi-2026') return AUDI_PRIZES;
   if (campaignId === 'ford-2026') return FORD_PRIZES;
+  if (campaignId === 'polaris-2026') {
+    const { polarisManifestPrizes } = require('../lib/polarisCampaign');
+    return polarisManifestPrizes();
+  }
   const row = db.prepare('SELECT name FROM campaigns WHERE id = ?').get(campaignId);
   return genericPrizes(row?.name || 'Campaign');
 }

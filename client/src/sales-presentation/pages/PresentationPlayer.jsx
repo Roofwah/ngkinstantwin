@@ -18,7 +18,7 @@ export default function PresentationPlayer() {
 
   useEffect(() => {
     const prev = document.title;
-    document.title = 'PUK';
+    document.title = 'PUK — Purchase-Linked Instant Win Promotions';
     let robots = document.querySelector('meta[name="robots"]');
     const created = !robots;
     if (!robots) {

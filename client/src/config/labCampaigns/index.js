@@ -2,6 +2,7 @@ import niterraRepco from './niterra-repco';
 import fordDisplayLab from './ford-display-lab';
 import hankook from './hankook';
 import tacoBell from './taco-bell';
+import polaris from './polaris';
 
 /** Registry of lab presenter configs — add one file per promotional program. */
 const LAB_CAMPAIGNS = {
@@ -9,6 +10,7 @@ const LAB_CAMPAIGNS = {
   'ford-display-lab': fordDisplayLab,
   hankook,
   'taco-bell': tacoBell,
+  polaris,
 };
 
 const DEFAULT_CONFIG_ID = 'niterra-repco';
@@ -42,4 +44,4 @@ export function resolveLabCampaign({ configId, campaignId } = {}) {
   return getDefaultLabCampaign();
 }
 
-export { niterraRepco, hankook, tacoBell };
+export { niterraRepco, hankook, tacoBell, polaris };

@@ -1,5 +1,6 @@
 const db = require('../db');
 const { isFordClaim, fordPrizeLabel } = require('./fordCampaign');
+const { isPolarisClaim, polarisPrizeLabel } = require('./polarisCampaign');
 
 /** Shown only when a real PUK entry-token issue time exists. Matches the 10-minute entry token TTL. */
 const ELIGIBLE_LOOKBACK_MS = 10 * 60 * 1000;
@@ -19,6 +20,7 @@ function claimPrizeValue(claim) {
 function publicPrizeLabel(claim) {
   const value = claimPrizeValue(claim);
   if (isFordClaim(claim)) return fordPrizeLabel(claim.prizeName, value);
+  if (isPolarisClaim(claim)) return polarisPrizeLabel(claim.prizeName, value);
   const name = claim?.prizeName || 'Prize';
   if (value && !/^\$\d/.test(String(name))) return `$${value} ${name}`;
   return name;

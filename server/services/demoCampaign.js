@@ -16,6 +16,7 @@ const DEMO_CAMPAIGN_IDS = [
   'taco-bell-2026',
   'guinness-2026',
   'loves-2026',
+  'polaris-2026',
   'puk-demo',
 ];
 

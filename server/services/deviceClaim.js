@@ -22,6 +22,11 @@ const {
   fordVoucherDisplayName,
 } = require('../lib/fordCampaign');
 const {
+  validatePolarisEntryPayload,
+  isPolarisVerificationMethod,
+  polarisCashDisplayName,
+} = require('../lib/polarisCampaign');
+const {
   validateCastrolEntryPayload,
   isCastrolVerificationMethod,
 } = require('../lib/castrolCampaign');
@@ -55,6 +60,7 @@ function isCrosswordEntry(method) {
   return method === 'niterra_crossword'
     || isAudiVerificationMethod(method)
     || isFordVerificationMethod(method)
+    || isPolarisVerificationMethod(method)
     || isCastrolVerificationMethod(method)
     || isSmirnoffVerificationMethod(method)
     || isHankookVerificationMethod(method)
@@ -255,6 +261,8 @@ function createClaimWithReceipt({
     validated = validateAudiEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else if (isFordVerificationMethod(body.verificationMethod)) {
     validated = validateFordEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
+  } else if (isPolarisVerificationMethod(body.verificationMethod)) {
+    validated = validatePolarisEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else if (isCastrolVerificationMethod(body.verificationMethod)) {
     validated = validateCastrolEntryPayload(body, campaign, deviceRow, campaignBrandOptions(campaign));
   } else if (isSmirnoffVerificationMethod(body.verificationMethod)) {
@@ -333,6 +341,7 @@ function createClaimWithReceipt({
 
   const isAudi = isAudiVerificationMethod(validated.verificationMethod);
   const isFord = isFordVerificationMethod(validated.verificationMethod);
+  const isPolaris = isPolarisVerificationMethod(validated.verificationMethod);
   const { result, prize } = assignPrize(claimId, now, resolvedCampaignId);
   const claimStatus = resolveClaimStatus(result, validated.verificationMethod);
   let prizeName = prize?.prizeName || null;
@@ -342,6 +351,8 @@ function createClaimWithReceipt({
     prizeName = audiVoucherDisplayName();
   } else if (isFord && prize) {
     prizeName = fordVoucherDisplayName();
+  } else if (isPolaris && prize) {
+    prizeName = polarisCashDisplayName();
   }
 
   db.prepare(`

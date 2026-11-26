@@ -1,0 +1,419 @@
+/* Polaris brand theme — instant win entry (not login page clone) */
+.polaris-page {
+  --polaris-navy: #2842c2;
+  --polaris-navy-deep: #1a2f7a;
+  --polaris-bg: #f4f4f4;
+  --polaris-text: #4d4d4d;
+  --polaris-input-border: #6e6e6e;
+  min-height: 100dvh;
+  background: var(--polaris-bg);
+  color: var(--polaris-text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.polaris-confetti {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 40;
+}
+
+.polaris-page * {
+  box-sizing: border-box;
+}
+
+.polaris-landing {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.polaris-landing__art {
+  width: 100%;
+  height: min(40svh, 280px);
+  display: block;
+  object-fit: cover;
+  object-position: center 40%;
+}
+
+.polaris-landing__fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 50%;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(244, 244, 244, 0.65) 55%,
+    var(--polaris-bg) 100%
+  );
+  pointer-events: none;
+}
+
+.polaris-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+.polaris-page--landing .polaris-container {
+  margin-top: -1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.polaris-card {
+  width: 100%;
+  padding: 28px 24px 36px;
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 10px 10px 0 rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 600px) {
+  .polaris-card {
+    padding: 32px 48px 40px;
+  }
+}
+
+.polaris-page--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+}
+
+.polaris-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(16, 43, 78, 0.15);
+  border-top-color: var(--polaris-navy);
+  border-radius: 50%;
+  animation: polarisSpin 0.8s linear infinite;
+}
+
+.polaris-unavailable {
+  text-align: center;
+  padding: 24px;
+}
+
+.polaris-unavailable h2 {
+  margin: 0 0 8px;
+  font-size: 1.125rem;
+  letter-spacing: 0.125rem;
+  text-transform: uppercase;
+  color: var(--polaris-navy);
+}
+
+.polaris-unavailable p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Typography ── */
+.polaris-kicker {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--polaris-text);
+}
+
+.polaris-title {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: var(--polaris-navy);
+}
+
+.polaris-lede {
+  margin: 0 0 24px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--polaris-text);
+}
+
+/* ── Form ── */
+.polaris-form {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.polaris-field {
+  margin-bottom: 16px;
+}
+
+.polaris-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--polaris-navy);
+}
+
+.polaris-field input,
+.polaris-field select {
+  width: 100%;
+  height: 50px;
+  padding: 8px 12px;
+  border: 1px solid var(--polaris-input-border);
+  border-radius: 4px;
+  background: rgba(255, 255, 254, 0.7);
+  color: var(--polaris-navy);
+  font-family: inherit;
+  font-size: 16px;
+}
+
+.polaris-field input::placeholder {
+  color: #767676;
+}
+
+.polaris-field input:focus,
+.polaris-field select:focus {
+  outline: 2px solid var(--polaris-navy);
+  outline-offset: 1px;
+}
+
+.polaris-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23102b4e' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.polaris-dealer {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  padding: 0 12px;
+  border: 1px solid var(--polaris-input-border);
+  border-radius: 4px;
+  background: #f8f9fa;
+  font-size: 15px;
+  color: var(--polaris-navy);
+}
+
+/* ── Buttons ── */
+.polaris-cta {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 44px;
+  margin-top: 8px;
+  border: 0;
+  border-radius: 100px;
+  background: transparent;
+  color: #fff;
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.polaris-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--polaris-navy-deep);
+  border-radius: 100px;
+  z-index: 0;
+}
+
+.polaris-cta span {
+  position: relative;
+  z-index: 1;
+}
+
+.polaris-cta:hover::before {
+  background: var(--polaris-navy);
+}
+
+.polaris-cta:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.polaris-ghost {
+  width: 100%;
+  margin-top: 16px;
+  background: transparent;
+  border: 0;
+  color: var(--polaris-navy);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ── Alerts ── */
+.polaris-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b00;
+  font-size: 14px;
+}
+
+.polaris-demo {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: #f0f4f8;
+  border: 1px solid #d0d9e4;
+  font-size: 14px;
+}
+
+.polaris-legal {
+  margin-top: 20px;
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0.04em;
+  color: var(--polaris-text);
+}
+
+/* ── Result ── */
+.polaris-result h1 {
+  margin: 0 0 12px;
+  font-size: 1.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--polaris-navy);
+}
+
+.polaris-lede--emphasis {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--polaris-navy);
+}
+
+.polaris-prize {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid rgba(16, 43, 78, 0.2);
+  border-radius: 4px;
+  text-align: center;
+  background: #fafbfc;
+}
+
+.polaris-prize--reveal {
+  padding: 28px 14px 22px;
+  background: var(--polaris-navy);
+  border-color: rgba(255, 255, 255, 0.12);
+  animation: polarisPrizeIn 0.55s ease-out;
+}
+
+@keyframes polarisPrizeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.polaris-prize--reveal .polaris-voucher-amount {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  margin: 0 0 14px;
+  min-height: clamp(5.5rem, 30vw, 9rem);
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 700;
+  line-height: 0.85;
+}
+
+.polaris-prize--reveal .polaris-voucher-amount__currency {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(2.8rem, 14vw, 4.5rem);
+  letter-spacing: 0;
+  color: #fff;
+  opacity: 0.85;
+}
+
+.polaris-prize--reveal .polaris-voucher-amount__value {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font-size: clamp(6rem, 34vw, 10.5rem);
+  letter-spacing: -0.03em;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.12s ease-out;
+}
+
+.polaris-prize--reveal .polaris-voucher-amount--pulse .polaris-voucher-amount__value {
+  transform: scale(1.05);
+}
+
+.polaris-voucher-label {
+  margin: 0;
+  font-size: clamp(0.88rem, 3.6vw, 1rem);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 16em;
+  margin-inline: auto;
+}
+
+.polaris-ref {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.polaris-ref__label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--polaris-text);
+  margin-bottom: 8px;
+}
+
+.polaris-sweepstakes {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid rgba(16, 43, 78, 0.2);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--polaris-navy);
+}
+
+.polaris-staff-msg {
+  margin: 16px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.polaris-code {
+  margin-top: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.2rem;
+  letter-spacing: 0.12em;
+  color: var(--polaris-navy);
+}
+
+@keyframes polarisSpin {
+  to { transform: rotate(360deg); }
+}

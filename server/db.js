@@ -153,6 +153,7 @@ try { db.exec('ALTER TABLE campaigns ADD COLUMN config TEXT'); } catch {}
 
 const { audiDemoPrizes } = require('./lib/audiCampaign');
 const { fordDemoPrizes } = require('./lib/fordCampaign');
+const { polarisDemoPrizes } = require('./lib/polarisCampaign');
 const { castrolDemoPrizes } = require('./lib/castrolCampaign');
 const { smirnoffDemoPrizes } = require('./lib/smirnoffCampaign');
 const { tacoBellDemoPrizes } = require('./lib/tacoBellCampaign');
@@ -537,6 +538,48 @@ const DEMO_CAMPAIGNS = [
     },
   },
   {
+    id: 'polaris-2026',
+    name: 'Polaris Instant Win',
+    brand: 'Polaris',
+    tagline: 'Unlock More Adventure',
+    mechanic: 'Qualifying Polaris purchase at AGPower Lilydale — enter last 4 digits of invoice',
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    config: {
+      themeColor: '#2842c2',
+      entryVariant: 'polaris-instant-win',
+      entryPath: '/enter/polaris',
+      eligibleBrands: [
+        'Ranger 500',
+        'Ranger SP 570 HD',
+        'General XP 1000 Sport',
+        'Ranger 1000 Premium',
+        'Ranger XP 1000HD',
+        'Ranger Diesel HD',
+        'Ranger XP 1000 Northstar',
+        'General XP 4 1000',
+      ],
+      defaultStoreName: 'AGPower Lilydale',
+      defaultStoreCode: 'agpower-lilydale',
+      defaultStoreLocation: 'Lilydale VIC',
+      retailer: 'AGPower',
+      formArtUrl: '/campaigns/polaris/bg.jpg',
+      landingHeroUrl: '/campaigns/polaris/bg.jpg',
+      idleVideoUrl: '/campaigns/polaris/polaris.mp4',
+      idleFallbackUrl: '/campaigns/polaris/bg.jpg',
+      heroImageUrl: '/campaigns/polaris/bg.jpg',
+      logoUrl: '/campaigns/polaris/bg.jpg',
+      qrBgUrl: '/campaigns/polaris/bg.jpg',
+      qrPadBg: '#ffffff',
+      demoControl: {
+        enabled: true,
+        winEvery: 1,
+        sweepstakesOnLose: false,
+        prizes: polarisDemoPrizes(),
+      },
+    },
+  },
+  {
     id: 'puk-demo',
     name: 'PUK Demo',
     brand: 'PUK',
@@ -652,7 +695,14 @@ for (const c of DEMO_CAMPAIGNS) {
                             claimOffset: prev.demoControl?.claimOffset || 0,
                           },
                         }
-                      : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
+                      : c.id === 'polaris-2026' && c.config.demoControl
+                        ? {
+                            demoControl: {
+                              ...c.config.demoControl,
+                              claimOffset: prev.demoControl?.claimOffset || 0,
+                            },
+                          }
+                        : (prev.demoControl ? { demoControl: prev.demoControl } : {})),
   };
   if ([
     'niterra-ngk-2026',
@@ -664,6 +714,7 @@ for (const c of DEMO_CAMPAIGNS) {
     'taco-bell-2026',
     'guinness-2026',
     'loves-2026',
+    'polaris-2026',
     'smirnoff-2026',
     'puk-demo',
   ].includes(c.id)) {

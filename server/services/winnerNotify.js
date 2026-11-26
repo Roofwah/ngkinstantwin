@@ -13,6 +13,7 @@ const {
 } = require('../lib/niterraCampaign');
 const { AUDI_CAMPAIGN_ID, AUDI_STORE_NAME, audiPrizeImagePath, isAudiVerificationMethod } = require('../lib/audiCampaign');
 const { isFordClaim } = require('../lib/fordCampaign');
+const { isPolarisClaim } = require('../lib/polarisCampaign');
 const { ensureWinnerRedemption, redemptionStatusLabel } = require('./redemption');
 const { customerQrSettings, armRedemptionWindow, publicPrizeLabel } = require('../lib/customerQr');
 
@@ -110,6 +111,17 @@ function winnerEmailBranding(claim) {
       defaultStore: store,
     };
   }
+  if (claim?.campaignId === 'polaris-2026' || isPolarisClaim(claim)) {
+    const store = claim.storeName || 'AGPower Lilydale';
+    return {
+      kicker: 'POLARIS INSTANT WIN',
+      title: 'Instant Winner',
+      subject: 'Polaris Instant Winner',
+      accent: '#2842c2',
+      buttonText: '#ffffff',
+      defaultStore: store,
+    };
+  }
   const store = claim?.storeName || 'Demo Store';
   return {
     kicker: 'PUK INSTANT WIN',
@@ -170,7 +182,7 @@ function winnerSmsBody(claim) {
             : claim?.campaignId === 'loves-2026'
               ? 'Loves Travel Stop Rock Falls IL'
               : 'Demo Store');
-  const prizeLine = (isAudiClaim(claim) || isFordClaim(claim))
+  const prizeLine = (isAudiClaim(claim) || isFordClaim(claim) || isPolarisClaim(claim))
     ? `You've won ${isAudiClaim(claim) ? audiPrizeLabel(claim) : publicPrizeLabel(claim)} at ${store}.`
     : `You've won ${claim.prizeName} at ${store}.`;
   return [
@@ -245,9 +257,13 @@ function winnerEmailText(claim) {
     `Winner: ${claim.customerName || '—'}`,
     `Mobile: ${maskMobile(claim.mobile)}`,
   ];
-  if (isAudiClaim(claim) || isFordClaim(claim)) {
+  if (isAudiClaim(claim) || isFordClaim(claim) || isPolarisClaim(claim)) {
     lines.push(`Model: ${claim.selectedBrand || '—'}`);
-    lines.push(`Contract (last 4 digits): ${claim.receiptNumber || '—'}`);
+    lines.push(
+      isPolarisClaim(claim)
+        ? `Invoice (last 4 digits): ${claim.receiptNumber || '—'}`
+        : `Contract (last 4 digits): ${claim.receiptNumber || '—'}`,
+    );
   } else {
     const value = Number(claim.spendAmount || 0).toFixed(2);
     lines.push(`Purchase: ${claim.selectedBrand || '—'}`);
@@ -284,8 +300,11 @@ function winnerEmailHtml(claim) {
   const branding = winnerEmailBranding(claim);
   const store = claim.storeName || branding.defaultStore;
   const status = redemptionStatusLabel(claim.redemptionStatus);
-  const purchaseRows = (isAudiClaim(claim) || isFordClaim(claim))
-    ? `${row('Model', claim.selectedBrand || '—')}${row('Contract (last 4 digits)', claim.receiptNumber || '—')}`
+  const purchaseRows = (isAudiClaim(claim) || isFordClaim(claim) || isPolarisClaim(claim))
+    ? `${row('Model', claim.selectedBrand || '—')}${row(
+      isPolarisClaim(claim) ? 'Invoice (last 4 digits)' : 'Contract (last 4 digits)',
+      claim.receiptNumber || '—',
+    )}`
     : `${row('Purchase', claim.selectedBrand || '—')}${row('Purchase Value', `$${Number(claim.spendAmount || 0).toFixed(2)}`)}`;
   const prizeLabel = isAudiClaim(claim) ? audiPrizeLabel(claim) : publicPrizeLabel(claim);
   const inner = `

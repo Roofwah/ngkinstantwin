@@ -1,7 +1,7 @@
 {
   "name": "pure-random-instant-win-mockup",
   "version": "1.0.0",
-  "description": "PureRandom — Secure digital Scratch & Win powered by PureRandom Instant Win Engine",
+  "description": "PUK — Purchase-Linked Instant Win Promotions",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
