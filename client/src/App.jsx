@@ -26,6 +26,7 @@ import AdminAudit from './pages/AdminAudit';
 import AdminReconciliation from './pages/AdminReconciliation';
 import AdminDemoControl from './pages/AdminDemoControl';
 import FulfilPrize from './pages/FulfilPrize';
+import PresentationPlayer from './sales-presentation/pages/PresentationPlayer';
 
 function RequireAdmin({ children }) {
   const token = localStorage.getItem('adminToken');
@@ -68,6 +69,8 @@ export default function App() {
         <Route path="/demo/zitcha/:hwId"   element={<Navigate to="/zitcha/demo" replace />} />
         <Route path="/demo/loves"          element={<Navigate to="/zitcha/demo" replace />} />
         <Route path="/demo/loves/:hwId"    element={<Navigate to="/zitcha/demo" replace />} />
+        {/* Sales presentation (isolated) — /demo/{opaque hash}; after static demo routes */}
+        <Route path="/demo/:code"          element={<PresentationPlayer />} />
         <Route path="/lab"                 element={<Lab />} />
         <Route path="/lab/display/:sessionId" element={<LabDisplay />} />
         <Route path="/lab/:configId"        element={<Lab />} />
